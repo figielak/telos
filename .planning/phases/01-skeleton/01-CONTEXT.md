@@ -7,7 +7,7 @@ that creates `.telos/` for any profile in a test repo. Done when `/telos:init`
 works in a test repo (SPEC §14).
 
 ## Decisions
-- D-01: CLI is plain JavaScript ESM (`.mjs`) with JSDoc types, no build step, no runtime or dev dependencies. Node ≥ 20.
+- D-01: CLI is plain JavaScript ESM (`.mjs`) with JSDoc types, no build step, no runtime or dev dependencies. Node ≥ 20.10.
 - D-02: Tests use `node:test` + `node:assert`; `npm test` = `node --test test/*.test.mjs`. Fixtures live in `test/fixtures/`.
 - D-03: Frontmatter uses a minimal YAML subset (scalars, booleans, numbers, inline `[a, b]` arrays). Telos parses and writes only that subset; anything else is an error.
 - D-04: `lib/config.mjs` (defaults + `validate()`) is the single source of the config schema; no separate JSON Schema file in v0.

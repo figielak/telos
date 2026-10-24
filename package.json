@@ -4,7 +4,7 @@
   "description": "CLI and hooks for the Telos Claude Code plugin",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": { "node": ">=20.10" },
   "bin": { "telos": "bin/telos" },
   "scripts": {
     "test": "node --test test/*.test.mjs"

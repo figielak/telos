@@ -13,4 +13,4 @@ Status: **pre-alpha** (phase 01-skeleton). See [SPEC.md](SPEC.md).
 /telos:init standard
 ```
 
-Requires Claude Code with plugin support, Git and Node.js ≥ 20.
+Requires Claude Code with plugin support, Git and Node.js ≥ 20.10.

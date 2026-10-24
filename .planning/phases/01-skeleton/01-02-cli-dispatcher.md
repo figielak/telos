@@ -2,7 +2,7 @@
 id: 01-02
 title: telos CLI dispatcher and repo helpers
 type: code
-status: draft
+status: done
 critical: false
 effort: normal
 depends: [01-01]
@@ -41,8 +41,12 @@ consistent exit codes and helpers to locate the repo root and `.telos/`.
 2. Implement repo helpers, then the dispatcher.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `node --test test/cli.test.mjs` → exit 0
-- [ ] `./bin/telos --help` → exit 0
+- [x] all listed tests pass
+- [x] `node --test test/cli.test.mjs` → exit 0
+- [x] `./bin/telos --help` → exit 0
 
 ## Result
+- `bin/telos` (extensionless ESM, top-level await) → `main(argv, opts)` in lib/cli.mjs returns the exit code; `opts` injects registry/cwd/streams for unit tests.
+- Registry: `commands` object of `{ help, needsTelos?, run(ctx) }`; `ctx = { args, cwd, root, stdout, stderr }`; `UsageError` → exit 2.
+- Global flags parsed with `parseArgs` only before the command; args after it go untouched to the command. No command → help on stderr, exit 2.
+- Note: extensionless ESM entry needs Node ≥ 20.10 (tested on 24.18); `engines` bumped to `>=20.10` (scope deviation: package.json), D-01 updated.
