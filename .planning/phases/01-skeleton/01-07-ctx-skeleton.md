@@ -2,7 +2,7 @@
 id: 01-07
 title: telos ctx bundle skeleton
 type: code
-status: draft
+status: done
 critical: false
 effort: normal
 depends: [01-05, 01-06]
@@ -46,7 +46,11 @@ registry later phases extend; implement `ctx init` and `ctx status` now.
 1. Write tests, implement registry, then the two bundles.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `node --test test/ctx.test.mjs` → exit 0
+- [x] all listed tests pass
+- [x] `node --test test/ctx.test.mjs` → exit 0
 
 ## Result
+- lib/ctx/: registry + `cap` (6000) + `stripComments`/`excerpt`; bundles `init` (profile, git, Telos files, block state, detection with evidence) and `status` (view + stack line + pointers); `stackLine` formats `detect().versions`. 10 tests, suite 54/54.
+- `ctx init` on astro-ts = 617 chars. Uninitialized `ctx status` and unknown bundles print one line, exit 0. Every module imports cleanly first (no cycle).
+- For 01-08: `BLOCK_START`, `BLOCK_VERSION`, `blockState` exported from lib/ctx/init.mjs.
+Deviations: lib/frontmatter.mjs — `splitComment` exported so comment stripping reuses the quote-aware scanner.
