@@ -1,0 +1,33 @@
+# 01 · Skeleton
+## Goal
+Make the repo an installable Claude Code plugin (and its own marketplace) with a
+zero-dependency `telos` Node CLI exposing `ctx` and `status`, config loading and
+validation, all file templates, stack/check detection, and a working `/telos:init`
+that creates `.telos/` for any profile in a test repo. Done when `/telos:init`
+works in a test repo (SPEC §14).
+
+## Decisions
+- D-01: CLI is plain JavaScript ESM (`.mjs`) with JSDoc types, no build step, no runtime or dev dependencies. Node ≥ 20.
+- D-02: Tests use `node:test` + `node:assert`; `npm test` = `node --test test/`. Fixtures live in `test/fixtures/`.
+- D-03: Frontmatter uses a minimal YAML subset (scalars, booleans, numbers, inline `[a, b]` arrays). Telos parses and writes only that subset; anything else is an error.
+- D-04: `lib/config.mjs` (defaults + `validate()`) is the single source of the config schema; no separate JSON Schema file in v0.
+- D-05: Split work: the CLI does all deterministic work non-interactively (`telos init --profile … --checks …`); the skill only presents results and confirms with the user.
+- D-06: Root CLAUDE.md block is wrapped in `<!-- telos:start -->` / `<!-- telos:end -->` and replaced in place on re-run (idempotent).
+- D-07: Detection emits a check command only with evidence (script, dependency, config file, lockfile). No evidence → the key is omitted, never guessed.
+- D-08: `init` is safe to re-run: it creates missing files and keeps existing ones (reports created/kept); `--force` rewrites only `config.json` and the CLAUDE.md block.
+
+## Constraints
+- Every Telos file template respects the size limits in SPEC §4 (enforced by tests).
+- CLI output is compact; `ctx` bundles are hard-capped (default 6000 chars) with a truncation marker.
+- Exit codes: 0 ok, 1 failure / not initialized, 2 usage error.
+- All files and CLI messages in English.
+
+## Open questions
+- Should `init` commit its files? Assumed: no — it prints a suggested `docs(telos): initialize telos` commit.
+- Is the plugin `bin/` dir really put on the Bash PATH? Verify in 01-01; fallback: skills call `${CLAUDE_PLUGIN_ROOT}/bin/telos`.
+- GitHub owner for marketplace.json (placeholder `OWNER` until known).
+
+## Carried over
+
+## Links
+- SPEC.md §4 (files), §4.4 (STATUS), §4.5 (config), §13 (packaging), §14 (roadmap)
