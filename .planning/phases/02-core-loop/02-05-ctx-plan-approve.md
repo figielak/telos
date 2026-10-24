@@ -2,7 +2,7 @@
 id: 02-05
 title: telos ctx plan and ctx approve bundles
 type: code
-status: approved
+status: done
 critical: false
 effort: normal
 depends: [02-01, 02-02, 02-03]
@@ -47,7 +47,12 @@ scope: [lib/ctx/plan.mjs, lib/ctx/approve.mjs, lib/ctx/index.mjs, test/ctx-plan.
 3. Register both; README rows; run the suite.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
 
 ## Result
+- lib/ctx/plan.mjs `planBundle` and lib/ctx/approve.mjs `approveBundle`, registered as `ctx plan` / `ctx approve`; 11 tests, suite 143/143.
+- approve.mjs also exports `statusPhase`, `indexLine`, `phaseDecisions`, `decisionBlocks` for `ctx do` (02-06); `phaseDecisions` repeats lint-plan's private CONTEXT parse (lint-plan.mjs outside scope).
+- Smoke on this repo's plan: the first order overflowed the cap (6079 chars) and cut Tasks/Format, so the index dropped `scope` and the bundle is ordered by need: Tasks and Format before Roadmap, CONTEXT last (the cut lands there; its path is given).
+- `ctx approve` without tasks or phase → `REFUSED: …` line; outside a real repo the .telos/ change list reads `n/a`.
+Deviations: none

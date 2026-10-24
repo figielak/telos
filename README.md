@@ -47,4 +47,6 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error.
 | `telos task rm <id>` | Delete a `draft` task file; other statuses exit 1 |
 | `telos ctx <bundle> [args]` | Print a skill's context bundle (≤ 6000 chars, comments stripped); unknown bundle → one line, exit 0 |
 | `telos ctx init [profile]` | Bundle for `/telos:init`: profile, repo and Telos state, CLAUDE.md block state, detected stack/checks with evidence |
+| `telos ctx plan [NN\|description]` | Bundle for `/telos:plan` and `/telos:revise`: profile, target phase (STATUS phase by default; a description → the next NN), PROJECT Purpose and Rules, stack, checks, ROADMAP, phase CONTEXT, numbered carry-over items for the phase, task index, format rules |
+| `telos ctx approve [NN]` | Bundle for `/telos:approve`: phase line, task index, lint-plan result, draft ids, tasks blocked by proposed or awaited decisions, phase tag, uncommitted `.telos/` changes |
 | `telos ctx status` | Bundle for `/telos:status`: status view, stack line, file pointers |
