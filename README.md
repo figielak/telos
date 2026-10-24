@@ -38,6 +38,7 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error.
 | `telos status add recent "<line>"` | Prepend to Recent, keep the 3 newest |
 | `telos status add carry "<line>"` | Append to Carry-over; exit 1 when 5 items exist |
 | `telos status rm carry <n>` | Remove Carry-over item `n` (1-based) |
+| `telos accept <id>` | Run the task's `` `cmd` → exit N `` Acceptance items (`sh -c` in the repo root, 600 s each; other items are MANUAL) and check that every changed file (work tree + commits `<type>(<id>):` since `telos/NN-start`) is in `scope`, `.telos/` or the Result's `Deviations:` line. One line per item, `accept <id>: PASS\|FAIL`; exit 1 on any FAIL |
 | `telos lint-plan [NN]` | Check a phase's task files (default: phase from STATUS): sections per type and detail level, line limits, `scope` set and Files ⊆ scope, machine-checkable acceptance, depends (exist, no cycles), decisions in CONTEXT, id = file name. Prints `ok: N tasks` or one `<id>: <problem>` line each and exits 1 |
 | `telos roadmap set <NN> <status>` | Change a phase's `[status]` in ROADMAP.md in place (`planned`, `drafted`, `active`, `done`, `dropped`) |
 | `telos roadmap add <name> "<goal>" "<done when>"` | Append `- NN-name [planned] goal · done when: …` with the next free NN |

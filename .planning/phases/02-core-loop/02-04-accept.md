@@ -2,7 +2,7 @@
 id: 02-04
 title: telos accept <id>
 type: code
-status: approved
+status: done
 critical: true
 effort: normal
 depends: [02-01, 02-03]
@@ -82,7 +82,12 @@ accept 02-04: FAIL
 6. Register in lib/cli.mjs, format output, README row, run the suite.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
 
 ## Result
+- lib/git.mjs (`isRepo`, `porcelainFiles` with `-z` and `--untracked-files=all`, `taskCommitFiles`, `refExists`) and lib/accept.mjs (`acceptanceItems`, `deviations`, `accept`, `acceptCommand`); 19 tests, suite 132/132.
+- `taskCommitFiles` matches the commit subject (`^type(id)!?:`) instead of `git log --grep`, so a body line or another scope that mentions the id never counts. `accept` also returns `changed` for the `SCOPE ok (N files)` line; items carry `tail`.
+- Commands run as `sh -c "exec 2>&1; cmd"` so the tail keeps stdout and stderr in order; timeout kills with SIGKILL. `Deviations:` entries may list several comma-separated paths and use `—` or `-`; directories are matched like scope.
+- Dogfood (`.telos` → `.planning` symlink): `npm test` PASS, SCOPE flagged only .planning/…/02-04-accept.md, expected until .planning/ becomes .telos/ (phase 03).
+Deviations: none
