@@ -2,7 +2,7 @@
 id: 02-06
 title: telos ctx do bundle
 type: code
-status: approved
+status: done
 critical: false
 effort: hard
 depends: [02-01, 02-04]
@@ -71,7 +71,12 @@ REFUSED: 02-07 depends on 02-06 [approved]
 5. Register `do`; README row; run the suite.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
 
 ## Result
+- lib/ctx/do.mjs `resolveRef` + `doBundle` (registered as `ctx do`); fixture gained src/a.ts (7 lines); 15 tests, suite 158/158.
+- Refs: `path:a-b (label)`, `FILE.md §A[, §B] (label)` (numbered headings match exactly, sections ≤ 60 lines), `path (label)` (whole file when ≤ 80 lines); anything else is listed as unresolved. One ref per line: a second path on the same line is not resolved.
+- Smoke on real 02-07: the first big ref took the whole budget, so excerpts are water-filled (short ones whole, long ones share the rest, each with its own `…[cut; open <ref> for the rest]`); 3 refs now fit in 5970 chars.
+- Depends are rechecked for in-progress and blocked tasks too; the stale check runs `git diff --quiet <tag> -- path` locally (lib/git.mjs outside scope).
+Deviations: none
