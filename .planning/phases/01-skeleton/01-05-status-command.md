@@ -2,7 +2,7 @@
 id: 01-05
 title: Frontmatter module and telos status
 type: code
-status: draft
+status: done
 critical: false
 effort: normal
 depends: [01-03, 01-04]
@@ -45,7 +45,11 @@ with live states) plus `status set|add|rm` that maintain STATUS.md (SPEC §4.4).
 1. Frontmatter tests + module. 2. Status tests + module. 3. Register command.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `node --test test/frontmatter.test.mjs test/status.test.mjs` → exit 0
+- [x] all listed tests pass
+- [x] `node --test test/frontmatter.test.mjs test/status.test.mjs` → exit 0
 
 ## Result
+- lib/frontmatter.mjs: `parse` (D-03 subset, errors name the file line) and `setField` (in place, keeps the comment column); lib/status.mjs: view, `set`, `add recent|carry`, `rm carry`; 15 new tests, suite 37/37.
+- View reads phase state from ROADMAP and task state from the task file (`?` when missing); smoke-tested on a copy of .planning/ and used to write this Result and STATUS.
+- Bug found while dogfooding: cli.mjs ↔ status.mjs import cycle crashed when status.mjs loaded first → UsageError moved to lib/errors.mjs (re-exported by cli.mjs), regression test added.
+Deviations: lib/errors.mjs — breaks the import cycle; needed before 01-07 imports status.mjs.
