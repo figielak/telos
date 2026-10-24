@@ -2,7 +2,7 @@
 id: 02-08
 title: /telos:plan and /telos:revise skills (+ -lite variants)
 type: code
-status: approved
+status: done
 critical: false
 effort: hard
 depends: [02-02, 02-03, 02-05]
@@ -68,9 +68,14 @@ Skill flow (shared/plan.md), every step a CLI call or an edit of a task file:
 5. README skills table; `claude plugin validate .`; run the suite.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] `claude plugin validate .` → exit 0
-- [ ] headless `/telos:plan "add greeting"` in a minimal fixture repo writes lint-clean draft tasks
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] `claude plugin validate .` → exit 0
+- [x] headless `/telos:plan "add greeting"` in a minimal fixture repo writes lint-clean draft tasks
 
 ## Result
+- skills plan, plan-lite, revise, revise-lite + shared/plan.md (42 lines), shared/revise.md (24); 7 new skill tests, suite 171/171; `claude plugin validate .` passes (icon warning only).
+- Spike Q-01 → D-12: `${CLAUDE_PLUGIN_ROOT}` expands, but Claude Code blocks `cat` outside the session's working dirs and the skill aborts before any model turn; fallback `telos ctx shared <name>` added.
+- Headless run 1 failed: `$ARGUMENTS` is pasted unquoted into the !`…` shell line, so `greet(name)` broke it (unsafe for any free text) → D-13: plan injects `telos ctx plan` and shows `## Request`; the no-arg bundle adds `New phase: NN`; 02-11 now owns the same fix for quick.
+- Headless run 2 (`claude -p`, minimal repo, 7 turns, ~$0.47): roadmap add → task new → Edit → lint ok → drafted + STATUS; task quality good (scope 2 files, tests first, `npm run test` → exit 0). Summary came back in the user's language.
+Deviations: lib/ctx/shared.mjs, lib/ctx/index.mjs — `ctx shared` fallback (D-12); lib/ctx/plan.mjs, test/ctx-plan.test.mjs — `New phase:` line for the shell-safe skill (D-13)

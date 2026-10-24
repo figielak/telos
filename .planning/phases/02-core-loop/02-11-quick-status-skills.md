@@ -7,7 +7,7 @@ critical: false
 effort: normal
 depends: [02-07, 02-08]
 decisions: [D-04, D-09]
-scope: [skills/quick/, skills/quick-hard/, skills/status/, shared/quick.md, test/skills.test.mjs, README.md]
+scope: [skills/quick/, skills/quick-hard/, skills/status/, shared/quick.md, lib/ctx/quick.mjs, test/ctx-quick.test.mjs, test/skills.test.mjs, README.md]
 ---
 ## Goal
 `/telos:quick <description>` makes a small change without a phase (mini-plan → implement →
@@ -20,6 +20,7 @@ checks → `<type>(quick)` commit); `/telos:status` shows the status bundle in �
 
 ## Files
 - shared/quick.md (create)
+- lib/ctx/quick.mjs, test/ctx-quick.test.mjs (modify: bundle without the description)
 - skills/quick/SKILL.md (create)
 - skills/quick-hard/SKILL.md (create)
 - skills/status/SKILL.md (create)
@@ -28,6 +29,7 @@ checks → `<type>(quick)` commit); `/telos:status` shows the status bundle in �
 
 ## Constraints
 - quick = sonnet, quick-hard = opus, status = sonnet
+- the description never goes into the injection (`$ARGUMENTS` is pasted unquoted into the shell, see 02-08 Result): skills inject `telos ctx quick` and show `## Change\n$ARGUMENTS`; `ctx quick` drops the `Change:` line and its empty-description refusal moves into shared/quick.md
 - quick: mini-plan ≤ 5 lines in chat, no plan file, no STATUS change; > ~5 files or unclear scope → stop, suggest `/telos:plan`
 - quick runs the bundle's checks (`test_related` or `test`); failing → no commit, report
 - quick commits only the changed paths, scope `quick`; no HISTORY in 02 (D-09)

@@ -2,10 +2,10 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 02-core-loop
-Task: 02-08
-Next: implement 02-08 (/telos:plan and /telos:revise skills, hard)
+Task: 02-09
+Next: implement 02-09 (/telos:approve skill)
 Blockers: none
-Awaiting user: 02:Q-01
+Awaiting user: none
 <!-- Blockers: "NN-MM: reason". Awaiting user: IDs only, e.g. "02:Q-01, 02:D-03" -->
 
 ## Carry-over
@@ -17,6 +17,6 @@ Awaiting user: 02:Q-01
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 02-08 done: /telos:plan and /telos:revise skills
 - 02-07 done: telos ctx quick
 - 02-06 done: telos ctx do
-- 02-05 done: telos ctx plan and ctx approve

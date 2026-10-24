@@ -61,6 +61,12 @@ test('without an argument ctx plan targets the STATUS phase', async () => {
   assert.match(r.stdout, /^Target: 01-demo \[active\]/m);
 });
 
+test('without an argument the bundle also names the next NN and its carry-over', async () => {
+  const r = await ctx(repo(), 'plan');
+  assert.match(r.stdout, /^Target: 01-demo \[active\][^\n]*\nNew phase: 03\n- #3 new phase item → SPEC$/m);
+  assert.doesNotMatch((await ctx(repo(), 'plan', '01')).stdout, /^New phase:/m);
+});
+
 test('a description targets a new phase with the next NN', async () => {
   const r = await ctx(repo(), 'plan', 'add', 'auth');
   assert.match(r.stdout, /^Target: new phase "add auth" → 03/m);

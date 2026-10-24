@@ -22,6 +22,10 @@ All skills are user-invoked only, so they cost nothing until called.
 | Command | Purpose |
 |---|---|
 | `/telos:init [minimal\|standard\|deep]` | Initialize Telos in the current repo: detects stack and check commands, asks once to confirm them (and the profile when not given; an initialized repo keeps its profile), runs `telos init`, prints a ≤ 10-line summary ending with the next step |
+| `/telos:plan [NN\|description]` | Plan a phase (the STATUS phase, phase `NN`, or a new phase from a description): asks at most one round of questions, writes draft task files with `telos task new`, fixes them until `telos lint-plan` passes, marks the phase `drafted`, ends with a ≤ 10-line summary |
+| `/telos:plan-lite [NN\|description]` | Same as `/telos:plan` on a cheaper model, for small obvious phases |
+| `/telos:revise <notes>` | Apply notes to the current phase's plan with minimal edits (split, merge, reorder, change); approved tasks it changes go back to `draft`; re-lints and summarizes |
+| `/telos:revise-lite <notes>` | Same as `/telos:revise` on a cheaper model, for minor edits |
 
 ## CLI
 
@@ -47,8 +51,9 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error.
 | `telos task rm <id>` | Delete a `draft` task file; other statuses exit 1 |
 | `telos ctx <bundle> [args]` | Print a skill's context bundle (≤ 6000 chars, comments stripped); unknown bundle → one line, exit 0 |
 | `telos ctx init [profile]` | Bundle for `/telos:init`: profile, repo and Telos state, CLAUDE.md block state, detected stack/checks with evidence |
-| `telos ctx plan [NN\|description]` | Bundle for `/telos:plan` and `/telos:revise`: profile, target phase (STATUS phase by default; a description → the next NN), PROJECT Purpose and Rules, stack, checks, ROADMAP, phase CONTEXT, numbered carry-over items for the phase, task index, format rules |
+| `telos ctx plan [NN\|description]` | Bundle for `/telos:plan` and `/telos:revise`: profile, target phase (STATUS phase by default, plus the NN a new phase would get; a description → the next NN), PROJECT Purpose and Rules, stack, checks, ROADMAP, phase CONTEXT, numbered carry-over items for the phase, task index, format rules |
 | `telos ctx approve [NN]` | Bundle for `/telos:approve`: phase line, task index, lint-plan result, draft ids, tasks blocked by proposed or awaited decisions, phase tag, uncommitted `.telos/` changes |
 | `telos ctx do [id]` | Bundle for `/telos:do`: picks the in-progress task or the first approved one with done depends; `REFUSED: …` (exit 0) for draft tasks, unmet depends and proposed/awaited decisions; else the task file, STATUS, PROJECT Rules, stack, checks, CONTEXT goal and decisions, depends' Interface, Read-first excerpts (stale ones flagged) and matching MAP lines |
 | `telos ctx quick <description>` | Bundle for `/telos:quick`: the change, current phase/task (warns when one is in progress), PROJECT Rules, stack, quick checks (`test_related`, `test`, `lint`, `types`), working tree (≤ 20 files), size guard; no description → `REFUSED: …` |
+| `telos ctx shared <name>` | Print `shared/<name>.md`, the instructions a skill and its `-lite`/`-hard` variant share (skills cannot `cat` plugin files) |
 | `telos ctx status` | Bundle for `/telos:status`: status view, stack line, file pointers |

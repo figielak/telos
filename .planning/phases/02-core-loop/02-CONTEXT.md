@@ -17,16 +17,18 @@ git-guard hooks. Done when a minimal phase runs end to end with commits in a tes
 - D-09: 02 builds the minimal path plus cheap std+ reads (referenced decisions + CONTEXT goal in `ctx do`); writing CONTEXT/HISTORY/LESSONS, lessons and delete-zone in bundles stay in 04 (STATUS carry-over).
 - D-10: Git guard blocks with exit 2 + one-line reason on stderr; it tokenizes the whole command (`&&`, `;`, `|`, env prefixes, `git -C`); `reset --hard` is always blocked (the hook cannot see user intent; the user runs it), `commit --amend` only when HEAD is on a remote-tracking branch.
 - D-11: E2E = automated CLI-level test in `npm test` (temp repo, no model) + a headless `claude -p --plugin-dir` run of plan → approve → do on a minimal fixture, recorded in Result (as 01-09); the model run is not in `npm test`.
+- D-12: Shared skill bodies are injected with !`telos ctx shared <name>`: `${CLAUDE_PLUGIN_ROOT}` expands, but Claude Code blocks `cat` outside the session's working dirs (spike in 02-08; was Q-01).
+- D-13: The user's free text never goes into a !`…` injection (`$ARGUMENTS` is pasted unquoted into the shell): skills show it in a body section (`## Request`, `## Notes`, `## Change`); only `init` (profile) and `do` (task id) pass `$ARGUMENTS` to `telos ctx`.
 
 ## Constraints
 - D-01…D-10 of phase 01 still apply (ESM, no deps, `node:test`, frontmatter subset, exit codes 0/1/2).
 - Every new CLI command and skill is documented in README.md in the same task.
 - Bundles stay ≤ 6000 chars (`cap()`), SessionStart output ≤ 1200 chars.
-- Variant skills (`plan-lite`, `revise-lite`, `do-hard`, `quick-hard`) hold frontmatter only and inject `shared/<name>.md` (SPEC §5.0).
+- Variant skills (`plan-lite`, `revise-lite`, `do-hard`, `quick-hard`) have the same body as their base skill, which injects `shared/<name>.md` via `telos ctx shared` (SPEC §5.0, D-12).
 - Skill bodies use only their bundle; they never read the whole repo or `.telos/` by hand.
 
 ## Open questions
-- Q-01: Does `${CLAUDE_PLUGIN_ROOT}` expand inside a skill's !`…` injection, and which `allowed-tools` entry does `cat` need? Resolved by a spike in 02-08; fallback `telos ctx shared <name>`.
+- none
 
 ## Carried over
 - none
