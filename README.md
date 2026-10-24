@@ -26,6 +26,7 @@ All skills are user-invoked only, so they cost nothing until called.
 | `/telos:plan-lite [NN\|description]` | Same as `/telos:plan` on a cheaper model, for small obvious phases |
 | `/telos:revise <notes>` | Apply notes to the current phase's plan with minimal edits (split, merge, reorder, change); approved tasks it changes go back to `draft`; re-lints and summarizes |
 | `/telos:revise-lite <notes>` | Same as `/telos:revise` on a cheaper model, for minor edits |
+| `/telos:approve` | Approve the drafted plan: refuses on lint problems, keeps tasks with unconfirmed decisions in `draft`, sets the rest `approved`, the phase `active` and STATUS, commits `docs(telos): plan phase NN-name` and creates the local tag `telos/NN-start` |
 
 ## CLI
 

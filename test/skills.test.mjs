@@ -113,3 +113,19 @@ test('free text never reaches a shell injection: $ARGUMENTS only for init (profi
     }
   }
 });
+
+test('approve injects its bundle, runs on sonnet and may only commit and tag', () => {
+  const { field, body } = read('approve');
+  assert.match(body, /^!`telos ctx approve`$/m);
+  assert.equal(field('model'), 'sonnet');
+  const tools = field('allowed-tools');
+  for (const t of ['Bash(telos *)', 'Bash(git status*)', 'Bash(git add *)', 'Bash(git commit *)', 'Bash(git tag telos/*)']) {
+    assert.ok(tools.includes(t), t);
+  }
+  assert.doesNotMatch(tools, /push|Edit|Write/);
+  for (const s of ['telos task set', 'telos roadmap set', 'telos status set', 'git tag telos/', 'docs(telos): plan phase']) {
+    assert.ok(body.includes(s), s);
+  }
+  assert.doesNotMatch(body, /git add (-A|--all|\.\/?)(?=[\s`]|$)|git commit[^\n]*--no-verify/m);
+  assert.ok(body.trim().split('\n').length <= 60);
+});

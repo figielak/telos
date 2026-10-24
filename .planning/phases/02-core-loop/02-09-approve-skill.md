@@ -2,7 +2,7 @@
 id: 02-09
 title: /telos:approve skill
 type: code
-status: approved
+status: done
 critical: false
 effort: normal
 depends: [02-01, 02-02, 02-05, 02-08]
@@ -41,8 +41,12 @@ and STATUS updated, one `docs(telos)` commit and the local tag `telos/NN-start`.
 3. README row; `claude plugin validate .`; suite.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] `claude plugin validate .` → exit 0
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] `claude plugin validate .` → exit 0
 
 ## Result
+- skills/approve/SKILL.md (33 lines, instructions inline: no variant, so no shared body); 1 test, suite 172/172; `claude plugin validate .` passes.
+- Injects `telos ctx approve` without arguments (D-13). Blocked tasks stay draft; a running phase (tag exists) commits `docs(telos): approve revised plan of NN-name` and is not re-tagged; unrelated .telos/ changes stay unstaged.
+- Headless on the 02-08 test repo: 3 turns, ~$0.19 → 01-01 approved, phase active, STATUS task=01-01 next=/telos:do, commit `docs(telos): plan phase 01-greet-function`, tag `telos/01-start`, clean tree.
+Deviations: none
