@@ -5,7 +5,7 @@ Phase: 01-skeleton
 Task: none
 Next: plan phase 02-core-loop
 Blockers: none
-Awaiting user: 01:D-01, 01:D-02, 01:D-03, 01:D-04, 01:D-05, 01:D-06, 01:D-07, 01:D-08
+Awaiting user: none
 <!-- Blockers: "NN-MM: reason". Awaiting user: IDs only, e.g. "02:Q-01, 02:D-03" -->
 
 ## Carry-over

@@ -15,6 +15,8 @@ works in a test repo (SPEC §14).
 - D-06: Root CLAUDE.md block is wrapped in `<!-- telos:start vN -->` / `<!-- telos:end -->` and replaced in place on re-run (idempotent). Matching ignores `vN`, so any older block is upgraded; the block carries no profile (it lives only in config.json).
 - D-07: Detection emits a check command only with evidence (script, dependency, config file, lockfile). No evidence → the key is omitted, never guessed.
 - D-08: `init` is safe to re-run: it creates missing files and keeps existing ones (reports created/updated/kept); the CLAUDE.md block is always synced (D-06); `--force` rewrites only `config.json` and allows a profile change.
+- D-09: `init` never commits; it prints the suggested `docs(telos): initialize telos` commit (was an open question; confirmed 2026-10-24).
+- D-10: Marketplace owner and GitHub namespace is `figielak` (`/plugin marketplace add figielak/telos`).
 
 ## Constraints
 - Every Telos file template respects the size limits in SPEC §4 (enforced by tests).
@@ -23,11 +25,10 @@ works in a test repo (SPEC §14).
 - All files and CLI messages in English.
 
 ## Open questions
-- Should `init` commit its files? Assumed: no — it prints a suggested `docs(telos): initialize telos` commit.
-- ~~Is `bin/` on the Bash PATH?~~ Yes (01-01 Result).
-- GitHub owner for marketplace.json (placeholder `OWNER` until known).
+- none
 
 ## Carried over
+- none
 
 ## Links
 - SPEC.md §4 (files), §4.4 (STATUS), §4.5 (config), §13 (packaging), §14 (roadmap)
