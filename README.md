@@ -38,6 +38,9 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error.
 | `telos status add recent "<line>"` | Prepend to Recent, keep the 3 newest |
 | `telos status add carry "<line>"` | Append to Carry-over; exit 1 when 5 items exist |
 | `telos status rm carry <n>` | Remove Carry-over item `n` (1-based) |
+| `telos task new <NN> <slug> "<title>"` | Create the next task file `NN-MM-slug.md` (status `draft`) from the template; the phase dir is named after its ROADMAP line |
+| `telos task set <id>… status=<s>` | Set the status of one or more tasks in place (comments kept); all ids are checked before any write |
+| `telos task rm <id>` | Delete a `draft` task file; other statuses exit 1 |
 | `telos ctx <bundle> [args]` | Print a skill's context bundle (≤ 6000 chars, comments stripped); unknown bundle → one line, exit 0 |
 | `telos ctx init [profile]` | Bundle for `/telos:init`: profile, repo and Telos state, CLAUDE.md block state, detected stack/checks with evidence |
 | `telos ctx status` | Bundle for `/telos:status`: status view, stack line, file pointers |
