@@ -24,6 +24,7 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error.
 |---|---|
 | `telos --help` / `-h` | List commands |
 | `telos --version` / `-v` | Print the version |
+| `telos init --profile <p> [--stack a,b] [--checks '<json>'] [--force]` | Create `.telos/` for `minimal`, `standard` or `deep`, sync the CLAUDE.md block, add `.telos/.cache/` to `.gitignore`. Rerun-safe: creates missing files, keeps existing ones; `--force` rewrites `config.json`. Stack/checks default to detection. Exit 1 on a profile mismatch or a broken CLAUDE.md block |
 | `telos status` | Compact status: current phase/task with live states from ROADMAP and the task file, Next, Blockers, Awaiting user first |
 | `telos status set <key>=<value>…` | Set STATUS lines; keys `phase`, `task`, `next`, `blockers`, `awaiting`; empty value → `none` |
 | `telos status add recent "<line>"` | Prepend to Recent, keep the 3 newest |

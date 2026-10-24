@@ -2,7 +2,7 @@
 id: 01-08
 title: telos init (deterministic file creation)
 type: code
-status: draft
+status: done
 critical: false
 effort: normal
 depends: [01-07]
@@ -32,7 +32,7 @@ profile's `.telos/` files, config, CLAUDE.md block and gitignore entry, idempote
 - CLAUDE.md: create if missing, else insert or replace the marked block; text outside markers untouched
 - block start is matched as `<!-- telos:start` + optional ` vN` + ` -->`, so older versions are replaced
 - `.gitignore`: append `.telos/.cache/` once
-- existing files kept unless `--force` (only config.json and CLAUDE.md block are rewritten)
+- existing files kept unless `--force` (only config.json is rewritten; the CLAUDE.md block is always synced, D-08)
 - output: created / kept file list + suggested commit `docs(telos): initialize telos`; no git calls
 
 ## Tests (write first)
@@ -49,7 +49,11 @@ profile's `.telos/` files, config, CLAUDE.md block and gitignore entry, idempote
 1. Write tests, implement, run full suite.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
 
 ## Result
+- lib/init.mjs: `init()` plans all writes first (broken CLAUDE.md block → exit 1, nothing written), then creates missing files, keeps existing ones, syncs the block, appends `.telos/.cache/`; 11 tests, suite 65/65; smoke-tested init → rerun → status → ctx init on astro-ts.
+- Choices: `--profile` required; a different profile on an initialized repo exits 1 unless `--force`; the CLAUDE.md block is always synced to the shipped version (D-06), `--force` only rewrites config.json.
+- `Next` uses a filesystem walk (no git calls), ignoring dotfiles, build dirs, docs, manifests and lockfiles.
+Deviations: .planning/phases/01-skeleton/01-CONTEXT.md — D-08 aligned with D-06 (block always synced).

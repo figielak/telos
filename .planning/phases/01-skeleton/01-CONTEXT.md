@@ -14,7 +14,7 @@ works in a test repo (SPEC §14).
 - D-05: Split work: the CLI does all deterministic work non-interactively (`telos init --profile … --checks …`); the skill only presents results and confirms with the user.
 - D-06: Root CLAUDE.md block is wrapped in `<!-- telos:start vN -->` / `<!-- telos:end -->` and replaced in place on re-run (idempotent). Matching ignores `vN`, so any older block is upgraded; the block carries no profile (it lives only in config.json).
 - D-07: Detection emits a check command only with evidence (script, dependency, config file, lockfile). No evidence → the key is omitted, never guessed.
-- D-08: `init` is safe to re-run: it creates missing files and keeps existing ones (reports created/kept); `--force` rewrites only `config.json` and the CLAUDE.md block.
+- D-08: `init` is safe to re-run: it creates missing files and keeps existing ones (reports created/updated/kept); the CLAUDE.md block is always synced (D-06); `--force` rewrites only `config.json` and allows a profile change.
 
 ## Constraints
 - Every Telos file template respects the size limits in SPEC §4 (enforced by tests).
