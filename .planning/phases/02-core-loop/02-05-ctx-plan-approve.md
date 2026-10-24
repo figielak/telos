@@ -37,7 +37,7 @@ scope: [lib/ctx/plan.mjs, lib/ctx/approve.mjs, lib/ctx/index.mjs, test/ctx-plan.
 - `ctx plan 01` on the 02-03 fixture lists the 3 tasks and the phase line
 - `ctx plan "add auth"` shows `new phase` with the next NN
 - carry-over `- 01: x → y` appears with its number; `- 04: …` does not
-- `ctx approve` lists lint problems for 02-bad and `tag: missing`
+- `ctx approve` lists lint problems for 09-bad and `tag: missing`
 - a task with a proposed decision is listed as blocked
 - output has no HTML comments and stays ≤ 6000 chars
 

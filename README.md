@@ -38,6 +38,7 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error.
 | `telos status add recent "<line>"` | Prepend to Recent, keep the 3 newest |
 | `telos status add carry "<line>"` | Append to Carry-over; exit 1 when 5 items exist |
 | `telos status rm carry <n>` | Remove Carry-over item `n` (1-based) |
+| `telos lint-plan [NN]` | Check a phase's task files (default: phase from STATUS): sections per type and detail level, line limits, `scope` set and Files ⊆ scope, machine-checkable acceptance, depends (exist, no cycles), decisions in CONTEXT, id = file name. Prints `ok: N tasks` or one `<id>: <problem>` line each and exits 1 |
 | `telos roadmap set <NN> <status>` | Change a phase's `[status]` in ROADMAP.md in place (`planned`, `drafted`, `active`, `done`, `dropped`) |
 | `telos roadmap add <name> "<goal>" "<done when>"` | Append `- NN-name [planned] goal · done when: …` with the next free NN |
 | `telos task new <NN> <slug> "<title>"` | Create the next task file `NN-MM-slug.md` (status `draft`) from the template; the phase dir is named after its ROADMAP line |

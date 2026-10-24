@@ -2,7 +2,7 @@
 id: 02-03
 title: telos lint-plan
 type: code
-status: approved
+status: done
 critical: false
 effort: hard
 depends: [02-01]
@@ -69,7 +69,12 @@ export const lintPlanCommand;
 5. Register in lib/cli.mjs; README row; run the suite and `node bin/telos lint-plan` on this repo's .planning copy as a smoke test.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
 
 ## Result
+- lib/scope.mjs `inScope` (`*`, `dir/`, path-or-dir, globs with `*`/`**`); lib/lint-plan.mjs `filesOf`, `lintTask`, `lintPhase`, `lintPlanCommand`; 22 tests, suite 113/113.
+- Beyond the plan: enum checks (`invalid type|status|effort`), cross-phase depends must exist (`loadTask`), a Files item may list several full paths separated by commas. A machine-checkable item is required for every type (D-07).
+- Broken fixture is phase `09-bad`, not `02-bad` (`02-*` would collide with the fixture ROADMAP's `02-next` used by 02-01 tests); 02-05 updated. Edge cases are tested as mutations of one valid task.
+- Smoke on a copy of .planning/: phase 02 `ok: 14 tasks`; phase 01 (done) still flags shorthand Files lines like `templates/PROJECT.md, MAP.md`, which lint rejects on purpose.
+Deviations: none
