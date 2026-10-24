@@ -4,7 +4,7 @@
 
 | Phase | Status |
 |---|---|
-| 01-skeleton | planned (draft) |
+| 01-skeleton | in progress |
 | 02-core-loop | — |
 | 03-map | — |
 | 04-standard | — |

@@ -1,0 +1,13 @@
+{
+  "name": "telos",
+  "version": "0.1.0",
+  "description": "CLI and hooks for the Telos Claude Code plugin",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "bin": { "telos": "bin/telos" },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "telos",
+  "description": "Marketplace for the Telos workflow plugin",
+  "owner": { "name": "figielak" },
+  "plugins": [
+    {
+      "name": "telos",
+      "source": "./",
+      "description": "Lean plan → test → implement → verify workflow for Claude Code"
+    }
+  ]
+}

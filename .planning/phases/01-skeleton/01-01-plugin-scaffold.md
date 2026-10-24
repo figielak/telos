@@ -2,7 +2,7 @@
 id: 01-01
 title: Plugin and marketplace scaffold
 type: code
-status: draft
+status: done
 critical: false
 effort: normal
 depends: []
@@ -42,8 +42,13 @@ packaged as a zero-dependency Node project with a working `npm test`.
 3. Write the tests, run them.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] `claude plugin validate .` → exit 0 (if the subcommand is unavailable, note it in Result)
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] `claude plugin validate .` → exit 0 (if the subcommand is unavailable, note it in Result)
 
 ## Result
+- Manifests, package.json (no deps, Node ≥ 20), .gitignore, README stub; 3 manifest tests pass; `claude plugin validate .` passes (v2.1.309; only a directory-listing ICON_MISSING warning).
+- Docs confirm `bin/` is on the Bash tool PATH while the plugin is enabled → skills can call bare `telos`.
+- `${CLAUDE_PLUGIN_ROOT}` is NOT in the Bash env; it is substituted only in skill/agent bodies and hook commands.
+- Deviation: `npm test` is `node --test test/*.test.mjs` (`node --test test/` treats the dir as a file); 01-CONTEXT D-02 updated.
+- No GitHub owner needed yet: `repository` omitted, marketplace `owner.name` = figielak; README uses `figielak/telos`.

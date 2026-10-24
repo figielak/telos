@@ -8,7 +8,7 @@ works in a test repo (SPEC §14).
 
 ## Decisions
 - D-01: CLI is plain JavaScript ESM (`.mjs`) with JSDoc types, no build step, no runtime or dev dependencies. Node ≥ 20.
-- D-02: Tests use `node:test` + `node:assert`; `npm test` = `node --test test/`. Fixtures live in `test/fixtures/`.
+- D-02: Tests use `node:test` + `node:assert`; `npm test` = `node --test test/*.test.mjs`. Fixtures live in `test/fixtures/`.
 - D-03: Frontmatter uses a minimal YAML subset (scalars, booleans, numbers, inline `[a, b]` arrays). Telos parses and writes only that subset; anything else is an error.
 - D-04: `lib/config.mjs` (defaults + `validate()`) is the single source of the config schema; no separate JSON Schema file in v0.
 - D-05: Split work: the CLI does all deterministic work non-interactively (`telos init --profile … --checks …`); the skill only presents results and confirms with the user.
@@ -24,7 +24,7 @@ works in a test repo (SPEC §14).
 
 ## Open questions
 - Should `init` commit its files? Assumed: no — it prints a suggested `docs(telos): initialize telos` commit.
-- Is the plugin `bin/` dir really put on the Bash PATH? Verify in 01-01; fallback: skills call `${CLAUDE_PLUGIN_ROOT}/bin/telos`.
+- ~~Is `bin/` on the Bash PATH?~~ Yes (01-01 Result).
 - GitHub owner for marketplace.json (placeholder `OWNER` until known).
 
 ## Carried over
