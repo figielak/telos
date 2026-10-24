@@ -2,7 +2,7 @@
 id: 01-09
 title: /telos:init skill and end-to-end check
 type: code
-status: draft
+status: done
 critical: false
 effort: normal
 depends: [01-08]
@@ -38,9 +38,14 @@ the user in one batch, run `telos init`, report briefly. Verified in a test repo
 3. Record observations (tokens via `/context`, PATH behavior) in Result.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] in the test repo `/telos:init standard` creates `.telos/` with the standard file set and a valid config
-- [ ] a second `/telos:init` reports all files as kept
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] in the test repo `/telos:init standard` creates `.telos/` with the standard file set and a valid config
+- [x] a second `/telos:init` reports all files as kept
 
 ## Result
+- skills/init/SKILL.md (29 lines, ~2 KB) + test/skills.test.mjs (4 tests, frontmatter read by regex); suite 69/69; `claude plugin validate .` passes.
+- E2E headless (`claude -p "/telos:init standard" --plugin-dir`, Claude Code 2.1.309) on astro-ts: files created, rerun kept everything; `$ARGUMENTS` expands inside !`…`; bare `telos` works from bin/ PATH.
+- E2E found a gap: `/telos:init` with no profile on an initialized repo guessed the profile → ctx init now shows `initialized, profile <p>` and the skill reuses it (re-verified on a minimal python-uv repo).
+- Interactive run verified by the user (2026-10-24): `/telos:init` without a profile asked profile + checks in one round and created `.telos/`. Token count via /context not measured (→ 06-measure).
+Deviations: lib/ctx/init.mjs, test/ctx.test.mjs — current profile added to the init bundle (gap found by E2E).

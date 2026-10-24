@@ -2,8 +2,8 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 01-skeleton
-Task: 01-09
-Next: 01-09 /telos:init skill and end-to-end check
+Task: none
+Next: plan phase 02-core-loop
 Blockers: none
 Awaiting user: 01:D-01, 01:D-02, 01:D-03, 01:D-04, 01:D-05, 01:D-06, 01:D-07, 01:D-08
 <!-- Blockers: "NN-MM: reason". Awaiting user: IDs only, e.g. "02:Q-01, 02:D-03" -->
@@ -17,6 +17,6 @@ Awaiting user: 01:D-01, 01:D-02, 01:D-03, 01:D-04, 01:D-05, 01:D-06, 01:D-07, 01
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 01-09 done: /telos:init skill and end-to-end check
 - 01-08 done: telos init (deterministic file creation)
 - 01-07 done: telos ctx bundle skeleton
-- 01-06 done: stack and check command detection

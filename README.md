@@ -15,6 +15,14 @@ Status: **pre-alpha** (phase 01-skeleton). See [SPEC.md](SPEC.md).
 
 Requires Claude Code with plugin support, Git and Node.js ≥ 20.10.
 
+## Commands (in Claude Code)
+
+All skills are user-invoked only, so they cost nothing until called.
+
+| Command | Purpose |
+|---|---|
+| `/telos:init [minimal\|standard\|deep]` | Initialize Telos in the current repo: detects stack and check commands, asks once to confirm them (and the profile when not given; an initialized repo keeps its profile), runs `telos init`, prints a ≤ 10-line summary ending with the next step |
+
 ## CLI
 
 The plugin puts `telos` on the Bash PATH (`bin/`). Skills call it; you can run it too.

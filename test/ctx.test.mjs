@@ -55,7 +55,7 @@ test('ctx init in an initialized repo reports existing files', async () => {
   initialize(root);
   const r = await ctx(root, 'init');
   assert.match(r.stdout, /^Requested profile: not given$/m);
-  assert.match(r.stdout, /^Telos: initialized \(PROJECT\.md, STATUS\.md, config\.json\)$/m);
+  assert.match(r.stdout, /^Telos: initialized, profile standard \(PROJECT\.md, STATUS\.md, config\.json\)$/m);
 });
 
 test('ctx init reports the CLAUDE.md block as present, outdated or absent', async () => {
