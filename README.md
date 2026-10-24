@@ -14,3 +14,21 @@ Status: **pre-alpha** (phase 01-skeleton). See [SPEC.md](SPEC.md).
 ```
 
 Requires Claude Code with plugin support, Git and Node.js ≥ 20.10.
+
+## CLI
+
+The plugin puts `telos` on the Bash PATH (`bin/`). Skills call it; you can run it too.
+Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error.
+
+| Command | Purpose |
+|---|---|
+| `telos --help` / `-h` | List commands |
+| `telos --version` / `-v` | Print the version |
+| `telos status` | Compact status: current phase/task with live states from ROADMAP and the task file, Next, Blockers, Awaiting user first |
+| `telos status set <key>=<value>…` | Set STATUS lines; keys `phase`, `task`, `next`, `blockers`, `awaiting`; empty value → `none` |
+| `telos status add recent "<line>"` | Prepend to Recent, keep the 3 newest |
+| `telos status add carry "<line>"` | Append to Carry-over; exit 1 when 5 items exist |
+| `telos status rm carry <n>` | Remove Carry-over item `n` (1-based) |
+| `telos ctx <bundle> [args]` | Print a skill's context bundle (≤ 6000 chars, comments stripped); unknown bundle → one line, exit 0 |
+| `telos ctx init [profile]` | Bundle for `/telos:init`: profile, repo and Telos state, CLAUDE.md block state, detected stack/checks with evidence |
+| `telos ctx status` | Bundle for `/telos:status`: status view, stack line, file pointers |

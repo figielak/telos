@@ -7,7 +7,7 @@ critical: false
 effort: normal
 depends: [01-07]
 decisions: [D-05, D-06, D-08]
-scope: [lib/init.mjs, lib/cli.mjs, test/init.test.mjs]
+scope: [lib/init.mjs, lib/cli.mjs, test/init.test.mjs, README.md]
 ---
 ## Goal
 `telos init --profile <p> [--stack a,b] [--checks <json>] [--force]` creates the
@@ -21,6 +21,7 @@ profile's `.telos/` files, config, CLAUDE.md block and gitignore entry, idempote
 - lib/init.mjs (create)
 - lib/cli.mjs (modify: register `init`)
 - test/init.test.mjs (create)
+- README.md (modify: `telos init` in the CLI table)
 
 ## Constraints
 - minimal: config.json, PROJECT, MAP (`not built`), ROADMAP, STATUS; standard adds HISTORY, LESSONS; deep adds nothing at init

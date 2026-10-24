@@ -7,7 +7,7 @@ critical: false
 effort: normal
 depends: [01-08]
 decisions: [D-05]
-scope: [skills/init/, test/skills.test.mjs]
+scope: [skills/init/, test/skills.test.mjs, README.md]
 ---
 ## Goal
 The `/telos:init [profile]` skill: inject `ctx init`, confirm detected checks with
@@ -20,6 +20,7 @@ the user in one batch, run `telos init`, report briefly. Verified in a test repo
 ## Files
 - skills/init/SKILL.md (create)
 - test/skills.test.mjs (create)
+- README.md (modify: Commands section with `/telos:init [profile]`)
 
 ## Constraints
 - frontmatter: `name: init`, `argument-hint: "[minimal|standard|deep]"`, `disable-model-invocation: true`, `model: sonnet`, `allowed-tools: Bash(telos *)`
