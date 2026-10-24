@@ -24,11 +24,11 @@ the user in one batch, run `telos init`, report briefly. Verified in a test repo
 ## Constraints
 - frontmatter: `name: init`, `argument-hint: "[minimal|standard|deep]"`, `disable-model-invocation: true`, `model: sonnet`, `allowed-tools: Bash(telos *)`
 - if profile missing ask it together with the check confirmation: one `AskUserQuestion` batch, ≤ 4 questions, recommended first
-- final chat summary ≤ 10 lines; no commit (prints the suggested one)
+- final chat summary ≤ 10 lines, last line = STATUS `Next:`; no commit (prints the suggested one)
 - body ≤ 60 lines
 
 ## Tests (write first)
-- every `skills/*/SKILL.md` has `disable-model-invocation: true` and `name` equal to its directory
+- every `skills/*/SKILL.md` has `disable-model-invocation: true` and `name` equal to its directory (read with a regex, not the task-frontmatter parser: SKILL.md values exceed the D-03 subset)
 - init SKILL.md injects `telos ctx init`
 
 ## Steps

@@ -20,21 +20,27 @@ registry later phases extend; implement `ctx init` and `ctx status` now.
 ## Files
 - lib/ctx/index.mjs (create: registry, size cap, truncation)
 - lib/ctx/init.mjs, lib/ctx/status.mjs (create)
+- lib/ctx/stack.mjs (create: `stackLine(root, cfg)`)
 - lib/cli.mjs (modify: register `ctx`)
 - test/ctx.test.mjs (create)
 
 ## Constraints
 - bundles are Markdown, hard-capped at 6000 chars, truncated with `…[truncated by telos ctx]`
 - unknown or not-yet-implemented bundle → one line `telos ctx: '<cmd>' not available yet`, exit 0 (must not break a skill's injection)
-- `ctx init [profile]`: requested profile, already-initialized flag + existing Telos files, detection result with evidence, CLAUDE.md block present yes/no
+- `ctx init [profile]`: requested profile, already-initialized flag + existing Telos files, detection result with evidence, CLAUDE.md block `present vN | outdated | absent` (outdated = older `vN` or unversioned marker)
 - `ctx status`: `telos status` output + file pointers
 - bundles never include whole source files
+- every injected file excerpt has HTML comments and frontmatter `# comment`s stripped (SPEC §2 rule 3)
+- `stackLine(root, cfg)`: one line from `cfg.stack` + `detect(root).versions` (no manifest parsing of its own), e.g. `Stack: astro 5 · typescript 5.6 · node >=22`; unknown version → id only; never written to a file (SPEC §4.1)
 
 ## Tests (write first)
 - `ctx init` on astro-ts fixture lists stack, checks and evidence
 - `ctx init` in an initialized repo reports existing files
+- CLAUDE.md block reported as `present v1`, `outdated` (unversioned marker) and `absent`
 - oversized bundle is truncated with the marker and stays ≤ cap
 - `ctx nope` → the one-line message, exit 0
+- an injected STATUS/task excerpt contains no `<!--` and no frontmatter `#` comment
+- `stackLine` on astro-ts fixture lists ids with versions; with an empty stack returns `Stack: unknown`
 
 ## Steps
 1. Write tests, implement registry, then the two bundles.

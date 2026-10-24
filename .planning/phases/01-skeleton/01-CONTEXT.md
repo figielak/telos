@@ -9,10 +9,10 @@ works in a test repo (SPEC §14).
 ## Decisions
 - D-01: CLI is plain JavaScript ESM (`.mjs`) with JSDoc types, no build step, no runtime or dev dependencies. Node ≥ 20.10.
 - D-02: Tests use `node:test` + `node:assert`; `npm test` = `node --test test/*.test.mjs`. Fixtures live in `test/fixtures/`.
-- D-03: Frontmatter uses a minimal YAML subset (scalars, booleans, numbers, inline `[a, b]` arrays). Telos parses and writes only that subset; anything else is an error.
+- D-03: Task-file frontmatter uses a minimal YAML subset (scalars, booleans, numbers, inline `[a, b]` arrays, trailing `# comment`). Writes change values in place and keep comments and alignment; anything else is an error.
 - D-04: `lib/config.mjs` (defaults + `validate()`) is the single source of the config schema; no separate JSON Schema file in v0.
 - D-05: Split work: the CLI does all deterministic work non-interactively (`telos init --profile … --checks …`); the skill only presents results and confirms with the user.
-- D-06: Root CLAUDE.md block is wrapped in `<!-- telos:start -->` / `<!-- telos:end -->` and replaced in place on re-run (idempotent).
+- D-06: Root CLAUDE.md block is wrapped in `<!-- telos:start vN -->` / `<!-- telos:end -->` and replaced in place on re-run (idempotent). Matching ignores `vN`, so any older block is upgraded; the block carries no profile (it lives only in config.json).
 - D-07: Detection emits a check command only with evidence (script, dependency, config file, lockfile). No evidence → the key is omitted, never guessed.
 - D-08: `init` is safe to re-run: it creates missing files and keeps existing ones (reports created/kept); `--force` rewrites only `config.json` and the CLAUDE.md block.
 

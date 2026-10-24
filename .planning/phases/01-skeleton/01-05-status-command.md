@@ -10,32 +10,36 @@ decisions: [D-03]
 scope: [lib/frontmatter.mjs, lib/status.mjs, lib/cli.mjs, test/frontmatter.test.mjs, test/status.test.mjs]
 ---
 ## Goal
-Parse/write the frontmatter subset, and implement `telos status` (compact view)
-and `telos status set k=v…` (machine-maintained STATUS, SPEC §4.4).
+Parse/write the task-file frontmatter subset, and implement `telos status` (view
+with live states) plus `status set|add|rm` that maintain STATUS.md (SPEC §4.4).
 
 ## Read first
-- SPEC.md §4.4 (STATUS template and rules)
+- SPEC.md §4.4 (STATUS format and rules), §4.1 ROADMAP.md (line format)
 - SPEC.md §4.3 (task frontmatter fields)
+- templates/STATUS.md, templates/task.md
 
 ## Files
 - lib/frontmatter.mjs (create)
 - lib/status.mjs (create)
-- lib/cli.mjs (modify: register `status`)
+- lib/cli.mjs (modify: register `status`, needsTelos)
 - test/frontmatter.test.mjs, test/status.test.mjs (create)
 
 ## Constraints
-- `status set` keys: `phase`, `task` (frontmatter), `next`, `blockers` (body lines); `updated` is set to today automatically; any other key → exit 2
-- the `Phase: … · Task: …` line is regenerated after every `set`: task state from the task file frontmatter, phase state derived from its tasks (all draft → draft, all done → done, else in progress)
-- `telos status` prints ≤ 15 lines, *Awaiting user* first when present
+- STATUS has no frontmatter: fixed prefix lines `Phase:`, `Task:`, `Next:`, `Blockers:`, `Awaiting user:` and lists `## Carry-over`, `## Recent`; HTML comments are preserved untouched
+- `status set` keys: `phase`, `task`, `next`, `blockers`, `awaiting`; empty value → `none`; any other key → exit 2
+- `status add recent "<line>"` prepends and keeps 3; `status add carry "<line>"` appends, exit 1 when 5 are present; `status rm carry <n>` (1-based); `- none` replaces an emptied list
+- `telos status` prints ≤ 15 lines: Awaiting user first when not `none`, then `Phase: <p> [<roadmap status>] · Task: <t> [<task status>]` read live from ROADMAP and the task file (`?` when missing), Next, Blockers, carry-over count, last recent
+- frontmatter: subset per D-03; an empty value parses as null; `setField(text, key, value)` edits one line in place, keeping its `# comment`
 - STATUS over `limits.status_lines` → warning on stderr, exit 0
 
 ## Tests (write first)
-- frontmatter round-trip of the task template (scalars, booleans, `[a, b]`, `[]`)
+- parse templates/task.md (scalars, booleans, `[a, b]`, `[]`, trailing `# comment` ignored, `"*"` quoted string in arrays)
+- `setField(status → in-progress)` keeps the comment and every other line byte-identical
 - unsupported YAML (nested map, multiline string) → error with line number
-- `status set task=01-02` updates frontmatter, `updated`, and the Phase line
+- `status set task=01-02 next="run tests"` changes only those lines; comments and lists unchanged
 - `status set foo=bar` → exit 2
-- phase state derivation for draft / mixed / all-done task sets
-- `telos status` output starts with the Awaiting user line when set
+- `status add recent` keeps 3 newest; `status add carry` on a full list → exit 1; `rm carry 1` on the last item leaves `- none`
+- `telos status` shows ROADMAP and task-file states, and the Awaiting user line first when set
 
 ## Steps
 1. Frontmatter tests + module. 2. Status tests + module. 3. Register command.

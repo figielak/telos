@@ -2,7 +2,7 @@
 id: 01-04
 title: File templates and renderer
 type: code
-status: draft
+status: done
 critical: false
 effort: normal
 depends: [01-02]
@@ -26,7 +26,7 @@ every template inside its SPEC size limit.
 
 ## Constraints
 - MAP.md template is a stub pointing to `/telos:map` (real map is phase 03)
-- claude-block.md includes the `<!-- telos:start -->` / `<!-- telos:end -->` markers (D-06)
+- claude-block.md includes the `<!-- telos:start v1 -->` / `<!-- telos:end -->` markers (D-06)
 - `render(name, vars)` throws on a missing variable; no logic in templates
 - templates are short: no explanatory prose beyond one-line HTML comments
 
@@ -41,7 +41,11 @@ every template inside its SPEC size limit.
 2. Write tests, implement renderer, run.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `node --test test/templates.test.mjs` → exit 0
+- [x] all listed tests pass
+- [x] `node --test test/templates.test.mjs` → exit 0
 
 ## Result
+- 10 templates + `render(name, vars)` (throws on a missing var); 5 tests, RED seen first; suite 22/22. Vars: name, profile, date, next, id, title, nn, number, source, supersedes.
+- After user review all templates use comment guidance + `- none`; STATUS is pointer lines only, PROJECT has no Stack, MAP has fixed sections, task needs `scope` and a `Deviations:` line, claude-block uses a `v1` marker.
+- New code work from the review is in SPEC (§2 comment stripping, §4.1, §4.3, §4.4, §6, §8, §11, §14) and carry-over (04 history/delete-zone, 05 adr new).
+- Deviations: SPEC.md, .planning/ROADMAP.md, STATUS.md, 01-CONTEXT.md, 01-05…01-09 — review decisions recorded and later tasks replanned.
