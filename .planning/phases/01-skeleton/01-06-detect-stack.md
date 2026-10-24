@@ -2,7 +2,7 @@
 id: 01-06
 title: Stack and check command detection
 type: code
-status: draft
+status: done
 critical: false
 effort: normal
 depends: [01-02]
@@ -43,7 +43,11 @@ evidence for each, so `init` never guesses and the user confirms facts, not inve
 1. Create fixtures, write tests, implement.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `node --test test/detect.test.mjs` → exit 0
+- [x] all listed tests pass
+- [x] `node --test test/detect.test.mjs` → exit 0
 
 ## Result
+- lib/detect.mjs: `detect(root)` → name, stack, versions, packageManager, checks, evidence; scripts first, tool fallbacks only with dependency/config evidence; 7 tests, suite 44/44.
+- Choices: plain JS → stack id `javascript`; `packageManager` field > lockfile > npm default; Python without lockfile → `pip`, no prefix; mixed JS+Python repo: JS checks win; broken package.json → `evidence.error`, no throw.
+- `majorVersion` exported for reuse; `empty/` fixture holds a README because git drops empty dirs. On this repo: `test: npm run test` only.
+Deviations: none
