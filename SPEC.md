@@ -567,7 +567,7 @@ Requirements: Claude Code with plugin support, Git, Node.js (present in Astro/TS
 | Phase | Content | Done when |
 |---|---|---|
 | 01-skeleton | plugin.json, marketplace.json, CLI skeleton (`ctx`, `status`), templates, `init`, config schema, CLAUDE.md block | `/telos:init` works in a test repo |
-| 02-core-loop | `plan`, `approve`, `revise`, `do`, `quick`, `status`, `telos roadmap set`, SessionStart hook, git guard | a minimal phase runs end to end with commits |
+| 02-core-loop | `plan`, `approve`, `revise`, `do`, `quick`, `status`, `telos roadmap set`, `telos accept <id>`, `telos lint-plan`, SessionStart hook, git guard | a minimal phase runs end to end with commits |
 | 03-map | `map-scan`, `map`, incremental refresh, PROJECT draft | MAP.md for a real Astro and a real Python repo under limits |
 | 04-standard | `discuss`, CONTEXT, `check` + `telos check`, `done`, `undo`, `lesson`, LESSONS in `ctx plan` (all) and `ctx quick` (area-matched), profile switching, std hooks | standard phase incl. undo works |
 | 05-deep | reviewer, researcher, `research`, `review`, critical/TDD/e2e, docs (§11), ADR, retro | deep phase incl. doc-sync works |
