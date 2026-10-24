@@ -2,7 +2,7 @@
 id: 02-07
 title: telos ctx quick bundle
 type: code
-status: approved
+status: done
 critical: false
 effort: normal
 depends: [02-04]
@@ -41,7 +41,11 @@ rules, stack, checks and the working-tree state.
 2. lib/ctx/quick.mjs; register; README row; run the suite.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
 
 ## Result
+- lib/ctx/quick.mjs `quickBundle` (registered as `ctx quick`): change, current phase/task, Rules, stack, quick checks, working tree, size guard; 6 tests, suite 164/164.
+- "typecheck" from the plan is the config key `types` (SPEC §4.5); `build`/`e2e` are left out as too slow for quick. The tree list caps at 20 with `- … N more`.
+- An in-progress current task gets "keep quick changes out of its files"; the `// 04:` marker shows where lessons and delete-zone lines plug in.
+Deviations: none
