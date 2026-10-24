@@ -2,7 +2,7 @@
 id: 01-03
 title: Config defaults, loading and validation
 type: code
-status: draft
+status: done
 critical: false
 effort: normal
 depends: [01-02]
@@ -39,7 +39,10 @@ and merges it, writes it stably, and answers profile-gating questions.
 1. Write tests, implement, run.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `node --test test/config.test.mjs` → exit 0
+- [x] all listed tests pass
+- [x] `node --test test/config.test.mjs` → exit 0
 
 ## Result
+- lib/config.mjs: deep-frozen `DEFAULTS` (profile `standard`, empty stack/checks), `validate` (unknown top-level and check keys are errors), `load` (deep merge, arrays replace), `write` (SPEC key order, checks in build→e2e order).
+- `atLeast`, `requireMessage` for profile gating; 8 tests, suite 17/17.
+- Process note: tests and code were written before the first run, so no RED run was observed.
