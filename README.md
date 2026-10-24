@@ -38,6 +38,8 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error.
 | `telos status add recent "<line>"` | Prepend to Recent, keep the 3 newest |
 | `telos status add carry "<line>"` | Append to Carry-over; exit 1 when 5 items exist |
 | `telos status rm carry <n>` | Remove Carry-over item `n` (1-based) |
+| `telos roadmap set <NN> <status>` | Change a phase's `[status]` in ROADMAP.md in place (`planned`, `drafted`, `active`, `done`, `dropped`) |
+| `telos roadmap add <name> "<goal>" "<done when>"` | Append `- NN-name [planned] goal · done when: …` with the next free NN |
 | `telos task new <NN> <slug> "<title>"` | Create the next task file `NN-MM-slug.md` (status `draft`) from the template; the phase dir is named after its ROADMAP line |
 | `telos task set <id>… status=<s>` | Set the status of one or more tasks in place (comments kept); all ids are checked before any write |
 | `telos task rm <id>` | Delete a `draft` task file; other statuses exit 1 |

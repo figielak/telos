@@ -2,7 +2,7 @@
 id: 02-02
 title: telos roadmap set|add
 type: code
-status: approved
+status: done
 critical: false
 effort: normal
 depends: []
@@ -45,7 +45,11 @@ scope: [lib/roadmap.mjs, lib/cli.mjs, test/roadmap.test.mjs, README.md]
 3. Register in lib/cli.mjs, add README rows, run the suite.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
 
 ## Result
+- lib/roadmap.mjs: `phaseLine` (`name` is the `NN-name` dir), `PHASE_STATUSES`, `RoadmapError` (→ exit 1) and `roadmapCommand` (`set`, `add`); 7 tests, suite 91/91.
+- `set` replaces only the `[status]` token; `add` inserts after the last phase line (so trailing comments stay last), replaces the template's `- none` in a fresh ROADMAP, and rejects a goal containing `done when:`.
+- Not reused yet: lib/tasks.mjs `roadmapPhase` and lib/status.mjs `phaseState` still match the line themselves (outside scope); switch them to `phaseLine` when they are next touched.
+Deviations: none
