@@ -26,13 +26,13 @@ scope: [skills/do/, skills/do-hard/, shared/do.md, test/skills.test.mjs, README.
 - README.md (modify: skills table)
 
 ## Constraints
-- do = sonnet, do-hard = opus; allowed-tools as SPEC §13 skill pattern (+ injection entry from 02-08)
+- do = sonnet, do-hard = opus; allowed-tools as SPEC §13 skill pattern; `Bash(telos *)` also covers the `telos ctx shared do` injection (D-12)
 - shared/do.md ≤ 70 lines; uses only the bundle, opens other files only via Read-first notes
 - max 2 fix attempts, then blocked (SPEC §5.1); never commit failing work
 - stage only Files + task file + `.telos/STATUS.md` (+ `.telos/ROADMAP.md` on phase end)
 
 ## Tests (write first)
-- do and do-hard inject `telos ctx do $ARGUMENTS` via the shared body; differ only in model
+- do and do-hard inject `telos ctx do $ARGUMENTS` (task id only, D-13) and `telos ctx shared do`; differ only in model
 - shared/do.md names `telos accept`, `telos task set`, `telos status set`, `Deviations:`, `git add` with explicit paths
 - shared/do.md contains no `git add -A`, `git add .`, `--no-verify`, `git push`
 

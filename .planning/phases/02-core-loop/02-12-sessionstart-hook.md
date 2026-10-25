@@ -15,7 +15,8 @@ resumes the loop without reading files.
 
 ## Read first
 - SPEC.md §8 (SessionStart rows, hook rules)
-- lib/status.mjs:89-118 (view)
+- lib/status.mjs:89-104 (view)
+- lib/roadmap.mjs `phaseLine` (02-02 Result: reuse instead of matching ROADMAP lines again)
 - lib/ctx/stack.mjs:13-21 (stackLine)
 
 ## Files
