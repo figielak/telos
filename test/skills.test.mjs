@@ -45,8 +45,8 @@ test('init injects telos ctx init and stays short', () => {
 
 // Variants (SPEC §5.0): same body as the base skill, which injects the shared instructions via
 // `telos ctx shared <name>` (cat of plugin files is blocked outside the session's working dirs).
-const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do' };
-const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus' };
+const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do', 'quick-hard': 'quick' };
+const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', status: 'sonnet' };
 const SHARED = fileURLToPath(new URL('../shared/', import.meta.url));
 const FIELDS = ['disable-model-invocation', 'allowed-tools', 'argument-hint'];
 
@@ -151,4 +151,28 @@ test('the do instructions gate on accept, change state via telos and stage expli
   assert.match(body, /git add <[^>]+>/);
   assert.doesNotMatch(body, /git add (-A|--all|\.\/?)(?=[\s`]|$)/m);
   assert.doesNotMatch(body, /--no-verify|git push/);
+});
+
+test('quick and quick-hard inject the quick bundle and show the change outside the injection', () => {
+  for (const name of ['quick', 'quick-hard']) {
+    const { field, body } = read(name);
+    assert.match(body, /^!`telos ctx quick`$/m, name);
+    assert.match(body, /^## Change\n\$ARGUMENTS$/m, name);
+    assert.match(body, /^!`telos ctx shared quick`$/m, name);
+    assert.doesNotMatch(field('allowed-tools'), /push|reset/, name);
+  }
+});
+
+test('the quick instructions commit with scope quick, explicit paths and a plan fallback', () => {
+  const body = readFileSync(join(SHARED, 'quick.md'), 'utf8');
+  for (const s of ['(quick)', '/telos:plan', 'Change']) assert.ok(body.includes(s), s);
+  assert.match(body, /git add <[^>]+>/);
+  assert.doesNotMatch(body, /git add (-A|--all|\.\/?)(?=[\s`]|$)/m);
+  assert.doesNotMatch(body, /--no-verify|git push/);
+});
+
+test('status injects its bundle and may only run telos', () => {
+  const { field, body } = read('status');
+  assert.match(body, /^!`telos ctx status`$/m);
+  assert.equal(field('allowed-tools'), 'Bash(telos *)');
 });

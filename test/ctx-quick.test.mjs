@@ -36,9 +36,9 @@ async function ctxQuick(root, ...args) {
   return out.text;
 }
 
-test('the bundle has the description, rules, stack and only the configured quick checks', async () => {
-  const out = await ctxQuick(repo(), 'fix', 'date', 'format');
-  assert.match(out, /^Change: fix date format$/m);
+test('the bundle has rules, stack and only the configured quick checks, never the description', async () => {
+  const out = await ctxQuick(repo());
+  assert.doesNotMatch(out, /^(Change|REFUSED):/m);
   assert.match(out, /^Rules:\n- no runtime dependencies$/m);
   assert.match(out, /^Stack: /m);
   assert.match(out, /^Checks: test_related=node --test \{files\} · test=npm test$/m);
@@ -48,16 +48,16 @@ test('the bundle has the description, rules, stack and only the configured quick
 
 test('a dirty tree lists its files, a clean tree says clean', async () => {
   const root = repo();
-  assert.match(await ctxQuick(root, 'x'), /^Working tree: clean$/m);
+  assert.match(await ctxQuick(root), /^Working tree: clean$/m);
   writeFileSync(join(root, 'src', 'a.ts'), 'changed\n');
   writeFileSync(join(root, 'notes.md'), 'new\n');
-  assert.match(await ctxQuick(root, 'x'), /^Working tree:\n- notes\.md\n- src\/a\.ts$/m);
+  assert.match(await ctxQuick(root), /^Working tree:\n- notes\.md\n- src\/a\.ts$/m);
 });
 
 test('more than 20 changed files are summarized', async () => {
   const root = repo();
   for (let i = 0; i < 25; i++) writeFileSync(join(root, `f${String(i).padStart(2, '0')}.txt`), 'x\n');
-  const out = await ctxQuick(root, 'x');
+  const out = await ctxQuick(root);
   assert.match(out, /^- f19\.txt\n- … 5 more$/m);
 });
 
@@ -65,17 +65,15 @@ test('the current task is named with its state', async () => {
   const root = repo();
   const task = join(root, '.telos', 'phases', '01-demo', '01-02-second-task.md');
   writeFileSync(task, readFileSync(task, 'utf8').replace('status: approved', 'status: in-progress'));
-  assert.match(await ctxQuick(root, 'x'), /^Current: phase 01-demo · task 01-02 \[in-progress\] — keep quick changes out of its files$/m);
+  assert.match(await ctxQuick(root), /^Current: phase 01-demo · task 01-02 \[in-progress\] — keep quick changes out of its files$/m);
 });
 
-test('no checks configured and an empty description', async () => {
-  const root = repo({});
-  assert.match(await ctxQuick(root, 'x'), /^Checks: none$/m);
-  assert.equal(await ctxQuick(root), 'REFUSED: describe the change: /telos:quick <description>\n');
+test('no checks configured', async () => {
+  assert.match(await ctxQuick(repo({})), /^Checks: none$/m);
 });
 
 test('the bundle stays under the cap without comments', async () => {
-  const out = await ctxQuick(repo(), 'x '.repeat(4000));
+  const out = await ctxQuick(repo());
   assert.ok(out.length <= CAP + 1);
   assert.doesNotMatch(out, /<!--/);
 });

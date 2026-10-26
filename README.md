@@ -29,6 +29,9 @@ All skills are user-invoked only, so they cost nothing until called.
 | `/telos:approve` | Approve the drafted plan: refuses on lint problems, keeps tasks with unconfirmed decisions in `draft`, sets the rest `approved`, the phase `active` and STATUS, commits `docs(telos): plan phase NN-name` and creates the local tag `telos/NN-start` |
 | `/telos:do [task-id]` | Execute the next approved task (or the given one): tests first → implement → `telos accept` (max 2 fix attempts, then `blocked`) → Result with Deviations → task and STATUS state → one commit `<type>(NN-MM): …` of the listed files; an `effort: hard` task stops first and suggests `/telos:do-hard` |
 | `/telos:do-hard [task-id]` | Same as `/telos:do` on a stronger model, for complex or blocked tasks |
+| `/telos:quick <description>` | Make a small change without a phase (≤ ~5 files, < 1 hour): ≤ 5-line mini-plan in chat, implement (test first for behavior changes), run `test_related`/`test`, `lint`, `types`, commit only the touched paths as `<type>(quick): …`; no plan file or STATUS change; larger or unclear → suggests `/telos:plan` |
+| `/telos:quick-hard <description>` | Same as `/telos:quick` on a stronger model, for small but tricky fixes |
+| `/telos:status` | Show phase, task, blockers, latest result and the next step in ≤ 10 lines; reads and changes nothing |
 
 ## CLI
 
@@ -57,6 +60,6 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error.
 | `telos ctx plan [NN\|description]` | Bundle for `/telos:plan` and `/telos:revise`: profile, target phase (STATUS phase by default, plus the NN a new phase would get; a description → the next NN), PROJECT Purpose and Rules, stack, checks, ROADMAP, phase CONTEXT, numbered carry-over items for the phase, task index, format rules |
 | `telos ctx approve [NN]` | Bundle for `/telos:approve`: phase line, task index, lint-plan result, draft ids, tasks blocked by proposed or awaited decisions, phase tag, uncommitted `.telos/` changes |
 | `telos ctx do [id]` | Bundle for `/telos:do`: picks the in-progress task or the first approved one with done depends; `REFUSED: …` (exit 0) for draft tasks, unmet depends and proposed/awaited decisions; else the task file, STATUS, PROJECT Rules, stack, checks, CONTEXT goal and decisions, depends' Interface, Read-first excerpts (stale ones flagged) and matching MAP lines |
-| `telos ctx quick <description>` | Bundle for `/telos:quick`: the change, current phase/task (warns when one is in progress), PROJECT Rules, stack, quick checks (`test_related`, `test`, `lint`, `types`), working tree (≤ 20 files), size guard; no description → `REFUSED: …` |
+| `telos ctx quick` | Bundle for `/telos:quick` (the description stays in the skill body): current phase/task (warns when one is in progress), PROJECT Rules, stack, quick checks (`test_related`, `test`, `lint`, `types`), working tree (≤ 20 files), size guard |
 | `telos ctx shared <name>` | Print `shared/<name>.md`, the instructions a skill and its `-lite`/`-hard` variant share (skills cannot `cat` plugin files) |
 | `telos ctx status` | Bundle for `/telos:status`: status view, stack line, file pointers |

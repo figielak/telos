@@ -2,7 +2,7 @@
 id: 02-11
 title: /telos:quick, /telos:quick-hard and /telos:status skills
 type: code
-status: approved
+status: done
 critical: false
 effort: normal
 depends: [02-07, 02-08]
@@ -46,8 +46,12 @@ checks → `<type>(quick)` commit); `/telos:status` shows the status bundle in �
 3. README rows; `claude plugin validate .`; suite.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] `claude plugin validate .` → exit 0
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] `claude plugin validate .` → exit 0
 
 ## Result
+- shared/quick.md (28 lines); skills quick (sonnet), quick-hard (opus) inject `telos ctx quick` and show the description under `## Change`; skills/status (sonnet, `Bash(telos *)` only) injects `telos ctx status`.
+- `telos ctx quick` takes no description: the `Change:` line and its empty-description refusal moved into shared/quick.md (stop on an empty `## Change`).
+- 3 new tests, ctx-quick tests adapted; suite 177/177; `claude plugin validate .` passes.
+Deviations: none
