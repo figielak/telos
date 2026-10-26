@@ -2,7 +2,7 @@
 id: 02-14
 title: End-to-end core loop in a minimal test repo
 type: code
-status: approved
+status: done
 critical: false
 effort: normal
 depends: [02-10, 02-11, 02-12, 02-13]
@@ -39,9 +39,14 @@ once at CLI level in `npm test` and once headless through the skills.
 3. Record commits, gaps found and fixes (as Deviations) in Result.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] headless run ends with ROADMAP `[done]`, one commit per task with scope `NN-MM`, tag `telos/01-start`
-- [ ] SessionStart output after `/clear` names the next step
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] headless run ends with ROADMAP `[done]`, one commit per task with scope `NN-MM`, tag `telos/01-start`
+- [x] SessionStart output after `/clear` names the next step
 
 ## Result
+- test/fixtures/minimal-loop (node package, `node --test`) + test/e2e-core-loop.test.mjs: 6 ordered steps play init → plan → approve → do ×2 with `telos` and `git` only (RED before implement, depends refusal, SCOPE FAIL until Deviations, guard rejects `git add .`); suite 197/197.
+- Surprise: the fixture's nested `node --test` reported as a child of the runner (NODE_TEST_CONTEXT); the test unsets it only around `telos` calls.
+- Headless (`claude -p --plugin-dir`, 2026-10-26): `/telos:init minimal` → `/telos:plan` (1 task) → `/telos:approve` (tag `telos/01-start`) → `/telos:do` (`feat(01-01): …`, ROADMAP `[done]`, STATUS next `/telos:plan`) → `/telos:quick` (`docs(quick): …`) → `/telos:status`; clean tree; SessionStart (clear) names `Next: /telos:plan`.
+- Gaps: init's Next suggests `/telos:map`, which arrives in 03; headless init/plan could not ask (AskUserQuestion) and took the recommended options.
+Deviations: none

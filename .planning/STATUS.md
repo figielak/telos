@@ -2,8 +2,8 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 02-core-loop
-Task: 02-14
-Next: implement 02-14 (e2e core loop)
+Task: none
+Next: /telos:plan 03 (03-map)
 Blockers: none
 Awaiting user: none
 <!-- Blockers: "NN-MM: reason". Awaiting user: IDs only, e.g. "02:Q-01, 02:D-03" -->
@@ -17,6 +17,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 02-14 done: e2e core loop (CLI test + headless run)
 - 02-13 done: git guard hook
 - 02-12 done: SessionStart hook
-- 02-11 done: /telos:quick, /telos:quick-hard and /telos:status skills
