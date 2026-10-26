@@ -71,3 +71,4 @@ Node scripts in `hooks/`, no model calls; each exits silently when `.telos/` is 
 | Event | Profile | Behavior |
 |---|---|---|
 | `SessionStart` (startup, resume, clear) | all | Injects a compact status (≤ 1200 chars): *Awaiting user* first (if any), PROJECT Purpose line 1, stack, profile, phase/task with live states, Next, Blockers, carry-over count, latest Recent line, file pointers |
+| `PreToolUse` Bash | all | Git guard: blocks `git push`, `--no-verify` (also `commit -n`), `git add -A` / `--all` / `.` / `:/`, `git commit --amend` when HEAD is on a remote branch, and `git reset --hard`, with exit 2 and `telos git guard: <rule> — <why>`; it splits `&&`, `;`, `|`, env prefixes, `git -C`/`-c` and `sh -c '…'`, and ignores quoted text |

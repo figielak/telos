@@ -2,7 +2,7 @@
 id: 02-13
 title: Git guard hook (PreToolUse Bash)
 type: code
-status: approved
+status: done
 critical: true
 effort: normal
 depends: [02-12]
@@ -61,9 +61,14 @@ Rules: `push`, `no-verify`, `add-all`, `amend-pushed`, `reset-hard`.
 4. hooks/git-guard.mjs + hooks.json entry; README; `claude plugin validate .`; suite.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] `claude plugin validate .` → exit 0
-- [ ] in a headless session with the plugin, `git push` is blocked with the telos reason
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] `claude plugin validate .` → exit 0
+- [x] in a headless session with the plugin, `git push` is blocked with the telos reason
 
 ## Result
+- lib/git-guard.mjs: `splitCommands` (quotes, escapes, `&& || ; | &`, newlines, parens) and pure `check` (env/wrapper prefixes, git global options, `sh|bash|zsh -c` recursion); hooks/git-guard.mjs reads stdin, allows silently without `.telos/` or on bad input, asks `git branch -r --contains HEAD` only for `commit --amend`.
+- 7 tests (33-row edge-case table, lazy headPushed, spawned hook); suite 191/191; `claude plugin validate .` passes.
+- Headless (`claude -p --plugin-dir`, temp repo with a local bare remote): `git push origin HEAD` blocked with `telos git guard: push — …`, remote stayed empty.
+- `commit -n` is no-verify only for `commit` (for merge `-n` is --no-stat); `git add *` also counts as add-all.
+Deviations: none
