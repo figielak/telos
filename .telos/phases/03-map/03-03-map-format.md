@@ -2,7 +2,7 @@
 id: 03-03
 title: MAP format and token-budget validation
 type: code
-status: approved
+status: done
 critical: false
 effort: hard
 depends: [03-02]
@@ -59,8 +59,13 @@ the configured token limit, fixed headings, provenance and independently editabl
 4. templates/MAP.md: document reference syntax and separate Area blocks without changing the stub contract; run the suite.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Tests demonstrate MAP limit enforcement at the exact boundary and preservation of each fixed heading and Area.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Tests demonstrate MAP limit enforcement at the exact boundary and preservation of each fixed heading and Area.
 
 ## Result
+Added pure inspectMap/mapHeader validation for provenance, fixed headings and exact configured token budgets.
+Parsed backticked file/range/directory references and separate Area blocks with lossless raw UTF-16 offsets.
+Updated template guidance while preserving the init stub and all five stable headings.
+Verified 221/221 tests (13 new), accept PASS and manual boundary/byte-preservation criteria; TMPDIR=/var/tmp avoids the environment synthetic /tmp/.git.
+Deviations: none

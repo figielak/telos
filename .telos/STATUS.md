@@ -2,8 +2,8 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 03-map
-Task: 03-03
-Next: /telos:do-hard 03-03
+Task: 03-04
+Next: /telos:do-hard 03-04
 Blockers: none
 Awaiting user: 03:Q-01, 03:D-08
 <!-- Blockers: "NN-MM: reason". Awaiting user: IDs only, e.g. "02:Q-01, 02:D-03" -->
@@ -17,6 +17,6 @@ Awaiting user: 03:Q-01, 03:D-08
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 03-03 done: MAP format, provenance and token-budget validation; 221 passing tests
 - 03-02 done: deterministic map-scan with bounded output and 208 passing tests
 - 03-01 done: planning moved to .telos/ (minimal profile)
-- 02-14 done: e2e core loop (CLI test + headless run)

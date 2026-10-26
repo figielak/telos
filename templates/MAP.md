@@ -7,16 +7,18 @@ Not built yet: run `/telos:map`. Until then, locate code with targeted Glob/Grep
 never read the whole repo.
 
 ## Structure
-<!-- top-level dirs, one line each: "- path/ — role" -->
+<!-- bullet rows with backticked repo-relative paths: "- `src/` — role".
+     Use / separators; directory refs end in /, file ranges use :start-end. -->
 
 ## Entry points
-<!-- "- path — what starts here" -->
+<!-- "- `src/main.ts:1-30` — what starts here" -->
 
 ## Flows
-<!-- "route → handler → service → store", one line per flow -->
+<!-- "- route → `handler.ts:1-20` → `service.ts` → `store.ts`", one bullet per flow -->
 
 ## Areas
-<!-- one ### per domain (### Game, ### Auth); key files with line ranges -->
+<!-- one ### per domain (### Game, ### Auth), each independently editable;
+     key files in bullet rows: "- `src/game state.ts:10-40` — role" -->
 
 ## Find
-<!-- "- X → path[:lines]" -->
+<!-- "- X → `src/file.ts:10-30`"; backticks also preserve paths containing spaces -->
