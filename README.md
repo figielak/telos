@@ -27,6 +27,8 @@ All skills are user-invoked only, so they cost nothing until called.
 | `/telos:revise <notes>` | Apply notes to the current phase's plan with minimal edits (split, merge, reorder, change); approved tasks it changes go back to `draft`; re-lints and summarizes |
 | `/telos:revise-lite <notes>` | Same as `/telos:revise` on a cheaper model, for minor edits |
 | `/telos:approve` | Approve the drafted plan: refuses on lint problems, keeps tasks with unconfirmed decisions in `draft`, sets the rest `approved`, the phase `active` and STATUS, commits `docs(telos): plan phase NN-name` and creates the local tag `telos/NN-start` |
+| `/telos:do [task-id]` | Execute the next approved task (or the given one): tests first → implement → `telos accept` (max 2 fix attempts, then `blocked`) → Result with Deviations → task and STATUS state → one commit `<type>(NN-MM): …` of the listed files; an `effort: hard` task stops first and suggests `/telos:do-hard` |
+| `/telos:do-hard [task-id]` | Same as `/telos:do` on a stronger model, for complex or blocked tasks |
 
 ## CLI
 

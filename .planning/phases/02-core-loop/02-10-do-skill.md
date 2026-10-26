@@ -2,7 +2,7 @@
 id: 02-10
 title: /telos:do and /telos:do-hard skills
 type: code
-status: approved
+status: done
 critical: false
 effort: hard
 depends: [02-04, 02-06, 02-09]
@@ -66,8 +66,13 @@ Flow of shared/do.md:
 4. README rows; `claude plugin validate .`; suite.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] `claude plugin validate .` → exit 0
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] `claude plugin validate .` → exit 0
 
 ## Result
+- shared/do.md (50 lines) with the Interface flow 0–7; skills/do (sonnet) and skills/do-hard (opus) are frontmatter + `telos ctx do $ARGUMENTS` + `telos ctx shared do`, allowed-tools per SPEC §13.
+- 2 new tests, do-hard added to the variant/model tables; suite 174/174; `claude plugin validate .` passes.
+- Shared-body length limit raised to 70 lines for do only (task constraint); the effort-hard stop waits for the user's `continue` reply, since $ARGUMENTS carries only the task id (D-13).
+- Not run headless yet: 02-14 covers plan → approve → do end to end.
+Deviations: none

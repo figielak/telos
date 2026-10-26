@@ -45,8 +45,8 @@ test('init injects telos ctx init and stays short', () => {
 
 // Variants (SPEC §5.0): same body as the base skill, which injects the shared instructions via
 // `telos ctx shared <name>` (cat of plugin files is blocked outside the session's working dirs).
-const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise' };
-const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet' };
+const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do' };
+const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus' };
 const SHARED = fileURLToPath(new URL('../shared/', import.meta.url));
 const FIELDS = ['disable-model-invocation', 'allowed-tools', 'argument-hint'];
 
@@ -75,7 +75,8 @@ test('every shared body a skill injects exists and stays short', () => {
     for (const [, shared] of read(name).body.matchAll(/!`telos ctx shared ([a-z-]+)`/g)) {
       const path = join(SHARED, `${shared}.md`);
       assert.ok(existsSync(path), `${name}: shared/${shared}.md`);
-      assert.ok(readFileSync(path, 'utf8').trim().split('\n').length <= 60, `shared/${shared}.md too long`);
+      const max = shared === 'do' ? 70 : 60;
+      assert.ok(readFileSync(path, 'utf8').trim().split('\n').length <= max, `shared/${shared}.md too long`);
     }
   }
 });
@@ -128,4 +129,26 @@ test('approve injects its bundle, runs on sonnet and may only commit and tag', (
   }
   assert.doesNotMatch(body, /git add (-A|--all|\.\/?)(?=[\s`]|$)|git commit[^\n]*--no-verify/m);
   assert.ok(body.trim().split('\n').length <= 60);
+});
+
+test('do and do-hard inject the do bundle for a task id and the shared do body', () => {
+  for (const name of ['do', 'do-hard']) {
+    const { field, body } = read(name);
+    assert.match(body, /^!`telos ctx do \$ARGUMENTS`$/m, name);
+    assert.match(body, /^!`telos ctx shared do`$/m, name);
+    for (const t of ['Bash(telos *)', 'Bash(git status*)', 'Bash(git diff*)', 'Bash(git add *)', 'Bash(git commit *)']) {
+      assert.ok(field('allowed-tools').includes(t), `${name}: ${t}`);
+    }
+    assert.doesNotMatch(field('allowed-tools'), /push|reset/, name);
+  }
+});
+
+test('the do instructions gate on accept, change state via telos and stage explicit paths', () => {
+  const body = readFileSync(join(SHARED, 'do.md'), 'utf8');
+  for (const s of ['telos accept', 'telos task set', 'telos status set', 'telos status add recent', 'telos roadmap set', 'Deviations:', '/telos:do-hard', 'blocked']) {
+    assert.ok(body.includes(s), s);
+  }
+  assert.match(body, /git add <[^>]+>/);
+  assert.doesNotMatch(body, /git add (-A|--all|\.\/?)(?=[\s`]|$)/m);
+  assert.doesNotMatch(body, /--no-verify|git push/);
 });
