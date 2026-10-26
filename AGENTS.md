@@ -15,7 +15,7 @@ Guide for coding agents working on this repository. Telos is a Claude Code plugi
 | `templates/` | Files `telos init` renders into a target repo's `.telos/` |
 | `test/` | `node:test` suites (`*.test.mjs`) and `test/fixtures/` |
 | `.claude-plugin/` | Plugin and marketplace manifests |
-| `.planning/` | Telos planning itself, in the `.telos/` format (moves to `.telos/` in phase 03) |
+| `.telos/` | Telos planning itself (minimal profile): PROJECT, MAP, ROADMAP, STATUS, phases |
 
 ## Commands
 
@@ -55,17 +55,22 @@ Every new or changed CLI command or `/telos:*` skill gets its row in README.md
 
 ## Working on a task
 
-Work follows the plan in `.planning/`:
+Telos is developed with Telos (minimal profile, SPEC §14). Work goes through the skills
+and the CLI, not by hand:
 
-1. `.planning/STATUS.md` names the current phase and task; the task file is
-   `.planning/phases/<NN-name>/<NN-MM>-<slug>.md`. Phase decisions (`D-NN`) are in
-   that phase's `NN-CONTEXT.md`.
-2. Stay inside the task's `scope`. Write the listed tests first, then implement.
-3. Check every Acceptance item; tick the boxes that pass.
-4. Fill `## Result` (3–5 lines: what was built, test count, surprises) and end it with
-   `Deviations: none` or `Deviations: <path> — <why>` for every file outside scope.
-5. Set the task `status: done`, update STATUS (Task, Next, Recent: newest first, max 3).
-6. One commit per task: `<type>(<NN-MM>): <summary>` with 2–4 bullet lines in the body
+1. `bin/telos status` names the current phase, task and next step. Task files live in
+   `.telos/phases/<NN-name>/<NN-MM>-<slug>.md`; phase decisions (`D-NN`) stay in the
+   hand-maintained `NN-CONTEXT.md` of that phase and reach `/telos:do` via `telos ctx do`.
+2. `/telos:plan` drafts a phase, `/telos:approve` approves its tasks, `/telos:do <id>`
+   (or `/telos:do-hard <id>` for `effort: hard`) runs one task; `/telos:quick` for
+   small changes outside a phase.
+3. Inside a task: stay in its `scope`, write the listed tests first, check every
+   Acceptance item (`bin/telos accept <id>`), fill `## Result` ending with
+   `Deviations: none` or `Deviations: <path> — <why>`.
+4. State changes only through the CLI: `telos task set <id> status=…`,
+   `telos status set phase=… task=… next=…`, `telos status add recent "…"`,
+   `telos roadmap set <NN> <status>`. Never edit task frontmatter, ROADMAP or STATUS by hand.
+5. One commit per task: `<type>(<NN-MM>): <summary>` with 2–4 bullet lines in the body
    (`feat`, `fix`, `refactor`, `test`, `docs`, `build`). Planning-only commits use
    `docs(telos): …`.
 
@@ -73,5 +78,5 @@ Work follows the plan in `.planning/`:
 
 - Stage explicit paths only: no `git add -A`, `git add .`.
 - No `git push`, no `--no-verify`, no `git reset --hard`, no `--amend` of pushed commits.
-- Do not commit failing work; after two failed fix attempts mark the task `blocked` in
-  STATUS and stop.
+- Do not commit failing work; after two failed fix attempts run
+  `telos task set <id> status=blocked` and `telos status set blockers="NN-MM: reason"`, then stop.

@@ -47,7 +47,7 @@ test('setField writes arrays and refuses unknown keys', () => {
 });
 
 test('parses this repo task files', () => {
-  const file = new URL('../.planning/phases/01-skeleton/01-05-status-command.md', import.meta.url);
+  const file = new URL('../.telos/phases/01-skeleton/01-05-status-command.md', import.meta.url);
   const fm = parse(readFileSync(file, 'utf8'));
   assert.equal(fm.id, '01-05');
   assert.deepEqual(fm.depends, ['01-03', '01-04']);

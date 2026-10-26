@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "profile": "minimal",
+  "files_language": "en",
+  "stack": [
+    "javascript"
+  ],
+  "checks": {
+    "test": "npm test"
+  },
+  "docs": {
+    "readme": "README.md",
+    "changelog": "CHANGELOG.md",
+    "paths": [
+      "docs/"
+    ]
+  },
+  "protected_configs": [
+    "eslint.config.*",
+    "biome.json",
+    "tsconfig.json",
+    "ruff.toml",
+    "pyproject.toml#tool.ruff"
+  ],
+  "limits": {
+    "status_lines": 40,
+    "map_tokens": 1500,
+    "history_entries": 30
+  },
+  "git": {
+    "auto_commit": true,
+    "phase_tags": true
+  },
+  "strict_scope": false
+}
