@@ -2,7 +2,7 @@
 id: 03-07
 title: Refresh context and selective map editing
 type: code
-status: approved
+status: done
 critical: false
 effort: hard
 depends: [03-04, 03-05, 03-06]
@@ -63,10 +63,16 @@ selective edits and verification that unaffected blocks remain byte-identical.
 5. README.md: complete refresh semantics and thresholds for CLI/skills; run suite and plugin validation.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] `claude plugin validate .` → exit 0
-- [ ] `bin/telos ctx map --refresh` → exit 0
-- [ ] Context never truncates an affected block; headless proof of model edit preservation remains a 03-09 gate.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] `claude plugin validate .` → exit 0
+- [x] `bin/telos ctx map --refresh` → exit 0
+- [x] Context never truncates an affected block; headless proof of model edit preservation remains a 03-09 gate.
 
 ## Result
+`telos ctx map --refresh` now runs diffNameStatus/planRefresh: noop (header only), incremental (Reason,
+Impact, Changed, New Area candidates, every affected block whole) or full with the fallback Reason;
+refused plans and affected blocks over the 6000-char payload are REFUSED, never clipped.
+shared/map.md (45 lines) runs the fixed refresh command, edits only affected blocks, compares bytes with
+the rollback copy, validates the whole MAP and restores after two failed repairs. 258 tests (7 new). Headless proof stays in 03-09.
+Deviations: none

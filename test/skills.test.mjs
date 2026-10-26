@@ -220,7 +220,18 @@ test('the map instructions never touch git or ROADMAP and report unsupported arg
   const map = readFileSync(join(SHARED, 'map.md'), 'utf8');
   assert.match(map, /never commit/i);
   assert.match(map, /ROADMAP/);
-  assert.match(map, /not available yet/);
   assert.match(map, /usage/i);
   assert.doesNotMatch(map, /git (add|commit|push)/);
+});
+
+test('the map instructions run the fixed refresh command and prove byte preservation', () => {
+  const map = readFileSync(join(SHARED, 'map.md'), 'utf8');
+  assert.doesNotMatch(map, /not available yet/);
+  for (const s of ['`--refresh`', '`telos ctx map --refresh`', 'Mode: incremental', 'Mode: noop', 'Mode: full', 'Affected blocks',
+    'byte for byte', 'Header to write', 'restore']) {
+    assert.ok(map.includes(s), s);
+  }
+  assert.match(map, /only the (?:listed|affected) blocks/i);
+  assert.match(map, /compare/i);
+  assert.match(map, /refresh[^\n]*PROJECT|PROJECT[^\n]*refresh/i);
 });
