@@ -2,7 +2,7 @@
 id: 03-02
 title: Deterministic repository scan and bounded CLI output
 type: code
-status: approved
+status: done
 critical: false
 effort: hard
 depends: [03-01]
@@ -70,9 +70,14 @@ reading, bounded to 2000 estimated tokens even on a large repository.
 5. README.md: add map-scan row with cap/exclusions; run the suite.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] `bin/telos map-scan` → exit 0
-- [ ] Output contains every SPEC scan category, ≤ 2000 estimated tokens including newline, with deterministic truncation notes.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] `bin/telos map-scan` → exit 0
+- [x] Output contains every SPEC scan category, ≤ 2000 estimated tokens including newline, with deterministic truncation notes.
 
 ## Result
+Added deterministic map-scan evidence, bounded source reads and entry/churn/size excerpt ranking.
+Whole-row rendering includes every category and caps stdout at 8000 UTF-16 code units including newline.
+Verified 208/208 tests (11 new), accept PASS and plugin validation; manual acceptance items checked.
+Test environment required TMPDIR=/var/tmp because a synthetic /tmp/.git breaks the existing findRoot test.
+Deviations: none
