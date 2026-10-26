@@ -51,6 +51,7 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error.
 | `telos init --profile <p> [--stack a,b] [--checks '<json>'] [--force]` | Create `.telos/` for `minimal`, `standard` or `deep`, sync the CLAUDE.md block, add `.telos/.cache/` to `.gitignore`. Rerun-safe: creates missing files, keeps existing ones; `--force` rewrites `config.json`. Stack/checks default to detection. Exit 1 on a profile mismatch or a broken CLAUDE.md block |
 | `telos status` | Compact status: current phase/task with live states from ROADMAP and the task file, Next, Blockers, Awaiting user first |
 | `telos map-scan` | Deterministic inventory of tree/counts, manifests/scripts/checks, entry candidates, tests, sizes, churn, dirty paths and up to 8 suggested line ranges; works before init and without HEAD. Output ≤ 8000 UTF-16 code units including newline (2000 estimated tokens), whole-row omissions counted. Excludes git/Telos state, build/vendor/cache/virtualenv directories, lockfiles, binaries and symlinks; never executes repository code |
+| `telos history add <kind> <ref> "<text>" [--path <relative-path> \| --approach "<text>"]` | Standard/deep: prepend a UTC-dated Log entry. Kinds: `decision`, `phase`, `revert`, `remove`, `quick`, `profile`, `init`; refs: `NN`, `NN-MM`, `ADR NNN`, `quick`, `telos`. Selectors are optional, mutually exclusive and only valid for `remove`/`revert`: remove records one Delete-zone target; revert clears entries for only that exact normalized path or exact approach text. Without a selector, either kind only logs. Exit 2 on invalid input, 1 on profile/storage failure |
 | `telos status set <key>=<value>…` | Set STATUS lines; keys `phase`, `task`, `next`, `blockers`, `awaiting`; empty value → `none` |
 | `telos status add recent "<line>"` | Prepend to Recent, keep the 3 newest |
 | `telos status add carry "<line>"` | Append to Carry-over; exit 1 when 5 items exist |
@@ -71,6 +72,21 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error.
 | `telos ctx quick` | Bundle for `/telos:quick` (the description stays in the skill body): current phase/task (warns when one is in progress), PROJECT Rules, stack, quick checks (`test_related`, `test`, `lint`, `types`), working tree (≤ 20 files), size guard |
 | `telos ctx shared <name>` | Print `shared/<name>.md`, the instructions a skill and its `-lite`/`-hard` variant share (skills cannot `cat` plugin files) |
 | `telos ctx status` | Bundle for `/telos:status`: status view, stack line, file pointers |
+
+History text and approach selectors must be non-empty single lines without surrounding whitespace
+or HTML comments; approaches cannot contain the separator ` — `. Paths use `/` separators;
+`./`, repeated and trailing slashes normalize away. Absolute paths, traversal, backslashes,
+backticks, colons and targets resolving outside the repository are refused. A selector names
+one exact target: reverting `src/old` does not clear `src/older` or other entries with the same ref.
+
+Only Log entries over `limits.history_entries` rotate, oldest first, into
+`.telos/HISTORY-archive.md` (created on demand, with a `# History archive` title and `## Log`
+section). Delete-zone entries, comments and unrelated sections stay intact. Existing storage
+must have valid canonical sections and rows; missing HISTORY, malformed or unreadable files,
+and storage symlinks are refused before mutation. Writes are staged and synced before
+replacement, with the archive installed first. If interrupted between replacements, the
+original live entries remain recoverable and the archive may contain duplicate live rows;
+retrying is safe for retaining entries, but can preserve those duplicates. No Git writes occur.
 
 ## Hooks
 

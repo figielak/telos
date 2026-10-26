@@ -2,7 +2,7 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 04-standard
-Task: 04-01
+Task: 04-02
 Next: /telos:do
 Blockers: none
 Awaiting user: none
@@ -16,6 +16,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 04-01 done: history storage, exact delete-zone selectors and recovery-safe Log rotation
 - 03-map done: map, refresh and PROJECT draft; real-repo proof carried to 06
 - 03-08 done: offline Astro/Python CLI mapping proof; 274 passing tests; real-model proof remains 03-09
-- 03-07 done: map --refresh with selective edits and byte-preservation checks; 258 passing tests
