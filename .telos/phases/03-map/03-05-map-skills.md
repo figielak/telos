@@ -2,7 +2,7 @@
 id: 03-05
 title: Map skills and an unconfirmed PROJECT draft
 type: code
-status: approved
+status: done
 critical: false
 effort: normal
 depends: [03-04]
@@ -51,10 +51,16 @@ for confirmation; provide `/telos:map-hard` with the same instructions on opus.
 4. Add README rows for both skills, confirmation semantics and current refresh availability; run tests and plugin validation.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] `claude plugin validate .` → exit 0
-- [ ] Both skills share a ≤ 60-line body, work without questions and require MAP validation before success.
-- [ ] Headless behavioral proof is explicitly deferred to 03-09; static instruction tests do not claim it.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] `claude plugin validate .` → exit 0
+- [x] Both skills share a ≤ 60-line body, work without questions and require MAP validation before success.
+- [x] Headless behavioral proof is explicitly deferred to 03-09; static instruction tests do not claim it.
 
 ## Result
+Added /telos:map (sonnet) and /telos:map-hard (opus): identical thin bodies injecting `telos ctx map`,
+the Request and `telos ctx shared map` (34 lines): targeted reads, rollback copy, full MAP write,
+PASS-gated validation with two repairs, unconfirmed PROJECT draft with Assumed: items, no questions.
+`--refresh` reports not available yet; other text prints usage. 234 tests (4 new, 2 extended); plugin validates.
+Behavioral headless proof stays deferred to 03-09; these are static instruction tests only.
+Deviations: none

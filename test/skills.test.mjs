@@ -45,8 +45,8 @@ test('init injects telos ctx init and stays short', () => {
 
 // Variants (SPEC §5.0): same body as the base skill, which injects the shared instructions via
 // `telos ctx shared <name>` (cat of plugin files is blocked outside the session's working dirs).
-const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do', 'quick-hard': 'quick' };
-const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', status: 'sonnet' };
+const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do', 'quick-hard': 'quick', 'map-hard': 'map' };
+const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet' };
 const SHARED = fileURLToPath(new URL('../shared/', import.meta.url));
 const FIELDS = ['disable-model-invocation', 'allowed-tools', 'argument-hint'];
 
@@ -175,4 +175,52 @@ test('status injects its bundle and may only run telos', () => {
   const { field, body } = read('status');
   assert.match(body, /^!`telos ctx status`$/m);
   assert.equal(field('allowed-tools'), 'Bash(telos *)');
+});
+
+test('map skills inject the fixed bundle and shared body; arguments only appear under Request', () => {
+  for (const name of ['map', 'map-hard']) {
+    const { field, body } = read(name);
+    assert.match(body, /^## Context\n!`telos ctx map`$/m, name);
+    assert.match(body, /^## Request\n\$ARGUMENTS$/m, name);
+    assert.match(body, /^## Instructions\n!`telos ctx shared map`$/m, name);
+    assert.equal(body.split('$ARGUMENTS').length - 1, 1, name);
+    const tools = field('allowed-tools');
+    for (const t of ['Bash(telos *)', 'Read', 'Grep', 'Glob', 'Edit(.telos/MAP.md)', 'Edit(.telos/PROJECT.md)', 'Write(.telos/MAP.md)', 'Write(.telos/PROJECT.md)']) {
+      assert.ok(tools.split(/,\s*/).includes(t), `${name}: ${t}`);
+    }
+    assert.doesNotMatch(tools, /git|push|Edit\(\.telos\/\*\*\)|Write\(\*|ROADMAP/, name);
+  }
+});
+
+test('the map instructions require targeted reads, the full format and validated writes', () => {
+  const map = readFileSync(join(SHARED, 'map.md'), 'utf8');
+  assert.ok(map.trim().split('\n').length <= 60);
+  for (const s of ['REFUSED:', 'Header to write', 'telos-map', 'Not built yet', 'telos ctx map', 'Map validation: PASS',
+    '## Structure', '## Entry points', '## Flows', '## Areas', '## Find', '### ', '3–8', '--refresh', 'at most two', 'rollback']) {
+    assert.ok(map.includes(s), s);
+  }
+  assert.match(map, /assum/i);
+  assert.match(map, /never (?:read|enumerate)[^\n]*\.telos\//i);
+});
+
+test('the map instructions draft PROJECT for confirmation without needing questions', () => {
+  const map = readFileSync(join(SHARED, 'map.md'), 'utf8');
+  assert.match(map, /preserve/i);
+  assert.match(map, /unconfirmed/i);
+  assert.match(map, /Assumed:/);
+  assert.match(map, /≤ 100/);
+  assert.match(map, /≤ 10 lines/);
+  assert.match(map, /≤ 60 lines/);
+  assert.match(map, /no stack|stack or check/i);
+  assert.match(map, /without asking|never ask|no questions/i);
+  assert.doesNotMatch(map, /AskUserQuestion/);
+});
+
+test('the map instructions never touch git or ROADMAP and report unsupported arguments', () => {
+  const map = readFileSync(join(SHARED, 'map.md'), 'utf8');
+  assert.match(map, /never commit/i);
+  assert.match(map, /ROADMAP/);
+  assert.match(map, /not available yet/);
+  assert.match(map, /usage/i);
+  assert.doesNotMatch(map, /git (add|commit|push)/);
 });
