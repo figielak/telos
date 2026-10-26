@@ -2,7 +2,7 @@
 id: 02-12
 title: SessionStart hook (startup, resume, clear)
 type: code
-status: approved
+status: done
 critical: false
 effort: normal
 depends: [02-01, 02-02]
@@ -45,8 +45,12 @@ resumes the loop without reading files.
 3. README Hooks section; `claude plugin validate .`; suite.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] `claude plugin validate .` → exit 0
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] `claude plugin validate .` → exit 0
 
 ## Result
+- lib/session.mjs `sessionText(root)` reuses `view` (live phase/task states), `stackLine` and `cap`; hooks/session-start.mjs reads stdin `cwd`, walks up to the repo root and swallows every error; hooks/hooks.json matches `startup|resume|clear`.
+- 7 tests (spawned hook with stdin JSON); suite 184/184; `claude plugin validate .` passes; fixture output 228 chars.
+- `view` already reads ROADMAP states, so `phaseLine` was not needed; the latest Recent line from `view` stays in (cheap resume hint). Truncation reuses the `telos ctx` marker.
+Deviations: none

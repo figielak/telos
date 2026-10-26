@@ -63,3 +63,11 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error.
 | `telos ctx quick` | Bundle for `/telos:quick` (the description stays in the skill body): current phase/task (warns when one is in progress), PROJECT Rules, stack, quick checks (`test_related`, `test`, `lint`, `types`), working tree (≤ 20 files), size guard |
 | `telos ctx shared <name>` | Print `shared/<name>.md`, the instructions a skill and its `-lite`/`-hard` variant share (skills cannot `cat` plugin files) |
 | `telos ctx status` | Bundle for `/telos:status`: status view, stack line, file pointers |
+
+## Hooks
+
+Node scripts in `hooks/`, no model calls; each exits silently when `.telos/` is missing.
+
+| Event | Profile | Behavior |
+|---|---|---|
+| `SessionStart` (startup, resume, clear) | all | Injects a compact status (≤ 1200 chars): *Awaiting user* first (if any), PROJECT Purpose line 1, stack, profile, phase/task with live states, Next, Blockers, carry-over count, latest Recent line, file pointers |
