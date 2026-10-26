@@ -3,7 +3,7 @@
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 03-map
 Task: none
-Next: /telos:approve or /telos:revise <notes>
+Next: /telos:plan
 Blockers: none
 Awaiting user: none
 <!-- Blockers: "NN-MM: reason". Awaiting user: IDs only, e.g. "02:Q-01, 02:D-03" -->
@@ -18,6 +18,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 03-map done: map, refresh and PROJECT draft; real-repo proof carried to 06
 - 03-08 done: offline Astro/Python CLI mapping proof; 274 passing tests; real-model proof remains 03-09
 - 03-07 done: map --refresh with selective edits and byte-preservation checks; 258 passing tests
-- 03-06 done: deterministic MAP refresh impact planning; 251 passing tests
