@@ -2,7 +2,7 @@
 id: 03-04
 title: Bounded map context and post-write validation feedback
 type: code
-status: approved
+status: done
 critical: false
 effort: hard
 depends: [03-02, 03-03]
@@ -69,9 +69,15 @@ and MAP validation, keeping mandatory instructions inside the context cap.
 5. README.md: add ctx map row and clarify preserved machine metadata/stub hint; run the suite.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] `bin/telos ctx map` → exit 0
-- [ ] Saved MAP validation and mandatory map context survive worst-case inputs without exceeding the payload cap.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] `bin/telos ctx map` → exit 0
+- [x] Saved MAP validation and mandatory map context survive worst-case inputs without exceeding the payload cap.
 
 ## Result
+Added `telos ctx map`: whole-file MAP validation, full mode, exact HEAD/UTC-date/count header,
+limit with skeleton size, headings/ref syntax, PROJECT draft/preserve state and suggestions,
+then renderScan rows sized to the remaining cap; refusals for no init/HEAD, dirty source, tiny limit.
+ctx do now shows the Not built yet hint for a stub MAP. 230/230 tests (9 new, 1 extended); accept PASS.
+Tests need TMPDIR outside /tmp on this host (stray /tmp/.git breaks the findRoot test).
+Deviations: none

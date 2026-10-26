@@ -159,12 +159,18 @@ test('decisions and the CONTEXT goal are included when the phase has a CONTEXT',
   assert.doesNotMatch(out, /D-03/);
 });
 
-test('MAP lines mentioning a scope path are added, a stub MAP adds nothing', async () => {
+test('MAP lines mentioning a scope path are added, a stub MAP adds only the Not built yet hint', async () => {
   const root = repo();
   writeFileSync(join(root, '.telos', 'MAP.md'), render('MAP.md', {}));
-  assert.doesNotMatch(await ctxDo(root), /^Map:/m);
+  const stub = await ctxDo(root);
+  assert.match(stub, /^Map: Not built yet: run `\/telos:map`\. Until then, locate code with targeted Glob\/Grep; never read the whole repo\.$/m);
+  assert.equal(stub.match(/^Map/gm).length, 1);
   writeFileSync(join(root, '.telos', 'MAP.md'), '# Map\n## Structure\n- src/ — app code\n- docs/ — docs\n');
   assert.match(await ctxDo(root), /^Map:\n- src\/ — app code$/m);
+  const rows = Array.from({ length: 15 }, (_, i) => `- src/m${i}.ts — module ${i}`).join('\n');
+  writeFileSync(join(root, '.telos', 'MAP.md'), `# Map\n## Find\n${rows}\n`);
+  const built = (await ctxDo(root)).split('Map:\n')[1].split('\n').filter((l) => l.startsWith('- src/m'));
+  assert.equal(built.length, 10);
 });
 
 test('a long bundle cuts excerpts, never the task file', async () => {
