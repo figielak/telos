@@ -2,10 +2,10 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 03-map
-Task: 03-09
-Next: /telos:do
+Task: none
+Next: /telos:approve or /telos:revise <notes>
 Blockers: none
-Awaiting user: 03:Q-01
+Awaiting user: none
 <!-- Blockers: "NN-MM: reason". Awaiting user: IDs only, e.g. "02:Q-01, 02:D-03" -->
 
 ## Carry-over
@@ -14,6 +14,7 @@ Awaiting user: 03:Q-01
 - 04: `telos history add <kind> <ref> "<text>"` + Log rotation to HISTORY-archive.md → SPEC §4.1, templates/HISTORY.md
 - 04: delete-zone guard hook (warn once per path per session, next-step hint; `history add revert` drops the entry) + approach lines in plan/quick bundles → SPEC §4.1, §8
 - 05: `telos adr new "<title>" --source NN:D-MM [--supersedes NNN]` fills ADR header, flips superseded ADR → SPEC §11, 01-04 Result
+- 06: headless map/refresh proof on one real Astro and one real Python repo at pinned revisions (map + map-hard, evidence, §12 usage) → 03-CONTEXT D-09, D-07
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
