@@ -2,7 +2,7 @@
 id: 03-04
 title: Bounded map context and post-write validation feedback
 type: code
-status: draft
+status: approved
 critical: false
 effort: hard
 depends: [03-02, 03-03]

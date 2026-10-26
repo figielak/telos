@@ -2,7 +2,7 @@
 id: 03-05
 title: Map skills and an unconfirmed PROJECT draft
 type: code
-status: draft
+status: approved
 critical: false
 effort: normal
 depends: [03-04]

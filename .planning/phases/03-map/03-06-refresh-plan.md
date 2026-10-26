@@ -2,7 +2,7 @@
 id: 03-06
 title: Deterministic refresh impact planning
 type: code
-status: draft
+status: approved
 critical: false
 effort: hard
 depends: [03-02, 03-03, 03-05]

@@ -2,7 +2,7 @@
 id: 03-02
 title: Deterministic repository scan and bounded CLI output
 type: code
-status: draft
+status: approved
 critical: false
 effort: hard
 depends: [03-01]

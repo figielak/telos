@@ -2,7 +2,7 @@
 id: 03-07
 title: Refresh context and selective map editing
 type: code
-status: draft
+status: approved
 critical: false
 effort: hard
 depends: [03-04, 03-05, 03-06]

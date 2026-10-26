@@ -2,7 +2,7 @@
 id: 03-01
 title: Move Telos planning into the minimal workflow
 type: doc
-status: draft
+status: approved
 critical: false
 effort: normal
 depends: []

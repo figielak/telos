@@ -2,7 +2,7 @@
 id: 03-03
 title: MAP format and token-budget validation
 type: code
-status: draft
+status: approved
 critical: false
 effort: hard
 depends: [03-02]
