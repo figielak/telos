@@ -2,7 +2,7 @@
 id: 03-09
 title: Recorded headless proof on real Astro and Python repos
 type: audit
-status: draft
+status: approved
 critical: false
 effort: normal
 depends: [03-08]

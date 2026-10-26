@@ -2,10 +2,10 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 03-map
-Task: none
-Next: /telos:approve
+Task: 03-09
+Next: /telos:do
 Blockers: none
-Awaiting user: 03:Q-01, 03:D-08
+Awaiting user: 03:Q-01
 <!-- Blockers: "NN-MM: reason". Awaiting user: IDs only, e.g. "02:Q-01, 02:D-03" -->
 
 ## Carry-over
