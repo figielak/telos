@@ -2,7 +2,7 @@
 id: 03-06
 title: Deterministic refresh impact planning
 type: code
-status: approved
+status: done
 critical: false
 effort: hard
 depends: [03-02, 03-03, 03-05]
@@ -61,8 +61,13 @@ no-change plan, identifying only affected sections and individual Areas.
 4. lib/map-refresh.mjs: preserve deterministic ordering/reasons for noop, fallback and refusal; run the suite.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Boundary tests prove strictly >30% rebuild and separate individual Areas; no CLI git writes occur.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Boundary tests prove strictly >30% rebuild and separate individual Areas; no CLI git writes occur.
 
 ## Result
+Added read-only baseline..HEAD name-status parsing with hash validation, NUL path preservation and explicit git errors.
+Added pure full/incremental/noop/refused planning over nonempty sections and individual Areas, with the strict >30% integer threshold.
+Matched exact/directory/nearest-Area evidence, sorted new-Area candidates, excluded scan paths and refused ambiguous inputs without changing MAP bytes.
+Verified 251/251 tests (17 new), accept PASS and manual threshold/Area/git-write checks; TMPDIR=/var/tmp avoids the synthetic /tmp/.git.
+Deviations: none
