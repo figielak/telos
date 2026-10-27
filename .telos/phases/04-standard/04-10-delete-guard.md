@@ -2,7 +2,7 @@
 id: 04-10
 title: Delete-zone guard
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard        # normal | hard
 depends: [04-01, 04-05, 04-09]
@@ -56,8 +56,13 @@ Warn once per path per session when Edit/Write recreates a deleted path, and cle
 4. README.md: document once-per-session warnings and exact revert selector remediation.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Carry-over #2 is covered end to end: approach injection, path warning, repeat suppression and explicit revert.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Carry-over #2 is covered end to end: approach injection, path warning, repeat suppression and explicit revert.
 
 ## Result
+Added nonblocking Delete-zone warnings with reason/ref, exact shell-quoted revert commands and config/scope denial precedence.
+Canonical target/session markers hash session identity; absent IDs and unavailable, corrupt or symlinked caches keep warnings enabled.
+All 16 new tests, 26 guard tests and 397 total tests pass; shared history records prove approach injection and exact revert end to end.
+Plugin validation passed with CLAUDE.md/icon warnings; full tests use isolated TMPDIR because the environment has /tmp/.git.
+Deviations: lib/edit-guard.mjs — expose the existing edit target normalizer so both guards share canonical matching.

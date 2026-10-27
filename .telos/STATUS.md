@@ -2,7 +2,7 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 04-standard
-Task: 04-10
+Task: 04-11
 Next: /telos:do
 Blockers: none
 Awaiting user: none
@@ -16,6 +16,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 04-10 done: delete-zone warnings once per canonical path/session with exact revert guidance
 - 04-09 done: edit guard for protected configs and task scope (warn, strict deny)
 - 04-08 done: ctx undo preview and confirmation-gated /telos:undo preserving Telos metadata
-- 04-07 done: ctx check/done bundles, /telos:check and /telos:done with verified close
