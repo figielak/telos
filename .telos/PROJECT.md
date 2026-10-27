@@ -21,8 +21,15 @@ Skills inject one `telos ctx` bundle each; the CLI owns all state changes in `.t
 ## Conventions
 <!-- naming, layout, patterns; read via "PROJECT.md §Conventions";
      LESSONS that became standing rules land here -->
-- none
+- Commands register one line in `commands` (`lib/cli.mjs`); bundles one line in `bundles` (`lib/ctx/index.mjs`).
+- Short JSDoc on exports, small pure functions, no comments that restate the code.
+- Skills are user-invoked only (`disable-model-invocation: true`) and get context from one `telos ctx <bundle>` injection.
+- `-lite`/`-hard` variants share their body via `shared/<name>.md` and differ only in `model`.
+- State changes go through the CLI (`telos task set`, `telos roadmap set`, `telos status set`), never by hand.
 
 ## Out of scope
 <!-- things this project deliberately does not do (never built ≠ Delete-zone) -->
-- none
+- Fully autonomous multi-phase execution.
+- Multi-agent orchestration, parallel waves, multi-model workflows.
+- Continuous learning / instinct systems, LLM-generated session summaries in hooks.
+- Stack notes beyond Astro, TypeScript and Python.
