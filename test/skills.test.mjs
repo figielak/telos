@@ -32,7 +32,14 @@ test('every skill is user-invoked only and named after its directory', () => {
 test('every injected telos command is pre-approved in allowed-tools', () => {
   for (const name of skills) {
     const { field, body } = read(name);
-    if (/!`telos /.test(body)) assert.match(field('allowed-tools') ?? '', /Bash\(telos \*\)/, name);
+    const allowed = (field('allowed-tools') ?? '').split(/,\s*/);
+    for (const [, cmd] of body.matchAll(/!`(telos [^`]*)`/g)) {
+      const covered = allowed.some((t) => {
+        const prefix = /^Bash\((telos[^)]*?)(?: \*)?\)$/.exec(t)?.[1];
+        return prefix !== undefined && (cmd === prefix || cmd.startsWith(`${prefix} `));
+      });
+      assert.ok(covered, `${name}: ${cmd}`);
+    }
   }
 });
 
@@ -45,10 +52,10 @@ test('init injects telos ctx init and stays short', () => {
 
 // Variants (SPEC §5.0): same body as the base skill, which injects the shared instructions via
 // `telos ctx shared <name>` (cat of plugin files is blocked outside the session's working dirs).
-const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do', 'quick-hard': 'quick', 'map-hard': 'map' };
-const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet', discuss: 'opus', lesson: 'sonnet', check: 'sonnet', done: 'sonnet', undo: 'sonnet' };
+const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do', 'quick-hard': 'quick', 'map-hard': 'map', 'review-hard': 'review' };
+const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet', discuss: 'opus', lesson: 'sonnet', check: 'sonnet', done: 'sonnet', undo: 'sonnet', review: 'sonnet', 'review-hard': 'opus' };
 const SHARED = fileURLToPath(new URL('../shared/', import.meta.url));
-const FIELDS = ['disable-model-invocation', 'allowed-tools', 'argument-hint'];
+const FIELDS = ['disable-model-invocation', 'allowed-tools', 'argument-hint', 'context'];
 
 test('variants share the base body and differ only in name, description and model', () => {
   for (const [variant, base] of Object.entries(VARIANTS)) {
@@ -382,4 +389,32 @@ test('undo injects a fixed bundle, validates the id from Request and confirms be
   assert.doesNotMatch(tools, /reset|stash|push|Edit|Write|git revert \*|git checkout/);
   assert.ok(tools.includes('Bash(git revert --no-commit *)'));
   assert.ok(body.trim().split('\n').length <= 60);
+});
+
+test('review skills fork the matching reviewer agent and inject only fixed commands', () => {
+  const agentModel = (name) => /^model:\s*(.*)$/m.exec(readFileSync(join(SKILLS, '..', 'agents', `${name}.md`), 'utf8'))[1].trim();
+  for (const [name, agent] of [['review', 'reviewer'], ['review-hard', 'reviewer-hard']]) {
+    const { field, body } = read(name);
+    assert.equal(field('context'), 'fork', name);
+    assert.equal(field('agent'), `telos:${agent}`, name);
+    assert.equal(field('model'), agentModel(agent), name);
+    assert.equal(field('argument-hint'), '"[NN-MM|NN]"', name);
+    assert.match(body, /^## Context\n!`telos ctx review`$/m, name);
+    assert.match(body, /^## Request\n\$ARGUMENTS$/m, name);
+    assert.match(body, /^## Instructions\n!`telos ctx shared review`$/m, name);
+    assert.equal(body.split('$ARGUMENTS').length - 1, 1, name);
+    assert.deepEqual(field('allowed-tools').split(/,\s*/).sort(),
+      ['Bash(git diff *)', 'Bash(git log *)', 'Bash(telos ctx review *)', 'Bash(telos ctx shared *)', 'Glob', 'Grep', 'Read'], name);
+  }
+  assert.notEqual(read('review').field('agent'), read('review-hard').field('agent'));
+});
+
+test('the review instructions stop on the profile gate and validate the selector before any rerun', () => {
+  const body = readFileSync(join(SHARED, 'review.md'), 'utf8');
+  const gate = body.indexOf('Requires deep profile');
+  const valid = body.indexOf('exactly `NN-MM` or `NN`');
+  const rerun = body.indexOf('telos ctx review <selector>');
+  assert.ok(gate >= 0 && valid > gate && rerun > valid, `${gate} ${valid} ${rerun}`);
+  assert.match(body, /REFUSED:/);
+  assert.match(body, /\/telos:review \[NN-MM\|NN\]/);
 });

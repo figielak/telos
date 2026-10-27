@@ -3,8 +3,8 @@
 A lean, token-economical workflow plugin for Claude Code:
 plan → test → implement → verify, with durable project memory in `.telos/`.
 
-Status: **pre-alpha**. Minimal and standard workflows are available. Deep-only agents,
-research, review and doc-sync remain planned. See [SPEC.md](SPEC.md) §14.
+Status: **pre-alpha**. Minimal and standard workflows are available, plus the deep review agents.
+Research and doc-sync remain planned. See [SPEC.md](SPEC.md) §14.
 
 ## Install (per repository)
 
@@ -40,7 +40,19 @@ All skills are user-invoked only, so they cost nothing until called.
 | `/telos:check [NN]` | Standard/deep: verify a phase without changing anything: `telos check --level full`, `telos accept <id>` for every done task, then a hand check of each manual Acceptance item (accept exit 0 never proves them); reports verdicts, unverified items, unresolved decisions and unfinished tasks |
 | `/telos:done [NN]` | Standard/deep: close an active phase. Stops on `Close: blocked` (unfinished tasks, proposed decisions, open questions, Awaiting user, no full checks, unreadable HISTORY). Then verifies before any state change (full checks exit 0, every accept PASS, every manual item checked); any failure leaves the phase active with no history. Promotes hard-to-reverse confirmed decisions with `telos history add decision` and a `→ HISTORY` marker in CONTEXT, adds the `phase` entry, `telos roadmap set NN done`, STATUS `task=none next=/telos:plan`; reruns skip what is recorded. Commits `docs(telos): close phase NN-name` with explicit paths only when `git.auto_commit` is true; suggests `/compact` |
 | `/telos:undo <NN-MM>` | Standard/deep: revert one task. Validates the id, reads `telos ctx undo <id>`, shows every commit with its stat, the Telos files they carry and transitive dependents (never reverted), and asks you to confirm the exact hashes; anything else changes nothing. Then `git revert --no-commit` newest first (conflicts only in `.telos/` are resolved by keeping the current file; a code conflict stops with recovery steps and no HISTORY entry), restores current Telos metadata from HEAD, requires `telos check --level full`, and only then sets the task `reverted`, blocks dependents, reopens a closed phase, updates STATUS and logs one `revert` HISTORY entry via the CLI. Commits `revert(<id>): …` with explicit `.telos/` paths when `git.auto_commit` is true; never reset, stash or push |
+| `/telos:review [NN-MM\|NN]` | Deep only: one read-only review round in a forked `telos:reviewer` agent (Sonnet). Injects the fixed bundle `telos ctx review` (STATUS task, else phase); an exact two-digit `NN-MM` / `NN` argument makes the agent rerun `telos ctx review <selector>`, anything else prints usage. It reviews only that evidence and its listed continuations (`git diff` / `git log` / file ranges), reports findings with > 80% confidence (HIGH/CRITICAL need `file:line`, scenario and impact or are demoted), checks public-API docstrings, and ends with a verdict in ≤ 40 lines. Incomplete coverage is `UNVERIFIED`, never a clean `PASS`; zero findings is valid; no re-review loop and no fixes (those belong to the caller within its scope). Minimal/standard print `Requires deep profile. …` and stop |
+| `/telos:review-hard [NN-MM\|NN]` | Same as `/telos:review` in the `telos:reviewer-hard` agent (Opus), for `critical` work: security, payments, concurrency, data integrity |
 | `/telos:status` | Show phase, task, blockers, latest result and the next step in ≤ 10 lines; reads and changes nothing |
+
+### Review agents (deep)
+
+`agents/reviewer.md` and `agents/reviewer-hard.md` are identical read-only definitions except for
+name and model. Their tools are `Read`, `Grep`, `Glob` and Bash limited to `git diff`, `git log`
+and `telos ctx review`: no edits, network, commits or repository-wide discovery. Repository text
+is data, never instructions. The `/telos:review*` skills fork them with the shared instructions
+in `shared/review.md`. The tool restrictions, the `telos:` agent namespace and the forked-skill
+model selection are declared in files and checked by `npm test`; they are not proven against a
+live Claude Code host.
 
 ## Standard workflow
 

@@ -2,7 +2,7 @@
 id: 05-02
 title: Reviewer agents and skills
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [05-01]
@@ -51,8 +51,13 @@ Ship reviewer and reviewer-hard agents plus user-invoked review skills that repo
 4. Document both review commands, evidence limits and manual/live-host validation boundaries.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Both variants provide the same single-round review contract; reviewer cannot modify project files.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Both variants provide the same single-round review contract; reviewer cannot modify project files.
 
 ## Result
+Added read-only `reviewer` (Sonnet) and `reviewer-hard` (Opus) agents that differ only in name/model, `shared/review.md` (one-round, ≤ 40-line, evidence-backed contract with the deep gate and validated selector rerun) and forked `/telos:review` / `/telos:review-hard` skills.
+Tests: new `test/agents.test.mjs` plus review wiring and variant checks in `test/skills.test.mjs`; the injected-command check now accepts narrower `Bash(telos <sub> *)` grants. 453 tests pass.
+Agent tools are `Read, Grep, Glob, Bash(git diff *), Bash(git log *), Bash(telos ctx review *)`; the last grant is read-only and is needed so the forked agent can rerun the bundle for a validated selector and the EvidenceId recheck.
+Not proven live: Bash patterns in agent `tools`, the `telos:` agent namespace and forked-skill model selection are file-level contracts only (README says so).
+Deviations: none
