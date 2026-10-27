@@ -87,3 +87,18 @@ test('hooks.json runs the script on startup, resume and clear', () => {
   assert.equal(entry.hooks[0].type, 'command');
   assert.match(entry.hooks[0].command, /\$\{CLAUDE_PLUGIN_ROOT\}\/hooks\/session-start\.mjs/);
 });
+
+test('a compact SessionStart on minimal prints exactly the startup status', () => {
+  const root = repo();
+  const startup = hook(root).out;
+  const compact = hook(root, JSON.stringify({ cwd: root, hook_event_name: 'SessionStart', source: 'compact', session_id: 's' })).out;
+  assert.equal(compact, startup);
+  assert.ok(startup.trimEnd().length <= 1200);
+});
+
+test('hooks.json also runs the script after compaction', () => {
+  const { hooks } = JSON.parse(readFileSync(HOOKS_JSON, 'utf8'));
+  const compact = hooks.SessionStart.find((e) => e.matcher === 'compact');
+  assert.ok(compact, 'compact matcher missing');
+  assert.match(compact.hooks[0].command, /\$\{CLAUDE_PLUGIN_ROOT\}\/hooks\/session-start\.mjs/);
+});

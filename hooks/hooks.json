@@ -1,9 +1,18 @@
 {
-  "description": "Telos: status at session start, git guard before Bash, config/scope/Delete-zone guard before Edit/Write, edited-file checks at Stop",
+  "description": "Telos: status at session start and after compaction, git guard before Bash, config/scope/Delete-zone guard and context hints before Edit/Write, edited-file checks at Stop, session save before compaction",
   "hooks": {
     "SessionStart": [
       {
         "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.mjs\""
+          }
+        ]
+      },
+      {
+        "matcher": "compact",
         "hooks": [
           {
             "type": "command",
@@ -50,6 +59,16 @@
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/stop.mjs\"",
             "timeout": 300
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-compact.mjs\""
           }
         ]
       }

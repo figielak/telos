@@ -2,7 +2,7 @@
 id: 04-12
 title: Compaction continuity
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard        # normal | hard
 depends: [04-11]
@@ -64,8 +64,13 @@ Persist last task and edited paths before compaction, reinject them afterward, a
 5. hooks/hooks.json, README.md and manifest tests: wire and document the standard compaction lifecycle.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Compact resume retains current work under the session cap; unknown usage never produces fabricated thresholds.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Compact resume retains current work under the session cap; unknown usage never produces fabricated thresholds.
 
 ## Result
+- lib/compaction.mjs: saveSession/readSession (versioned `.cache/session` with session hash, validated task and ≤ 50 queued paths from the 04-11 accumulator), compactLine (fits the remaining SessionStart budget), readUsage (last main-thread `message.usage` numbers only, 1 MiB tail), usageHint (70/85/100% once per session via markers).
+- sessionText(root, {source, sessionId}) adds `Before compaction: …` only for compact on std+; session-start passes source/session_id; pre-compact hook saves silently; edit-guard appends the hint; hooks.json adds SessionStart `compact` and PreCompact.
+- Verified against a local transcript: usage fields exist, but neither transcripts nor hook payloads carry a capacity, so hints need TELOS_CONTEXT_WINDOW and are off otherwise.
+- Tests: 7 in compaction.test.mjs + 2 session + 1 manifest; npm test 420/420.
+Deviations: none

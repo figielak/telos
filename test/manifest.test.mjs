@@ -54,3 +54,10 @@ test('hooks.json queues edits on PostToolUse and runs the edited-file checks at 
   assert.equal(stop.command, 'node "${CLAUDE_PLUGIN_ROOT}/hooks/stop.mjs"');
   assert.ok(stop.timeout >= 240, 'Stop timeout covers format + types at 120 s each');
 });
+
+test('hooks.json saves the session before compaction', () => {
+  const hooks = readJson('hooks/hooks.json').hooks;
+  assert.equal(hooks.PreCompact.length, 1);
+  assert.deepEqual(hooks.PreCompact[0].hooks.map((x) => x.command), ['node "${CLAUDE_PLUGIN_ROOT}/hooks/pre-compact.mjs"']);
+  assert.ok(hooks.SessionStart.some((e) => e.matcher === 'compact'));
+});

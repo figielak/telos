@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-// PreToolUse Edit/Write hook: protected configs, task scope and Delete-zone (std+). Deny → exit 2 + reason on
+// PreToolUse Edit/Write hook: protected configs, task scope, Delete-zone and compaction hints (std+). Deny → exit 2 + reason on
 // stderr; warn → additionalContext on stdout, exit 0. Unreadable input is reported, not fatal.
 import { readFileSync } from 'node:fs';
 
+import { usageHint } from '../lib/compaction.mjs';
 import { deleteGuard } from '../lib/delete-guard.mjs';
 import { editGuard, editTarget } from '../lib/edit-guard.mjs';
 import { findRoot } from '../lib/repo.mjs';
@@ -30,7 +31,9 @@ if (verdict.decision === 'deny') {
 }
 const target = root && editTarget(root, input);
 const deletion = target && deleteGuard(root, { path: target.path, sessionId: input.session_id });
-const warnings = [verdict.decision === 'warn' ? `telos scope: ${verdict.reason}` : null, deletion].filter(Boolean);
+let hint = null;
+try { hint = root && usageHint(root, input); } catch {}
+const warnings = [verdict.decision === 'warn' ? `telos scope: ${verdict.reason}` : null, deletion, hint].filter(Boolean);
 if (warnings.length) {
   process.stdout.write(`${JSON.stringify({ hookSpecificOutput: {
     hookEventName: 'PreToolUse', additionalContext: warnings.join('\n') } })}\n`);
