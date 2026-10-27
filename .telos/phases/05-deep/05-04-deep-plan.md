@@ -2,7 +2,7 @@
 id: 05-04
 title: Research-informed deep planning
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [05-03]
@@ -46,8 +46,12 @@ Feed existing research into deep planning and add one self-critique pass before 
 4. Update the changed skill and bundle rows in README.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Deep planning uses optional research and one critique pass without promoting its assumptions to decisions.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Deep planning uses optional research and one critique pass without promoting its assumptions to decisions.
 
 ## Result
+`planBundle` now adds, for the deep profile only, a `Research (…)` section from the target phase's `NN-RESEARCH.md`: ≤ 1800 chars of `| `-prefixed evidence, whole-line comments skipped, cut with a `Read "<path>" lines a-b` pointer into the raw file; the memory budget shrinks by its size so rules, checks, tasks, roadmap and the cap hold. No report, another phase's report, a new-phase target and minimal/standard add nothing (output unchanged).
+`shared/plan.md` and `shared/revise.md` gain one deep-only self-critique step (risks, missing tests, task size, edge cases; no extra agent, no second question round, blocking questions → CONTEXT `Q-NN` + Awaiting user) and treat research as evidence whose plan-changing recommendations stay `[proposed]`; plan stays at 60 lines. README plan/revise/ctx rows updated.
+Tests: 5 new `ctx plan` research cases and one instruction contract test; 472 tests pass. Surprise: deep also gets standard memory lines, so "unchanged" is compared against standard, not minimal.
+Deviations: none

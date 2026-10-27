@@ -21,9 +21,14 @@ ROADMAP, STATUS and task `status` only through `telos` commands. Never commit.
      `[proposed]`; never silently confirm one: drop `[proposed]` only when the notes confirm
      it. Update task `decisions`/Constraints that use a changed ID, and Awaiting user with one
      `telos status set awaiting="NN:D-MM, …"` (`awaiting=` when none are left).
-5. **Lint**: `telos lint-plan <NN>`; fix every reported line and rerun, at most 3 rounds.
-6. **Record**: a `[planned]` phase becomes `telos roadmap set <NN> drafted`; `drafted` and `active`
+5. **Critique** (Profile deep only): the same self-critique as `/telos:plan`, once, over the tasks
+   you changed or added: risks, missing tests, task size, edge cases; fix in place, no extra agent.
+   A `Research (…)` section is evidence, never decisions; never run research yourself. There is
+   no second question round: a blocking question becomes `- Q-NN: …` in the CONTEXT plus
+   `telos status set awaiting="<existing entries>, NN:Q-MM"`; unresolved items go in the summary.
+6. **Lint**: `telos lint-plan <NN>`; fix every reported line and rerun, at most 3 rounds.
+7. **Record**: a `[planned]` phase becomes `telos roadmap set <NN> drafted`; `drafted` and `active`
    stay. Then `telos status set next="/telos:approve or /telos:revise <notes>"`.
-7. **Summary**, ≤ 10 lines: what changed per task id (new, changed, removed, back to draft), the
-   task list when it changed, `Assumed: …`, lint problems left; last line
+8. **Summary**, ≤ 10 lines: what changed per task id (new, changed, removed, back to draft), the
+   task list when it changed, `Assumed: …`, unresolved critique items, lint problems left; last line
    `Next: /telos:approve or /telos:revise <notes>`.

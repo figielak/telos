@@ -435,3 +435,26 @@ test('research skills fork the matching researcher agent with the fixed research
       ['Bash(telos ctx research *)', 'Bash(telos ctx shared *)', 'Glob', 'Grep', 'Read', 'WebFetch', 'WebSearch'], name);
   }
 });
+
+test('plan and revise share one deep self-critique pass that adds no research, agent or question round', () => {
+  const plan = readFileSync(join(SHARED, 'plan.md'), 'utf8');
+  const revise = readFileSync(join(SHARED, 'revise.md'), 'utf8');
+  for (const [name, body] of [['plan', plan], ['revise', revise]]) {
+    assert.ok(body.trim().split('\n').length <= 60, `${name}: too long`);
+    assert.equal(body.match(/self-critique/g).length, 1, `${name}: exactly one self-critique pass`);
+    for (const s of ['Profile deep', 'risks', 'missing tests', 'task size', 'edge cases']) assert.ok(body.includes(s), `${name}: ${s}`);
+    assert.match(body, /no extra agent|no agent/i, name);
+    assert.match(body, /no second question round|no second round/i, name);
+    assert.match(body, /never (run|start|invoke) research|no automatic research/i, name);
+    assert.match(body, /evidence/i, name);
+    assert.match(body, /Awaiting user|awaiting=/, name);
+  }
+  assert.match(plan, /Research \(/);
+  assert.match(plan, /not (a|an) (gate|approval)/i);
+  assert.match(plan, /proposed/);
+  assert.match(plan, /\*\*Critique\*\* \(Profile deep only\)/);
+  assert.match(revise, /same (deep )?self-critique/i);
+  assert.match(plan, /unresolved/i);
+  assert.ok(plan.indexOf('**Critique** (Profile deep only)') < plan.indexOf('telos lint-plan <NN>'), 'critique edits get linted');
+  assert.ok(plan.indexOf('**Critique** (Profile deep only)') < plan.indexOf('Summary'));
+});

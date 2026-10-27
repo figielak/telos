@@ -13,6 +13,8 @@ change ROADMAP, STATUS and task `status` only through the `telos` commands below
    model, acceptance, task split) and the context or a quick look at the code cannot settle it.
    Everything else: pick the conventional option and list it as `Assumed: …` in the summary.
    Record answers in the Constraints of the tasks they affect. No second round.
+   **Research** (deep, `Research (…)` section): evidence, not decisions; never run research. A
+   plan-changing recommendation → `- D-NN [proposed]: …`. No section: plan without it (not a gate).
    **Context** (Profile standard or deep; minimal: skip, no CONTEXT): keep the target phase's
    `NN-CONTEXT.md`; create it only when missing and only for the target, with all six template
    sections (`- none` when empty), ≤ 60 lines. Answers → `- D-NN: …`; assumed choices that
@@ -45,10 +47,14 @@ change ROADMAP, STATUS and task `status` only through the `telos` commands below
      file it names.
 5. **Carry-over**: copy each `Carry-over for NN` item into the Constraints of the task that covers
    it, then `telos status rm carry <n>` for each, highest `n` first (numbers shift).
-6. **Lint**: `telos lint-plan <NN>`; fix every reported line and rerun, at most 3 rounds. Then check
+6. **Critique** (Profile deep only): one self-critique pass over the drafted tasks, no extra agent or
+   loop: risks, missing tests, task size, edge cases; edit in place. A blocking question → `- Q-NN: …`
+   in the CONTEXT and `telos status set awaiting="<existing>, NN:Q-MM"`; no second question round.
+   Unresolved items go in the summary.
+7. **Lint**: `telos lint-plan <NN>`; fix every reported line and rerun, at most 3 rounds. Then check
    yourself what lint cannot: each edge case has a test, Read-first ranges point at the right code.
-7. **Record**: `telos roadmap set <NN> drafted`, then
+8. **Record**: `telos roadmap set <NN> drafted`, then
    `telos status set phase=<NN-name> task=none next="/telos:approve or /telos:revise <notes>"`.
-8. **Summary**, ≤ 10 lines: phase goal; tasks as `NN-MM title`, marking `[hard]` / `[critical]`;
-   risks; `Assumed: …`; open questions and lint problems left; last line
+9. **Summary**, ≤ 10 lines: goal; tasks `NN-MM title` marked `[hard]` / `[critical]`; risks;
+   `Assumed: …`; unresolved critique items, open questions, lint problems; last line
    `Next: /telos:approve or /telos:revise <notes>`.
