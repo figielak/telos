@@ -13,6 +13,14 @@ change ROADMAP, STATUS and task `status` only through the `telos` commands below
    model, acceptance, task split) and the context or a quick look at the code cannot settle it.
    Everything else: pick the conventional option and list it as `Assumed: …` in the summary.
    Record answers in the Constraints of the tasks they affect. No second round.
+   **Context** (Profile standard or deep; minimal: skip, no CONTEXT): keep the target phase's
+   `NN-CONTEXT.md`; create it only when missing and only for the target, with all six template
+   sections (`- none` when empty), ≤ 60 lines. Answers → `- D-NN: …`; assumed choices that
+   change the plan → `- D-NN [proposed]: …`, never confirmed by you. Keep existing D-NN/Q-NN and
+   user answers word for word; new IDs follow the highest one; never renumber. Copy relevant
+   decisions into task Constraints and list their IDs in task `decisions` (a `[proposed]` one
+   then blocks approve/do until the user confirms it). Put new proposed IDs into Awaiting user
+   with one `telos status set awaiting="<existing entries>, NN:D-MM"`.
 3. **New phase**: `telos roadmap add <kebab-name> "<goal>" "<done when>"` (it prints the NN);
    the done-when criterion must be observable.
 4. **Tasks**: split the phase into tasks of about an hour or less; foundations first, so `depends`

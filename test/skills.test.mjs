@@ -46,7 +46,7 @@ test('init injects telos ctx init and stays short', () => {
 // Variants (SPEC §5.0): same body as the base skill, which injects the shared instructions via
 // `telos ctx shared <name>` (cat of plugin files is blocked outside the session's working dirs).
 const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do', 'quick-hard': 'quick', 'map-hard': 'map' };
-const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet' };
+const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet', discuss: 'opus' };
 const SHARED = fileURLToPath(new URL('../shared/', import.meta.url));
 const FIELDS = ['disable-model-invocation', 'allowed-tools', 'argument-hint'];
 
@@ -247,4 +247,41 @@ test('profile injects its fixed bundle, keeps the requested profile in the body 
   for (const s of ['REFUSED:', 'retained', 'CLAUDE.md', 'Exit 2', 'exit 1']) assert.ok(body.includes(s), s);
   assert.doesNotMatch(body, /init --force|git (add|commit|push) |--no-verify/);
   assert.ok(body.trim().split('\n').length <= 40);
+});
+
+test('discuss injects its fixed bundle, keeps arguments under Request and selects phases via a validated command', () => {
+  const { field, body } = read('discuss');
+  assert.equal(field('model'), 'opus');
+  assert.match(body, /^## Context\n!`telos ctx discuss`$/m);
+  assert.match(body, /^## Request\n\$ARGUMENTS$/m);
+  assert.equal(body.split('$ARGUMENTS').length - 1, 1);
+  assert.equal((body.match(/!`/g) ?? []).length, 1);
+  assert.ok(body.includes('`telos ctx discuss <NN>`'));
+  const tools = field('allowed-tools').split(/,\s*/);
+  for (const t of ['Bash(telos *)', 'Read', 'Grep', 'Glob', 'Edit(.telos/phases/**)', 'Write(.telos/phases/**)']) assert.ok(tools.includes(t), t);
+  assert.doesNotMatch(field('allowed-tools'), /git|STATUS|ROADMAP/);
+  assert.ok(body.trim().split('\n').length <= 60);
+});
+
+test('the discuss instructions write all CONTEXT sections, keep IDs and change Awaiting user via the CLI', () => {
+  const { body } = read('discuss');
+  for (const s of ['## Goal', '## Decisions', '## Constraints', '## Open questions', '## Carried over', '## Links',
+    '≤ 60 lines', '[proposed]', 'Q-NN', 'D-NN', 'AskUserQuestion', 'telos status set awaiting=', 'REFUSED:', 'Requires standard', '/telos:revise', '/telos:plan']) {
+    assert.ok(body.includes(s), s);
+  }
+  assert.match(body, /never renumber/i);
+  assert.match(body, /never (?:silently )?confirm/i);
+  assert.match(body, /one (?:question )?round/i);
+  assert.doesNotMatch(body, /git (add|commit|push)|--no-verify/);
+});
+
+test('plan and revise maintain phase CONTEXT on standard+ only and keep decision IDs', () => {
+  const plan = readFileSync(join(SHARED, 'plan.md'), 'utf8');
+  const revise = readFileSync(join(SHARED, 'revise.md'), 'utf8');
+  for (const s of ['NN-CONTEXT.md', '≤ 60 lines', 'minimal', '[proposed]', 'telos status set awaiting=', 'decisions']) {
+    assert.ok(plan.includes(s), `plan: ${s}`);
+  }
+  for (const s of ['CONTEXT', '[proposed]', 'telos status set awaiting=']) assert.ok(revise.includes(s), `revise: ${s}`);
+  for (const text of [plan, revise]) assert.match(text, /never renumber/i);
+  assert.match(revise, /never (?:silently )?confirm/i);
 });

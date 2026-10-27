@@ -2,7 +2,7 @@
 id: 04-03
 title: Discuss and phase context
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [04-02]
@@ -50,8 +50,13 @@ Add /telos:discuss and make standard planning maintain bounded phase CONTEXT wit
 - Update README command/bundle rows and run the listed tests.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Discuss-to-plan instructions preserve phase-local IDs and existing approve/do refusal behavior.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Discuss-to-plan instructions preserve phase-local IDs and existing approve/do refusal behavior.
 
 ## Result
+- `telos ctx discuss [NN]` (lib/ctx/discuss.mjs): exact minimal requirement line, REFUSED for missing/done/dropped phases, Mode per phase state (active = append-only, changes via revise), CONTEXT or skeleton, next free D/Q IDs, task references, Awaiting user; read-only, non-NN arg → exit 2.
+- `/telos:discuss` (opus, one fixed injection, focus under Request, phase via `telos ctx discuss <NN>`): one question round, six sections ≤ 60 lines, answers confirmed, assumptions `[proposed]`, Awaiting user via `telos status set awaiting=`.
+- shared plan/revise maintain std+ CONTEXT, keep IDs, never self-confirm; existing approve/do gates unchanged (tested via ctx approve/do).
+- Tests: 7 in ctx-discuss.test.mjs + 3 in skills.test.mjs; npm test 315/315. test/check.test.mjs and 04-06-check.md changes in the work tree come from parallel 04-06 work and are not part of this task.
+Deviations: skills/plan/SKILL.md — needs Write(.telos/phases/**) to create a missing CONTEXT; skills/plan-lite/SKILL.md — same allowed-tools as plan (variant test)

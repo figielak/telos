@@ -16,6 +16,11 @@ ROADMAP, STATUS and task `status` only through `telos` commands. Never commit.
    - split: `telos task new <NN> <slug> "<title>"`, move the content, fix `depends` on both sides;
    - merge or drop: move what stays, then `telos task rm <id>` (draft only) and repoint `depends`;
    - reorder: change `depends`; IDs are never renumbered.
+   - CONTEXT (standard/deep): keep confirmed `D-NN`, `D-NN [proposed]` and `Q-NN` lines and user
+     answers unless the notes change them; never renumber; new choices get the next free ID as
+     `[proposed]`; never silently confirm one: drop `[proposed]` only when the notes confirm
+     it. Update task `decisions`/Constraints that use a changed ID, and Awaiting user with one
+     `telos status set awaiting="NN:D-MM, …"` (`awaiting=` when none are left).
 5. **Lint**: `telos lint-plan <NN>`; fix every reported line and rerun, at most 3 rounds.
 6. **Record**: a `[planned]` phase becomes `telos roadmap set <NN> drafted`; `drafted` and `active`
    stay. Then `telos status set next="/telos:approve or /telos:revise <notes>"`.
