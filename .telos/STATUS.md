@@ -2,7 +2,7 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 05-deep
-Task: 05-01
+Task: 05-02
 Next: /telos:do
 Blockers: none
 Awaiting user: none
@@ -15,6 +15,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 05-01 done: bounded review evidence, stable snapshot identity and read-only proof (445 tests)
 - 04-13 done: standard lifecycle, confirmed undo, memory and hook proof (429 tests)
 - 04-12 done: PreCompact save, compact SessionStart restore and opt-in context hints
-- 04-11 done: edited-file queue and once-per-Stop format/types checks without loops or lost edits

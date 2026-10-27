@@ -2,7 +2,7 @@
 id: 05-01
 title: Review context and diff evidence
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard        # normal | hard
 depends: []
@@ -60,8 +60,13 @@ Prepare a bounded, read-only review bundle for one task or phase, with precise c
 4. lib/ctx/index.mjs and README.md: register/document ctx review and its default selection.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Task and phase review inputs are reproducible, bounded and read-only; missing evidence is visible.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Task and phase review inputs are reproducible, bounded and read-only; missing evidence is visible.
 
 ## Result
+- Added deep-only `ctx review` and `reviewEvidence`: exact task commits or phase baseline, staged/unstaged and untracked evidence, Acceptance and relevant MAP lines.
+- Content-based evidenceId covers full patches and binary bytes; bounded bundles preserve continuations and mark missing coverage UNVERIFIED. Missing or unrelated baselines refuse.
+- All 445 tests pass, including 15 new review cases; accept 05-01 PASS, manual criteria verified. Plugin validation passes with existing CLAUDE.md/icon warnings.
+- Read-only checks preserve HEAD, index bytes and Telos metadata; literal paths and data framing prevent shell execution and forged report fields.
+Deviations: none
