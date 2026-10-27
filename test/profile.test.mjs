@@ -63,6 +63,8 @@ test('minimal → standard creates HISTORY and LESSONS and records the switch vi
   assert.equal(entries.length, 1);
   assert.equal(entries[0].ref, 'telos');
   assert.match(entries[0].text, /minimal → standard/);
+  // The switch does not invent an `init` row dated today with the target profile.
+  assert.deepEqual(readHistory(root).log.map((e) => e.kind), ['profile']);
 });
 
 test('standard → deep creates decisions/; a downgrade retains every file and its content', async (t) => {

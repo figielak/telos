@@ -17,4 +17,3 @@
      ref: NN, NN-MM, ADR NNN, quick, telos
      Archive is installed first; after an interrupted write it may duplicate live Log rows. -->
 - 2026-10-27 profile telos: minimal → standard
-- 2026-10-27 init telos: initialized (standard profile)
