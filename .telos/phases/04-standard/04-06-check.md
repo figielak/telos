@@ -2,7 +2,7 @@
 id: 04-06
 title: Verification runner
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: true
 effort: hard        # normal | hard
 depends: [04-02]
@@ -55,8 +55,13 @@ Implement telos check with configured quick/full checks, bounded failure reports
 4. README.md: document defaults, SKIP/unverified behavior and exits.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Verification output is compact, failures are nonzero and malicious filenames cannot run shell code.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Verification output is compact, failures are nonzero and malicious filenames cannot run shell code.
 
 ## Result
+Implemented configured quick/full verification with SKIP/unverified verdicts, profile/usage gates and a reusable runner.
+Bounded command time/output, killed process groups and restricted quoted file substitution to safe in-repo arguments.
+All 14 runner tests and 329 total tests pass; `telos accept 04-06`: PASS, scope ok; manual criteria verified by regression tests.
+Quoted/embedded placeholders and complex substitution templates are rejected before execution to preserve literal file arguments.
+Deviations: none
