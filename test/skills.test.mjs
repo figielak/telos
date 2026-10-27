@@ -46,7 +46,7 @@ test('init injects telos ctx init and stays short', () => {
 // Variants (SPEC §5.0): same body as the base skill, which injects the shared instructions via
 // `telos ctx shared <name>` (cat of plugin files is blocked outside the session's working dirs).
 const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do', 'quick-hard': 'quick', 'map-hard': 'map' };
-const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet', discuss: 'opus' };
+const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet', discuss: 'opus', lesson: 'sonnet' };
 const SHARED = fileURLToPath(new URL('../shared/', import.meta.url));
 const FIELDS = ['disable-model-invocation', 'allowed-tools', 'argument-hint'];
 
@@ -284,4 +284,32 @@ test('plan and revise maintain phase CONTEXT on standard+ only and keep decision
   for (const s of ['CONTEXT', '[proposed]', 'telos status set awaiting=']) assert.ok(revise.includes(s), `revise: ${s}`);
   for (const text of [plan, revise]) assert.match(text, /never renumber/i);
   assert.match(revise, /never (?:silently )?confirm/i);
+});
+
+test('lesson injects its fixed bundle, keeps the lesson under Request and may edit only LESSONS and PROJECT', () => {
+  const { field, body } = read('lesson');
+  assert.equal(field('model'), 'sonnet');
+  assert.match(body, /^## Context\n!`telos ctx lesson`$/m);
+  assert.match(body, /^## Request\n\$ARGUMENTS$/m);
+  assert.equal(body.split('$ARGUMENTS').length - 1, 1);
+  assert.equal((body.match(/!`/g) ?? []).length, 1);
+  const tools = field('allowed-tools').split(/,\s*/);
+  for (const t of ['Bash(telos *)', 'Read', 'Edit(.telos/LESSONS.md)', 'Edit(.telos/PROJECT.md)']) assert.ok(tools.includes(t), t);
+  assert.doesNotMatch(field('allowed-tools'), /Write|git|STATUS|ROADMAP|phases/);
+  assert.ok(body.trim().split('\n').length <= 60);
+});
+
+test('the lesson instructions dedupe by area, never add a 21st and promote before removing', () => {
+  const { body } = read('lesson');
+  for (const s of ['- [area] lesson (ref)', 'NN-MM', 'quick', 'REFUSED:', 'Requires standard', 'AskUserQuestion', '§Conventions', '20']) {
+    assert.ok(body.includes(s), s);
+  }
+  assert.match(body, /area first/i);
+  assert.match(body, /duplicate/i);
+  assert.match(body, /distinct[^\n]*(?:same area|separate)/i);
+  assert.match(body, /never (?:add )?a 21st/i);
+  assert.match(body, /never (?:delete|remove|drop)[^\n]*without/i);
+  assert.match(body, /only after/i);
+  assert.match(body, /re-?read/i);
+  assert.doesNotMatch(body, /git (add|commit|push)|telos (task|status|roadmap) /);
 });

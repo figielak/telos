@@ -2,7 +2,7 @@
 id: 04-04
 title: Lesson capture
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [04-02]
@@ -47,8 +47,13 @@ Add /telos:lesson with an area-first duplicate check and a bounded LESSONS list 
 - Register the bundle and document the new skill and context rows.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Lesson instructions enforce the 20-entry limit and require a user choice before replacing knowledge.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Lesson instructions enforce the 20-entry limit and require a user choice before replacing knowledge.
 
 ## Result
+- lib/lessons.mjs: parseLessons (canonical area/text/ref with 1-based lines, comments and `- none` skipped, malformed lines reported with a reason), formatLesson, sameArea (equal or nested path prefixes), readLessons, LIMIT 20 — reusable by 04-05.
+- `telos ctx lesson`: minimal gate, REFUSED with `telos profile <p>` repair when LESSONS is missing, default ref from STATUS task else quick, N/20 with full-list guidance, numbered L<n> entries; Conventions last so cap() never cuts a lesson.
+- `/telos:lesson` (sonnet, fixed injection, lesson under Request): area-first dedupe, distinct same-area lessons kept, no 21st, promote/drop only after an AskUserQuestion choice, promotion written and re-read before removal.
+- Tests: 8 in lessons.test.mjs + 2 in skills.test.mjs; npm test 339/339. allowed-tools keeps Bash(telos *) because the existing injection contract requires it.
+Deviations: none

@@ -2,7 +2,7 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 04-standard
-Task: 04-04
+Task: 04-05
 Next: /telos:do
 Blockers: none
 Awaiting user: none
@@ -16,6 +16,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 04-04 done: lesson parser, ctx lesson and /telos:lesson with area dedupe and 20-entry limit
+- 04-03 done: /telos:discuss, ctx discuss and CONTEXT upkeep in plan/revise
 - 04-06 done: bounded quick/full verification, safe file substitution and compact failures
-- 04-02 done: telos profile switching with rollback, ctx profile bundle and /telos:profile skill
-- 04-01 done: history storage, exact delete-zone selectors and recovery-safe Log rotation
