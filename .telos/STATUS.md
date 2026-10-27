@@ -2,8 +2,8 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 04-standard
-Task: 04-13
-Next: /telos:do
+Task: none
+Next: /telos:plan
 Blockers: none
 Awaiting user: none
 <!-- Blockers: "NN-MM: reason". Awaiting user: IDs only, e.g. "02:Q-01, 02:D-03" -->
@@ -16,6 +16,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 04-13 done: standard lifecycle, confirmed undo, memory and hook proof (429 tests)
 - 04-12 done: PreCompact save, compact SessionStart restore and opt-in context hints
 - 04-11 done: edited-file queue and once-per-Stop format/types checks without loops or lost edits
-- 04-10 done: delete-zone warnings once per canonical path/session with exact revert guidance

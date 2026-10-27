@@ -2,7 +2,7 @@
 id: 04-13
 title: Standard lifecycle proof
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: true
 effort: hard        # normal | hard
 depends: [04-03, 04-04, 04-05, 04-07, 04-08, 04-10, 04-12]
@@ -59,9 +59,14 @@ Prove a standard phase completes and can be undone in an isolated repository, in
 5. Run npm test and claude plugin validate .; record verdicts and any remaining integration limits.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] A standard phase including confirmed undo is proven in temporary git repositories.
-- [ ] `claude plugin validate .` → exit 0
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] A standard phase including confirmed undo is proven in temporary git repositories.
+- [x] `claude plugin validate .` → exit 0
 
 ## Result
+- Added 9 isolated standard lifecycle scenarios and deterministic fixtures covering close/undo gates, memory, hook subprocesses, profile downgrade and output caps; README documents availability and workflow.
+- Verification: 9/9 new scenarios, npm test 429/429, telos accept 04-13 PASS (scope ok), claude plugin validate . exit 0 (root CLAUDE.md and missing-icon warnings).
+- Conflict proof preserves committed state and successful history; Git can leave inverse metadata and conflict markers in the working tree until manual recovery.
+- Machine workflow proof only: the harness supplies confirmation/manual-review outcomes; no live Claude Code host smoke evidence was collected.
+Deviations: none

@@ -3,7 +3,8 @@
 A lean, token-economical workflow plugin for Claude Code:
 plan → test → implement → verify, with durable project memory in `.telos/`.
 
-Status: **pre-alpha** (phase 01-skeleton). See [SPEC.md](SPEC.md).
+Status: **pre-alpha**. Minimal and standard workflows are available. Deep-only agents,
+research, review and doc-sync remain planned. See [SPEC.md](SPEC.md) §14.
 
 ## Install (per repository)
 
@@ -40,6 +41,51 @@ All skills are user-invoked only, so they cost nothing until called.
 | `/telos:done [NN]` | Standard/deep: close an active phase. Stops on `Close: blocked` (unfinished tasks, proposed decisions, open questions, Awaiting user, no full checks, unreadable HISTORY). Then verifies before any state change (full checks exit 0, every accept PASS, every manual item checked); any failure leaves the phase active with no history. Promotes hard-to-reverse confirmed decisions with `telos history add decision` and a `→ HISTORY` marker in CONTEXT, adds the `phase` entry, `telos roadmap set NN done`, STATUS `task=none next=/telos:plan`; reruns skip what is recorded. Commits `docs(telos): close phase NN-name` with explicit paths only when `git.auto_commit` is true; suggests `/compact` |
 | `/telos:undo <NN-MM>` | Standard/deep: revert one task. Validates the id, reads `telos ctx undo <id>`, shows every commit with its stat, the Telos files they carry and transitive dependents (never reverted), and asks you to confirm the exact hashes; anything else changes nothing. Then `git revert --no-commit` newest first (conflicts only in `.telos/` are resolved by keeping the current file; a code conflict stops with recovery steps and no HISTORY entry), restores current Telos metadata from HEAD, requires `telos check --level full`, and only then sets the task `reverted`, blocks dependents, reopens a closed phase, updates STATUS and logs one `revert` HISTORY entry via the CLI. Commits `revert(<id>): …` with explicit `.telos/` paths when `git.auto_commit` is true; never reset, stash or push |
 | `/telos:status` | Show phase, task, blockers, latest result and the next step in ≤ 10 lines; reads and changes nothing |
+
+## Standard workflow
+
+Start with standard at initialization, or upgrade an existing minimal repository:
+
+```text
+/telos:init minimal
+/telos:profile standard
+```
+
+Discuss needs a phase in ROADMAP. To create the first planned phase in a fresh repository,
+run in Bash:
+
+```sh
+telos roadmap add greeting "Greeting helpers" "Messages verified"
+telos status set phase=01-greeting task=none next=/telos:discuss
+```
+
+Then clarify and plan it in Claude Code. For a plan containing two dependent tasks
+`01-01` and `01-02`, the flow is:
+
+```text
+/telos:discuss 01
+/telos:plan 01
+/telos:approve
+/telos:do 01-01
+/telos:do 01-02
+/telos:check 01
+/telos:done 01
+/telos:undo 01-02
+```
+
+Confirm proposed decisions before approval or execution. Standard leaves a phase active
+after its last task; `/telos:done` requires passing full checks, task acceptance and explicit
+review of every manual item, then records decisions and the phase in HISTORY. Undo previews
+the exact commits and transitive dependents and asks for confirmation; a successful undo
+reopens a closed phase, preserves other work and blocks affected dependents. A conflict or
+failed post-revert check stops before recording a successful undo.
+
+`npm test` includes [the standard lifecycle proof](test/e2e-standard.test.mjs): isolated local
+Git repositories, public CLI calls, hook stdin/stdout payloads, close/undo failure paths,
+memory, profile downgrade and output caps. The harness plays the skill commands and supplies
+confirmation/manual-review outcomes. This proves the machine workflow; it does not prove
+live Claude Code skill loading, model judgment, interactive confirmation or host hook dispatch.
+No live-host smoke validation is claimed by this suite.
 
 ## CLI
 
