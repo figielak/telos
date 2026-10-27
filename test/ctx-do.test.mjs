@@ -94,7 +94,7 @@ test('effort hard adds a hint and keeps the full bundle', async () => {
 test('the bundle has the task, STATUS, rules, stack, checks and excerpts in order', async () => {
   const out = await ctxDo(repo());
   const order = ['Task: 01-02', 'File: .telos/phases/01-demo/01-02-second-task.md', 'id: 01-02', '## Acceptance',
-    'Status: phase 01-demo', 'Rules:\n- no runtime dependencies', 'Stack: ', 'Checks: ', 'Read first:', '--- src/a.ts:1-5 (greet)'];
+    'Status: phase 01-demo', 'Rules:\n- no runtime dependencies', 'Stack: ', 'Checks: ', 'Auto-commit: ', 'Read first:', '--- src/a.ts:1-5 (greet)'];
   let at = -1;
   for (const part of order) {
     const i = out.indexOf(part);
@@ -103,6 +103,16 @@ test('the bundle has the task, STATUS, rules, stack, checks and excerpts in orde
   }
   assert.doesNotMatch(out, /<!--|# draft \|/);
   assert.match(out, /--- src\/a\.ts:1-5 \(greet\)\nexport function greet\(name\) \{\n[\s\S]*export function bye\(name\) \{\n/);
+});
+
+test('Auto-commit follows git.auto_commit, yes by default', async () => {
+  const root = repo();
+  assert.match(await ctxDo(root), /^Auto-commit: yes$/m);
+  edit(root, '.telos/config.json', (t) => {
+    const cfg = JSON.parse(t);
+    return JSON.stringify({ ...cfg, git: { ...cfg.git, auto_commit: false } });
+  });
+  assert.match(await ctxDo(root), /^Auto-commit: no$/m);
 });
 
 test('a range past the end is clamped, a missing file says so', () => {

@@ -42,6 +42,8 @@ reset or skip hooks.
       `doc`/`audit` = docs. Bullets describe behavior, not files. Run `git status` after: files
       of this task left unstaged → stage and commit them in a second commit with the same scope.
       A failing commit (hook, identity): show the error and stop; do not retry with other flags.
+      `Auto-commit: no` in the context → no `git add` and no commit; list the paths and the
+      commit subject you would use in the Reply instead.
    b. **Blocked** (failing checks after 2 attempts, unverifiable item): leave the work tree as it
       is and commit nothing. Run `telos task set <id> status=blocked` and
       `telos status set blockers="<id>: <reason>" next="/telos:do-hard <id>"`
