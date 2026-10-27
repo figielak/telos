@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "profile": "minimal",
+  "profile": "standard",
   "files_language": "en",
   "stack": [
     "javascript"
