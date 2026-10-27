@@ -2,7 +2,7 @@
 id: 04-07
 title: Check and phase close
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard        # normal | hard
 depends: [04-01, 04-03, 04-06]
@@ -61,8 +61,12 @@ Add /telos:check and /telos:done so standard phases close only after full checks
 5. README.md and test/skills.test.mjs: document and enforce both workflows.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Phase close cannot bypass failing checks or manual acceptance, and reruns avoid duplicate history.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Phase close cannot bypass failing checks or manual acceptance, and reruns avoid duplicate history.
 
 ## Result
+- lib/ctx/check.mjs phaseReport → `ctx check [NN]` / `ctx done [NN]` (done.mjs): minimal gate, REFUSED for missing/empty/non-active/already-done phases, tasks with acceptance counts, Accept commands, full checks or UNVERIFIED, unresolved D/Q/Awaiting user; done adds History phase entry state, decision tags ([candidate]/[in HISTORY…]/[promoted]/[proposed]), Auto-commit and Close: ready|blocked with reasons. Read-only.
+- /telos:check (verify only, manual items checked by hand) and /telos:done (verify → promote → phase entry → roadmap done → STATUS → commit only when auto_commit), both sonnet with one fixed injection.
+- Tests: 8 in ctx-close.test.mjs + 2 in skills.test.mjs; npm test 361/361. The git-guard hook rejected a heredoc containing the test's `git add -A` regex text, so skill/test edits went through Write/Edit.
+Deviations: none

@@ -46,7 +46,7 @@ test('init injects telos ctx init and stays short', () => {
 // Variants (SPEC §5.0): same body as the base skill, which injects the shared instructions via
 // `telos ctx shared <name>` (cat of plugin files is blocked outside the session's working dirs).
 const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do', 'quick-hard': 'quick', 'map-hard': 'map' };
-const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet', discuss: 'opus', lesson: 'sonnet' };
+const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet', discuss: 'opus', lesson: 'sonnet', check: 'sonnet', done: 'sonnet' };
 const SHARED = fileURLToPath(new URL('../shared/', import.meta.url));
 const FIELDS = ['disable-model-invocation', 'allowed-tools', 'argument-hint'];
 
@@ -326,4 +326,38 @@ test('quick derives safe --area selectors in an explicit rerun and plan turns me
   for (const name of ['quick', 'quick-hard', 'plan', 'plan-lite']) {
     for (const [cmd] of read(name).body.matchAll(/!`[^`]*`/g)) assert.doesNotMatch(cmd, /\$ARGUMENTS|--area/, `${name}: ${cmd}`);
   }
+});
+
+test('check and done inject one fixed bundle and keep the phase argument under Request', () => {
+  for (const name of ['check', 'done']) {
+    const { field, body } = read(name);
+    assert.match(body, new RegExp(`^## Context\\n!\`telos ctx ${name}\`$`, 'm'), name);
+    assert.match(body, /^## Request\n\$ARGUMENTS$/m, name);
+    assert.equal(body.split('$ARGUMENTS').length - 1, 1, name);
+    assert.equal((body.match(/!`/g) ?? []).length, 1, name);
+    assert.ok(body.includes(`\`telos ctx ${name} <NN>\``), name);
+    for (const s of ['telos check --level full', 'telos accept <id>', 'Requires standard', 'REFUSED:']) assert.ok(body.includes(s), `${name}: ${s}`);
+    assert.match(body, /never proves/i, name);
+    assert.doesNotMatch(field('allowed-tools'), /push|reset|tag|Write/, name);
+    assert.ok(body.trim().split('\n').length <= 60, name);
+  }
+  assert.doesNotMatch(read('check').field('allowed-tools'), /git|Edit/);
+  assert.doesNotMatch(read('check').body, /telos (task|status|roadmap|history) /);
+});
+
+test('done verifies before any state change, promotes once, records via telos and honors auto_commit', () => {
+  const { field, body } = read('done');
+  const at = (s) => { const i = body.indexOf(s); assert.ok(i >= 0, s); return i; };
+  assert.ok(at('telos check --level full') < at('telos history add decision'));
+  assert.ok(at('telos accept <id>') < at('telos history add phase'));
+  assert.ok(at('telos history add phase') < at('telos roadmap set <NN> done'));
+  assert.ok(at('telos roadmap set <NN> done') < at('telos status set task=none'));
+  for (const s of ['Close: blocked', '[candidate]', '[promoted]', '→ HISTORY', 'History: phase entry missing',
+    'Auto-commit: yes', 'Auto-commit: no', 'docs(telos): close phase', '/compact', 'Next: /telos:plan']) {
+    assert.ok(body.includes(s), s);
+  }
+  assert.match(body, /never mark tasks done/i);
+  assert.match(body, /stays active, no history/i);
+  for (const t of ['Bash(git add *)', 'Bash(git commit *)', 'Edit(.telos/phases/**)']) assert.ok(field('allowed-tools').includes(t), t);
+  assert.doesNotMatch(body, /git add (-A|--all|\.\/?)(?=[\s`]|$)|git commit[^\n]*--no-verify|git push|git tag /m);
 });
