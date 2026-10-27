@@ -52,8 +52,8 @@ test('init injects telos ctx init and stays short', () => {
 
 // Variants (SPEC §5.0): same body as the base skill, which injects the shared instructions via
 // `telos ctx shared <name>` (cat of plugin files is blocked outside the session's working dirs).
-const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do', 'quick-hard': 'quick', 'map-hard': 'map', 'review-hard': 'review' };
-const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet', discuss: 'opus', lesson: 'sonnet', check: 'sonnet', done: 'sonnet', undo: 'sonnet', review: 'sonnet', 'review-hard': 'opus' };
+const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do', 'quick-hard': 'quick', 'map-hard': 'map', 'review-hard': 'review', 'research-hard': 'research' };
+const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet', discuss: 'opus', lesson: 'sonnet', check: 'sonnet', done: 'sonnet', undo: 'sonnet', review: 'sonnet', 'review-hard': 'opus', research: 'sonnet', 'research-hard': 'opus' };
 const SHARED = fileURLToPath(new URL('../shared/', import.meta.url));
 const FIELDS = ['disable-model-invocation', 'allowed-tools', 'argument-hint', 'context'];
 
@@ -417,4 +417,21 @@ test('the review instructions stop on the profile gate and validate the selector
   assert.ok(gate >= 0 && valid > gate && rerun > valid, `${gate} ${valid} ${rerun}`);
   assert.match(body, /REFUSED:/);
   assert.match(body, /\/telos:review \[NN-MM\|NN\]/);
+});
+
+test('research skills fork the matching researcher agent with the fixed research bundle', () => {
+  const agentModel = (name) => /^model:\s*(.*)$/m.exec(readFileSync(join(SKILLS, '..', 'agents', `${name}.md`), 'utf8'))[1].trim();
+  for (const [name, agent] of [['research', 'researcher'], ['research-hard', 'researcher-hard']]) {
+    const { field, body } = read(name);
+    assert.equal(field('context'), 'fork', name);
+    assert.equal(field('agent'), `telos:${agent}`, name);
+    assert.equal(field('model'), agentModel(agent), name);
+    assert.equal(field('argument-hint'), '"[NN] [--replace] [focus]"', name);
+    assert.match(body, /^## Context\n!`telos ctx research`$/m, name);
+    assert.match(body, /^## Request\n\$ARGUMENTS$/m, name);
+    assert.match(body, /^## Instructions\n!`telos ctx shared research`$/m, name);
+    assert.equal(body.split('$ARGUMENTS').length - 1, 1, name);
+    assert.deepEqual(field('allowed-tools').split(/,\s*/).sort(),
+      ['Bash(telos ctx research *)', 'Bash(telos ctx shared *)', 'Glob', 'Grep', 'Read', 'WebFetch', 'WebSearch'], name);
+  }
 });

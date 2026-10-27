@@ -2,7 +2,7 @@
 id: 05-03
 title: Prepared research workflow
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard        # normal | hard
 depends: [05-02]
@@ -67,8 +67,13 @@ Provide research context and forked researcher skills that return a short source
 5. README.md: document research commands, report bounds and fork handoff limitations.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Research never silently overwrites a report or changes a decision; automated tests do not claim live web/host proof.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Research never silently overwrites a report or changes a decision; automated tests do not claim live web/host proof.
 
 ## Result
+Added `telos ctx research [NN]` (`lib/ctx/research.mjs`): deep-gated, read-only bundle with the phase target, CONTEXT Goal, open questions, stack, topic-matched MAP lines, one `Report:` path with its overwrite policy, the date and any existing report as `| `-prefixed data; lists are budgeted with omission lines under the 6000-char cap; missing STATUS/ROADMAP phase or CONTEXT → REFUSED, nothing created.
+Added read-only `researcher` (Sonnet) / `researcher-hard` (Opus) agents, `shared/research.md` (search-first, ≤ 60-line report with dated sources, no invented citations or decisions, one `Handoff:` line: create / replace with `--replace` / keep + proposed update) and forked `/telos:research*` skills; README rows and agent notes.
+Tests: `test/ctx-research.test.mjs` (9) plus agent and skill contract tests; 467 tests pass.
+Surprise: like the reviewer, the researcher gets `Bash(telos ctx research *)` (read-only) so a validated `NN` can rerun the bundle; it still has no write tools. Live web search, fork and main-thread handoff are not exercised by tests (README says so).
+Deviations: none

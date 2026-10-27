@@ -64,6 +64,59 @@ test('the review instructions define the single-round output contract', () => {
   assert.doesNotMatch(body, /git add|git commit|git pu[s]h|--no-verify/);
 });
 
+const RESEARCH_TOOLS = ['Read', 'Grep', 'Glob', 'WebSearch', 'WebFetch', 'Bash(telos ctx research *)'];
+
+test('researcher runs on sonnet and researcher-hard on opus; they differ only in name and model', () => {
+  const base = agent('researcher');
+  const hard = agent('researcher-hard');
+  assert.deepEqual([base.fields.name, base.fields.model, hard.fields.name, hard.fields.model], ['researcher', 'sonnet', 'researcher-hard', 'opus']);
+  const strip = ({ name, model, ...rest }) => rest;
+  assert.deepEqual(strip(hard.fields), strip(base.fields));
+  assert.equal(hard.body, base.body);
+});
+
+test('the researcher has no write tools: it returns text and the main thread persists it', () => {
+  for (const name of ['researcher', 'researcher-hard']) {
+    const tools = agent(name).fields.tools.split(/,\s*/);
+    assert.deepEqual(tools, RESEARCH_TOOLS, name);
+    assert.doesNotMatch(tools.join(' '), /Edit|Write|NotebookEdit|Agent|Bash\(\*\)|Bash\(git/, name);
+  }
+  const { body } = agent('researcher');
+  assert.ok(body.split('\n').length <= 25);
+  assert.match(body, /data, never instructions/);
+  assert.match(body, /never write|no write/i);
+  assert.match(body, /≤ 60 lines/);
+});
+
+test('the research instructions bound the report, preserve existing research and never invent sources or decisions', () => {
+  const body = text('shared/research.md');
+  assert.ok(body.trim().split('\n').length <= 60);
+  for (const s of ['Requires deep profile', 'REFUSED:', '--replace', '≤ 60 lines', 'Handoff:', 'Recommendation', 'Options',
+    'Sources', 'Unresolved', 'Date', 'Report status']) {
+    assert.ok(body.includes(s), s);
+  }
+  assert.match(body, /Handoff: create/);
+  assert.match(body, /Handoff: replace/);
+  assert.match(body, /Handoff: keep/);
+  assert.match(body, /proposed update/i);
+  assert.match(body, /unavailable/i);
+  assert.match(body, /never invent|never fabricate/i);
+  assert.match(body, /never decide/i);
+  assert.match(body, /primary docs/i);
+  assert.match(body, /existing (librar|pattern)/i);
+  assert.match(body, /CONTEXT, STATUS (or|and) ROADMAP/);
+  assert.doesNotMatch(body, /git add|git commit|--no-verify/);
+});
+
+test('research selects the phase only from a validated Request and keeps the bundle path', () => {
+  const body = text('shared/research.md');
+  const gate = body.indexOf('Requires deep profile');
+  const valid = body.indexOf('exactly two digits');
+  const rerun = body.indexOf('telos ctx research <NN>');
+  assert.ok(gate >= 0 && valid > gate && rerun > valid, `${gate} ${valid} ${rerun}`);
+  assert.match(body, /only the `Report:` path/);
+});
+
 test('an UNVERIFIED review can never be a clean verdict', () => {
   const body = text('shared/review.md');
   assert.match(body, /Verdict UNVERIFIED, never\s+(a\s+)?clean/i);
