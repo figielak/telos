@@ -2,7 +2,7 @@
 id: 04-09
 title: Config and scope guards
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: true
 effort: hard        # normal | hard
 depends: [04-02]
@@ -60,8 +60,13 @@ Protect configured files and enforce current-task scope on Edit/Write, with acti
 5. README.md and manifest tests: document and validate both guards.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Protected configs cannot be authorized by scope alone; strict scope blocks canonical out-of-scope paths.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Protected configs cannot be authorized by scope alone; strict scope blocks canonical out-of-scope paths.
 
 ## Result
+- lib/edit-guard.mjs editGuard(root, input) → allow|warn|deny: protected_configs (exact, glob, basename at any depth, `#fragment` = whole file) need the exact path in the in-progress task's Files; out-of-scope edits warn with the Deviations line, strict_scope denies; `.telos/` exempt.
+- Targets are matched lexically and via realpath of the deepest existing ancestor (absolute, `../`, cwd-relative, symlinked file/dir, sibling prefixes covered); invalid std config or unreadable STATUS task fails closed except for repair edits inside `.telos/`.
+- hooks/edit-guard.mjs: exit 2 + stderr for deny, `hookSpecificOutput.additionalContext` for warn, malformed input reported with exit 0; wired in hooks.json for Edit|Write|MultiEdit|NotebookEdit next to the Bash guard.
+- Tests: 10 in edit-guard.test.mjs + 1 in manifest.test.mjs; npm test 381/381. The additionalContext payload follows the documented PreToolUse format but was not re-checked against live host docs in this session.
+Deviations: none
