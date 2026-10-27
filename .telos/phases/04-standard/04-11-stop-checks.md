@@ -2,7 +2,7 @@
 id: 04-11
 title: Edited-file Stop checks
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: true
 effort: hard        # normal | hard
 depends: [04-06, 04-09]
@@ -63,8 +63,13 @@ Track edited paths and run one configured formatting/typecheck batch at Stop wit
 5. hooks/hooks.json, README.md and manifest tests: register/document hooks and optional checks.format.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Stop batches run once, never lose edits arriving during checks, and do not guess formatter commands.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Stop batches run once, never lose edits arriving during checks, and do not guess formatter commands.
 
 ## Result
+- config: optional `checks.format` (never detected); check.mjs: runNamed(root, {names, files, timeoutMs}) shared by runChecks and Stop, so `telos check --level full` never formats.
+- lib/edited.mjs: recordEdit (canonical path via editTarget, one file per path in `.cache/edited/<session>/pending/`, tmp+rename retried when pending was claimed), claimBatch (atomic rename of pending to batch-*, merges earlier failed batches), completeBatch, stopChecks (format then types once, 120 s each, bounded report, batch kept on failure).
+- hooks/edited.mjs (PostToolUse, silent) and hooks/stop.mjs (exit 2 with the report, skipped on stop_hook_active) wired in hooks.json; Stop timeout 300 s.
+- Tests: 11 in edited.test.mjs (incl. a real hook process recording an edit during the batch) + 1 config + 1 manifest; npm test 410/410.
+Deviations: none

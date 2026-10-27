@@ -72,3 +72,11 @@ test('write then load round-trips with stable formatting', () => {
   assert.ok(text.indexOf('"build"') < text.indexOf('"test"'), 'checks keep spec order');
   assert.deepEqual(load(root), cfg);
 });
+
+test('checks.format is an optional known check; unknown check keys are still rejected', () => {
+  assert.deepEqual(validate({ ...DEFAULTS, checks: { format: 'prettier --write {files}', types: 'tsc' } }), []);
+  const errors = validate({ ...DEFAULTS, checks: { formatter: 'x' } });
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /^checks\.formatter: unknown check \(known: .*format/);
+  assert.match(validate({ ...DEFAULTS, checks: { format: '' } })[0], /^checks\.format: must be a non-empty string/);
+});

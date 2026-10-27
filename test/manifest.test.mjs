@@ -43,3 +43,14 @@ test('hooks.json wires the git guard on Bash and the edit guard on Edit/Write to
     }
   }
 });
+
+test('hooks.json queues edits on PostToolUse and runs the edited-file checks at Stop with a timeout', () => {
+  const hooks = readJson('hooks/hooks.json').hooks;
+  const post = hooks.PostToolUse.find((h) => h.matcher.split('|').includes('Edit'));
+  for (const tool of ['Edit', 'Write', 'MultiEdit', 'NotebookEdit']) assert.ok(post.matcher.split('|').includes(tool), tool);
+  assert.deepEqual(post.hooks.map((x) => x.command), ['node "${CLAUDE_PLUGIN_ROOT}/hooks/edited.mjs"']);
+  assert.equal(hooks.Stop.length, 1);
+  const [stop] = hooks.Stop[0].hooks;
+  assert.equal(stop.command, 'node "${CLAUDE_PLUGIN_ROOT}/hooks/stop.mjs"');
+  assert.ok(stop.timeout >= 240, 'Stop timeout covers format + types at 120 s each');
+});
