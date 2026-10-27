@@ -46,7 +46,7 @@ test('init injects telos ctx init and stays short', () => {
 // Variants (SPEC §5.0): same body as the base skill, which injects the shared instructions via
 // `telos ctx shared <name>` (cat of plugin files is blocked outside the session's working dirs).
 const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do', 'quick-hard': 'quick', 'map-hard': 'map' };
-const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet', discuss: 'opus', lesson: 'sonnet', check: 'sonnet', done: 'sonnet' };
+const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet', discuss: 'opus', lesson: 'sonnet', check: 'sonnet', done: 'sonnet', undo: 'sonnet' };
 const SHARED = fileURLToPath(new URL('../shared/', import.meta.url));
 const FIELDS = ['disable-model-invocation', 'allowed-tools', 'argument-hint'];
 
@@ -360,4 +360,26 @@ test('done verifies before any state change, promotes once, records via telos an
   assert.match(body, /stays active, no history/i);
   for (const t of ['Bash(git add *)', 'Bash(git commit *)', 'Edit(.telos/phases/**)']) assert.ok(field('allowed-tools').includes(t), t);
   assert.doesNotMatch(body, /git add (-A|--all|\.\/?)(?=[\s`]|$)|git commit[^\n]*--no-verify|git push|git tag /m);
+});
+
+test('undo injects a fixed bundle, validates the id from Request and confirms before any git revert', () => {
+  const { field, body } = read('undo');
+  assert.match(body, /^## Context\n!`telos ctx undo`$/m);
+  assert.match(body, /^## Request\n\$ARGUMENTS$/m);
+  assert.equal(body.split('$ARGUMENTS').length - 1, 1);
+  assert.equal((body.match(/!`/g) ?? []).length, 1);
+  const at = (s) => { const i = body.indexOf(s); assert.ok(i >= 0, s); return i; };
+  assert.ok(at('`telos ctx undo <NN-MM>`') < at('AskUserQuestion'));
+  assert.ok(at('AskUserQuestion') < at('git revert --no-commit <hash>'));
+  assert.ok(at('git revert --no-commit <hash>') < at('telos check --level full'));
+  assert.ok(at('telos check --level full') < at('telos task set <NN-MM> status=reverted'));
+  assert.ok(at('telos task set <NN-MM> status=reverted') < at('telos history add revert'));
+  for (const s of ['REFUSED:', 'Revert order', 'Block after undo', 'status=blocked', 'telos roadmap set <NN> active',
+    '--diff-filter=U', 'git revert --abort', 'Auto-commit: no', 'revert(<NN-MM>)']) assert.ok(body.includes(s), s);
+  assert.match(body, /never reverted/i);
+  assert.match(body, /write no HISTORY/i);
+  const tools = field('allowed-tools');
+  assert.doesNotMatch(tools, /reset|stash|push|Edit|Write|git revert \*|git checkout/);
+  assert.ok(tools.includes('Bash(git revert --no-commit *)'));
+  assert.ok(body.trim().split('\n').length <= 60);
 });
