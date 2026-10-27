@@ -458,3 +458,12 @@ test('plan and revise share one deep self-critique pass that adds no research, a
   assert.ok(plan.indexOf('**Critique** (Profile deep only)') < plan.indexOf('telos lint-plan <NN>'), 'critique edits get linted');
   assert.ok(plan.indexOf('**Critique** (Profile deep only)') < plan.indexOf('Summary'));
 });
+
+test('the check skill runs the exact targeted full check and treats missing e2e as unverified', () => {
+  const { body } = read('check');
+  assert.match(body, /`telos check --level full --phase <NN>`/);
+  assert.match(body, /`Full checks \(…\)` line/);
+  assert.match(body, /E2E:/);
+  assert.match(body, /UNVERIFIED/);
+  assert.match(body, /never proves/i);
+});

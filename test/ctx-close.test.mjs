@@ -115,7 +115,8 @@ test('a ready phase lists tasks to accept, full checks and promotion candidates'
     assert.match(r.stdout, /^Profile: standard$/m, name);
     assert.match(r.stdout, /^- 01-01 \[done\] First task · normal · depends: none · acceptance: 1 command, 1 manual$/m, name);
     assert.match(r.stdout, /^Accept: telos accept 01-01 · telos accept 01-02 · telos accept 01-03$/m, name);
-    assert.match(r.stdout, /^Full checks \(telos check --level full\): lint=npm run lint · test=npm test$/m, name);
+    assert.match(r.stdout, /^Full checks \(telos check --level full --phase 01\): lint=npm run lint · test=npm test$/m, name);
+    assert.doesNotMatch(r.stdout, /^E2E:/m, name);
     assert.match(r.stdout, /^Unresolved: none$/m, name);
     assert.ok(r.stdout.length <= CAP + 1, name);
   }
@@ -133,7 +134,7 @@ test('check verifies an unfinished phase without a close verdict; no checks mean
   assert.match(check.stdout, /^Accept: telos accept 01-01$/m);
   assert.match(check.stdout, /^Not done \(skipped\): 01-02, 01-03$/m);
   assert.doesNotMatch(check.stdout, /^Close:/m);
-  assert.match(check.stdout, /^Full checks \(telos check --level full\): none configured — UNVERIFIED$/m);
+  assert.match(check.stdout, /^Full checks \(telos check --level full --phase 01\): none configured — UNVERIFIED$/m);
   allDone(root);
   const done = await telos(root, 'ctx', 'done');
   assert.match(done.stdout, /^Close: blocked$/m);
@@ -180,4 +181,43 @@ test('an unreadable HISTORY blocks the close instead of failing the bundle', asy
   assert.match(r.stdout, /^History: unavailable \(/m);
   assert.match(r.stdout, /^Close: blocked$/m);
   assert.match(r.stdout, /^- HISTORY\.md is unreadable/m);
+});
+
+// 05-05 (D-02): deep critical code needs a configured e2e; the bundle names the exact full check.
+test('deep critical code requires e2e: missing blocks the close, configured joins the full checks', async (t) => {
+  const root = allDone(repo(t, { profile: 'deep' }));
+  setTask(root, '01-03-third-task.md', 'critical: false', 'critical: true');
+  const before = snapshot(root);
+  const check = await telos(root, 'ctx', 'check');
+  assert.match(check.stdout, /^Full checks \(telos check --level full --phase 01\): lint=npm run lint · test=npm test$/m);
+  assert.match(check.stdout, /^E2E: required for critical code 01-03 — checks\.e2e not configured \(UNVERIFIED\)$/m);
+  const done = await telos(root, 'ctx', 'done');
+  assert.match(done.stdout, /^Close: blocked\n- e2e required for critical code 01-03 but checks\.e2e is not configured \(UNVERIFIED\)$/m);
+  assert.deepEqual(snapshot(root), before);
+
+  const cfg = join(root, '.telos', 'config.json');
+  writeFileSync(cfg, JSON.stringify({ ...JSON.parse(readFileSync(cfg, 'utf8')), checks: { test: 'npm test', e2e: 'npm run e2e' } }, null, 2));
+  const ready = await telos(root, 'ctx', 'done');
+  assert.match(ready.stdout, /^E2E: required for critical code 01-03: e2e=npm run e2e$/m);
+  assert.match(ready.stdout, /^Close: ready$/m);
+});
+
+test('standard, noncritical and doc/audit critical work show no e2e requirement', async (t) => {
+  const standard = allDone(repo(t));
+  setTask(standard, '01-03-third-task.md', 'critical: false', 'critical: true');
+  assert.doesNotMatch((await telos(standard, 'ctx', 'done')).stdout, /E2E|e2e required/);
+  const docs = allDone(repo(t, { profile: 'deep' }));
+  setTask(docs, '01-03-third-task.md', 'critical: false', 'critical: true');
+  setTask(docs, '01-03-third-task.md', /type: code/, 'type: doc');
+  const r = await telos(docs, 'ctx', 'done');
+  assert.doesNotMatch(r.stdout, /^E2E:/m);
+  assert.doesNotMatch(r.stdout, /e2e required/);
+});
+
+test('ctx check for another phase names that phase in the full-check command', async (t) => {
+  const root = repo(t, { profile: 'deep' });
+  const status = join(root, '.telos', 'STATUS.md');
+  writeFileSync(status, readFileSync(status, 'utf8').replace('Phase: 01-demo', 'Phase: 02-next'));
+  const r = await telos(root, 'ctx', 'check', '01');
+  assert.match(r.stdout, /^Full checks \(telos check --level full --phase 01\):/m);
 });

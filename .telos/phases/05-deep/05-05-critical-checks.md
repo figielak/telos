@@ -2,7 +2,7 @@
 id: 05-05
 title: Critical-task verification
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: true
 effort: hard        # normal | hard
 depends: []
@@ -63,8 +63,13 @@ Extend deterministic verification with explicit task/phase targeting and require
 5. README.md and skill tests: document/enforce selector, exit-code and profile behavior.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] An absent or failing required e2e cannot be masked by passing unit checks; existing command interpolation protections remain tested.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] An absent or failing required e2e cannot be masked by passing unit checks; existing command interpolation protections remain tested.
 
 ## Result
+`telos check --level full` accepts mutually exclusive `--task NN-MM` / `--phase NN` (full only; malformed, repeated or quick-level → exit 2 before execution); deep without a selector uses the STATUS phase. Deep critical `code` tasks in the target append `e2e` after the full set through `runNamed` (same substitution, timeout, output bounds); unconfigured e2e → `UNVERIFIED`, exit 1, even when other checks pass. Missing task/phase/STATUS phase → `REFUSED`, exit 1, nothing runs. Standard, noncritical and doc/audit targets keep the plain set; `Target:` line printed for selected targets.
+`ctx check`/`ctx done` show the exact `telos check --level full --phase NN` and, on deep, an `E2E:` line; an unconfigured required e2e is a close blocker. `/telos:check` runs that exact command; README rows updated.
+Evidence: RED 11 failing tests before implementation (selectors and e2e absent); GREEN 482/482 (`npm test`). e2e: n/a (this repo is standard, no `checks.e2e`).
+Note: `/telos:done` and `/telos:undo` still run plain `telos check --level full`, which on deep targets the STATUS phase; aligning `done` belongs to 05-12.
+Deviations: none

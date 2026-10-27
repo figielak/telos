@@ -217,3 +217,128 @@ test('check is read-only for Telos state and git, including when invoked in a su
   assert.equal((await cli(join(root, 'src'), '--level', 'quick')).code, 0);
   assert.deepEqual([...snapshot(join(root, '.telos')), ...snapshot(join(root, '.git'))], before);
 });
+
+// Targeted full checks (05-05, D-02): --task/--phase select tasks; deep critical code requires e2e.
+function task(root, id, { type = 'code', critical = false, status = 'done' } = {}) {
+  const dir = join(root, '.telos', 'phases', `${id.slice(0, 2)}-demo`);
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, `${id}-t.md`), `---\nid: ${id}\ntitle: T ${id}\ntype: ${type}\nstatus: ${status}\n`
+    + `critical: ${critical}\neffort: normal\ndepends: []\ndecisions: []\nscope: ["src/"]\n---\n## Goal\nx\n`);
+  return root;
+}
+const statusPhase = (root, phase) => writeFileSync(join(root, '.telos/STATUS.md'), `# Status\nPhase: ${phase}\nTask: none\n`);
+const readOrDir = (path) => { try { return readFileSync(path, 'utf8'); } catch (e) { if (e.code === 'EISDIR') return 'dir'; throw e; } };
+const telosSnapshot = (root) => readdirSync(join(root, '.telos'), { recursive: true }).sort()
+  .map((p) => [p, readOrDir(join(root, '.telos', p))]);
+const order = (root) => existsSync(join(root, 'order')) ? readFileSync(join(root, 'order'), 'utf8').trim().split('\n') : [];
+
+function deep(t, checks) {
+  const root = repo(t, checks, 'deep');
+  task(root, '01-01');
+  task(root, '01-02', { critical: true });
+  task(root, '02-01');
+  statusPhase(root, '02-demo');
+  return root;
+}
+
+test('deep critical code runs the full checks then e2e for the selected phase, independent of STATUS', async (t) => {
+  const root = deep(t, { test: probe('order test'), e2e: probe('order e2e') });
+  const r = await cli(root, '--level', 'full', '--phase', '01');
+  assert.equal(r.code, 0, r.stdout);
+  assert.deepEqual(order(root), ['test', 'e2e']);
+  assert.match(r.stdout, /^Target: phase 01 · e2e required for critical code 01-02$/m);
+  assert.match(r.stdout, /test:PASS  e2e:PASS/);
+  rmSync(join(root, 'order'));
+  const status = await cli(root);
+  assert.equal(status.code, 0);
+  assert.deepEqual(order(root), ['test'], 'STATUS phase 02 has no critical code');
+  assert.match(status.stdout, /^Target: phase 02 · no e2e required$/m);
+  rmSync(join(root, 'order'));
+  const one = await runChecks(root, { task: '01-01' });
+  assert.equal(one.ok, true);
+  assert.deepEqual(order(root), ['test'], 'a noncritical task needs no e2e');
+  rmSync(join(root, 'order'));
+  assert.equal((await runChecks(root, { task: '01-02' })).ok, true);
+  assert.deepEqual(order(root), ['test', 'e2e']);
+});
+
+test('missing e2e for deep critical code is UNVERIFIED and exit 1 even when other checks pass', async (t) => {
+  const root = deep(t, { test: probe('order test') });
+  const result = await runChecks(root, { phase: '01' });
+  assert.equal(result.ok, false);
+  assert.equal(result.checks.find((c) => c.name === 'test').verdict, 'PASS');
+  assert.match(result.note, /^UNVERIFIED: e2e required for critical code 01-02 but checks\.e2e is not configured/);
+  const r = await cli(root, '--task', '01-02');
+  assert.equal(r.code, 1);
+  assert.match(r.stdout, /e2e:SKIP/);
+  assert.match(r.stdout, /UNVERIFIED: e2e required/);
+});
+
+test('a failing or timed-out e2e is FAIL with exit 1 and writes no Telos state', async (t) => {
+  const failing = deep(t, { test: 'true', e2e: probe('fail') });
+  const before = telosSnapshot(failing);
+  const r = await cli(failing, '--phase', '01');
+  assert.equal(r.code, 1);
+  assert.match(r.stdout, /test:PASS  e2e:FAIL/);
+  assert.match(r.stdout, /^e2e: exit 3$/m);
+  assert.deepEqual(telosSnapshot(failing), before);
+  const hanging = deep(t, { test: 'true', e2e: probe('hang') });
+  const timed = await runChecks(hanging, { phase: '01', timeoutMs: 300 });
+  assert.equal(timed.ok, false);
+  assert.deepEqual(timed.checks.at(-1), { ...timed.checks.at(-1), name: 'e2e', verdict: 'FAIL' });
+  assert.match(timed.checks.at(-1).note, /^timeout/);
+});
+
+test('noncritical, doc/audit and standard work keep the existing check set without e2e', async (t) => {
+  const checks = { test: probe('order test'), e2e: probe('order e2e') };
+  const docs = repo(t, checks, 'deep');
+  task(docs, '01-01', { type: 'doc', critical: true });
+  task(docs, '01-02', { type: 'audit', critical: true });
+  task(docs, '01-03');
+  statusPhase(docs, '01-demo');
+  assert.equal((await cli(docs)).code, 0);
+  assert.deepEqual(order(docs), ['test']);
+  const standard = repo(t, checks, 'standard');
+  task(standard, '01-01', { critical: true });
+  statusPhase(standard, '01-demo');
+  const r = await cli(standard, '--phase', '01');
+  assert.equal(r.code, 0);
+  assert.deepEqual(order(standard), ['test']);
+  rmSync(join(standard, 'order'));
+  assert.equal((await cli(standard)).code, 0, 'standard without a selector is unchanged');
+  assert.deepEqual(order(standard), ['test']);
+  const noE2e = repo(t, { test: 'true' }, 'standard');
+  task(noE2e, '01-01', { critical: true });
+  assert.equal((await cli(noE2e, '--task', '01-01')).code, 0);
+});
+
+test('malformed, conflicting, repeated or quick-level selectors are usage errors before any check runs', async (t) => {
+  const root = deep(t, { test: probe('order forbidden'), e2e: probe('order forbidden') });
+  for (const args of [['--task', '1-1'], ['--task', '01-1'], ['--phase', '1'], ['--phase', '01-02'], ['--task'], ['--phase'],
+    ['--task', '01-01', '--phase', '01'], ['--phase', '01', '--phase', '02'], ['--level', 'quick', '--task', '01-01'],
+    ['--phase', '01', '--level', 'quick'], ['--task', '--level', 'full']]) {
+    const r = await cli(root, ...args);
+    assert.equal(r.code, 2, JSON.stringify({ args, r }));
+  }
+  await assert.rejects(runChecks(root, { level: 'quick', phase: '01' }), /usage/);
+  await assert.rejects(runChecks(root, { task: '01-01', phase: '01' }), /usage/);
+  assert.equal(existsSync(join(root, 'order')), false);
+});
+
+test('a missing task, phase or default phase in deep full mode fails with a remedy and runs nothing', async (t) => {
+  const root = deep(t, { test: probe('order forbidden') });
+  const task9 = await cli(root, '--task', '01-09');
+  assert.equal(task9.code, 1);
+  assert.match(task9.stdout, /no task 01-09/);
+  const phase7 = await cli(root, '--phase', '07');
+  assert.equal(phase7.code, 1);
+  assert.match(phase7.stdout, /phase 07 has no task files/);
+  statusPhase(root, 'none');
+  const none = await cli(root);
+  assert.equal(none.code, 1);
+  assert.match(none.stdout, /no phase in STATUS; pass --phase NN or --task NN-MM/);
+  rmSync(join(root, '.telos/STATUS.md'));
+  assert.equal((await cli(root, '--level', 'full')).code, 1);
+  assert.equal(existsSync(join(root, 'order')), false);
+  assert.equal((await cli(root, '--level', 'quick')).code, 0, 'quick needs no target');
+});
