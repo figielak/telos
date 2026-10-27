@@ -8,7 +8,14 @@ ROADMAP or HISTORY change. Work from the context above; open only the files the 
    about an hour, a new dependency, a decision the user should make, or its scope is unclear.
    When `Current:` names an `in-progress` task, keep out of that task's files; a change that
    must touch them → stop and suggest finishing it with `/telos:do` first.
-2. **Mini-plan** in chat, ≤ 5 lines: files to touch, the test that proves the change, the
+2. **Memory** (only when the context says `Lessons: none selected`): from `## Change`, take
+   each repo path, directory or file it names and its topic words (`tests`, `git`, `docs`…),
+   even when the working tree is clean. Keep only selectors made of `A-Z a-z 0-9 . _ @ + / -`
+   (drop any other; never paste the Change text itself), then run once
+   `telos ctx quick --area '<selector>' --area '<selector>'` and follow its `Lessons` lines.
+   Exit 2 → drop the rejected selector and rerun once; none derivable → skip. Never reintroduce
+   a `Removed approaches` entry; a change that needs one → stop and ask.
+   **Mini-plan** in chat, ≤ 5 lines: files to touch, the test that proves the change, the
    commit type. No questions unless the Change is ambiguous; then ask once and stop.
 3. **Implement**, following Rules and Stack. Behavior change → add or adjust a test first
    (RED, then green). If it grows past the size limit while working → stop as in step 1, leave

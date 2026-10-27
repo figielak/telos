@@ -144,3 +144,67 @@ test('ctx plan and approve without a phase say so', async () => {
   assert.match((await ctx(root, 'plan')).stdout, /^Target: none/m);
   assert.match((await ctx(root, 'approve')).stdout, /^REFUSED: no phase/m);
 });
+
+// Memory (04-05): lessons and Delete-zone approaches on standard+; the archive never appears.
+function withMemory(root, { lessons = 3, approaches = 2 } = {}) {
+  const config = join(root, '.telos', 'config.json');
+  writeFileSync(config, JSON.stringify({ ...JSON.parse(readFileSync(config, 'utf8')), profile: 'standard' }, null, 2));
+  const lines = Array.from({ length: lessons }, (_, i) => `- [src/area${i}/] lesson number ${i} (01-0${(i % 9) + 1})`);
+  writeFileSync(join(root, '.telos', 'LESSONS.md'), `# Lessons\n${lines.join('\n') || '- none'}\n`);
+  const zone = [
+    ...Array.from({ length: approaches }, (_, i) => `- approach: removed approach ${i} — too slow (01-01, 2026-01-0${(i % 9) + 1})`),
+    '- `src/old/` — module removed (01-01, 2026-01-02)',
+  ];
+  writeFileSync(join(root, '.telos', 'HISTORY.md'), render('HISTORY.md', { date: '2026-01-01', profile: 'standard' })
+    .replace(/(## Delete-zone\n(?:<!--[\s\S]*?-->\n)?)- none/, `$1${zone.join('\n')}`));
+  writeFileSync(join(root, '.telos', 'HISTORY-archive.md'),
+    '# History archive\n\n## Log\n- 2025-01-01 remove 01-01: ARCHIVED secret approach\n');
+  return root;
+}
+
+test('ctx plan on standard includes all lessons and Delete-zone approaches, never the archive', async () => {
+  const root = withMemory(repo());
+  const r = await ctx(root, 'plan', '01');
+  assert.match(r.stdout, /^Lessons \(3\/20\):\n- \[src\/area0\/\] lesson number 0 \(01-01\)\n- \[src\/area1\/\]/m);
+  assert.match(r.stdout, /^Removed approaches \(never reintroduce\):\n- removed approach 0 — too slow \(01-01, 2026-01-01\)\n- removed approach 1/m);
+  assert.doesNotMatch(r.stdout, /ARCHIVED|src\/old\//);
+  // Memory sits before the roadmap and CONTEXT, after the task index and format.
+  assert.ok(r.stdout.indexOf('Format: ') < r.stdout.indexOf('Lessons ('));
+  assert.ok(r.stdout.indexOf('Removed approaches') < r.stdout.indexOf('Roadmap:'));
+});
+
+test('ctx plan on minimal omits standard memory even when the files remain', async () => {
+  const root = withMemory(repo());
+  const config = join(root, '.telos', 'config.json');
+  writeFileSync(config, JSON.stringify({ ...JSON.parse(readFileSync(config, 'utf8')), profile: 'minimal' }, null, 2));
+  const r = await ctx(root, 'plan', '01');
+  assert.doesNotMatch(r.stdout, /Lessons|Removed approaches|lesson number/);
+});
+
+test('oversized memory is budgeted with explicit omissions; rules, checks and tasks survive', async () => {
+  const root = withMemory(repo(), { lessons: 20, approaches: 200 });
+  const r = await ctx(root, 'plan', '01');
+  assert.ok(r.stdout.length <= CAP + 1, String(r.stdout.length));
+  assert.match(r.stdout, /^Rules:\n- no runtime dependencies$/m);
+  assert.match(r.stdout, /^Checks: /m);
+  assert.match(r.stdout, /^- 01-02 \[approved\]/m);
+  assert.match(r.stdout, /^Lessons \(20\/20\):/m);
+  for (let i = 0; i < 20; i++) assert.match(r.stdout, new RegExp(`lesson number ${i} \\(`));
+  assert.match(r.stdout, /^- … \d+ more approaches omitted \(see \.telos\/HISTORY\.md §Delete-zone\)$/m);
+  assert.match(r.stdout, /^Roadmap:/m);
+});
+
+test('a broken HISTORY is reported in the bundle instead of failing it', async () => {
+  const root = withMemory(repo());
+  writeFileSync(join(root, '.telos', 'HISTORY.md'), '# History\nbroken\n');
+  const r = await ctx(root, 'plan', '01');
+  assert.equal(r.code, 0);
+  assert.match(r.stdout, /^Removed approaches: unavailable \(/m);
+  assert.match(r.stdout, /^Lessons \(3\/20\):/m);
+});
+
+test('ctx do never reads LESSONS', async () => {
+  const root = withMemory(repo());
+  const r = await ctx(root, 'do', '01-02');
+  assert.doesNotMatch(r.stdout, /lesson number/);
+});

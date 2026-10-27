@@ -39,6 +39,10 @@ change ROADMAP, STATUS and task `status` only through the `telos` commands below
    - `effort: hard` or `critical: true`: add `## Interface` (contracts, ≤ 15 lines) and
      `## Edge cases` (`- input → outcome`) before Steps; every edge case also appears in Tests.
    - ≤ 80 lines per task (detailed ≤ 140). Edit sections in place; never rewrite a whole file.
+   - Memory (standard/deep, `Lessons` / `Removed approaches` in the context): turn each lesson
+     that applies to a task into a Constraint of that task with its ref; never plan a removed
+     approach, and name it in the Constraints of a task that comes close. `… omitted` → read the
+     file it names.
 5. **Carry-over**: copy each `Carry-over for NN` item into the Constraints of the task that covers
    it, then `telos status rm carry <n>` for each, highest `n` first (numbers shift).
 6. **Lint**: `telos lint-plan <NN>`; fix every reported line and rerun, at most 3 rounds. Then check

@@ -2,7 +2,7 @@
 id: 04-05
 title: Planning and quick memory
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard        # normal | hard
 depends: [04-01, 04-04]
@@ -63,8 +63,13 @@ Inject lessons and removed-approach constraints into plan/quick without passing 
 5. README.md: document memory behavior and ctx quick selector syntax.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] A clean-tree quick request can obtain matching lessons safely; unrelated lessons and history archives stay out.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] A clean-tree quick request can obtain matching lessons safely; unrelated lessons and history archives stay out.
 
 ## Result
+- lib/lessons.mjs: normalizeSelector (shell-inert charset, relative, no traversal), matchLessons (path prefix at `/` boundaries or exact case-insensitive topic; no selectors → []), memoryLines (lessons + Delete-zone approaches via deleteZoneEntries, budgeted with explicit `… N more … omitted` lines, HistoryError shown as unavailable).
+- ctx plan (std+): all lessons and approaches after Format, before Roadmap; ctx quick: strict `--area` argv (≤ 20, else exit 2), memory after Rules/Checks so they are never cut; minimal unchanged.
+- shared/quick.md reruns `telos ctx quick --area '<selector>'` from Change paths/topics (clean tree too); shared/plan.md turns lessons into Constraints and never plans removed approaches.
+- Tests: 5 ctx-plan + 6 ctx-quick + 1 skills; npm test 351/351. Also fixed a stray space in the README plan row left by 04-03.
+Deviations: none

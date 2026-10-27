@@ -313,3 +313,17 @@ test('the lesson instructions dedupe by area, never add a 21st and promote befor
   assert.match(body, /re-?read/i);
   assert.doesNotMatch(body, /git (add|commit|push)|telos (task|status|roadmap) /);
 });
+
+test('quick derives safe --area selectors in an explicit rerun and plan turns memory into Constraints', () => {
+  const quick = readFileSync(join(SHARED, 'quick.md'), 'utf8');
+  for (const s of ["telos ctx quick --area '<selector>'", 'Lessons: none selected', 'clean', 'Removed approaches', 'A-Z a-z 0-9 . _ @ + / -']) {
+    assert.ok(quick.includes(s), `quick: ${s}`);
+  }
+  assert.match(quick, /never paste the Change/i);
+  assert.doesNotMatch(quick, /!`|\$ARGUMENTS|eval/);
+  const plan = readFileSync(join(SHARED, 'plan.md'), 'utf8');
+  for (const s of ['Lessons', 'Removed approaches', 'Constraint', 'omitted']) assert.ok(plan.includes(s), `plan: ${s}`);
+  for (const name of ['quick', 'quick-hard', 'plan', 'plan-lite']) {
+    for (const [cmd] of read(name).body.matchAll(/!`[^`]*`/g)) assert.doesNotMatch(cmd, /\$ARGUMENTS|--area/, `${name}: ${cmd}`);
+  }
+});
