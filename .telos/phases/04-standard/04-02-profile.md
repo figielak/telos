@@ -2,7 +2,7 @@
 id: 04-02
 title: Profile switching
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: true
 effort: hard        # normal | hard
 depends: [04-01]
@@ -59,8 +59,13 @@ Switch existing repositories between profiles without losing planning files or o
 4. skills/profile/SKILL.md and README.md: describe retained data, perform switch and document all new rows.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] All profile transitions preserve existing project data and keep CLAUDE.md unchanged.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] All profile transitions preserve existing project data and keep CLAUDE.md unchanged.
 
 ## Result
+- `telos profile <p>` (lib/profile.mjs): provisions missing HISTORY/LESSONS/decisions/, publishes only `profile` via an atomic temp+rename keeping raw key order, logs `profile telos: a → b` through addHistory; failure restores config and HISTORY bytes.
+- addHistory requires a standard+ config, so the entry is written before publish when leaving standard/deep and after publish when leaving minimal (rollback in both orders).
+- `telos ctx profile` read-only bundle, `/telos:profile` skill (fixed injection, profile under Request), README rows for skill, CLI and bundle.
+- Tests: 11 in test/profile.test.mjs + 1 in skills.test.mjs; npm test 305/305. decisions/ is created empty (git will not track it until an ADR exists).
+Deviations: none

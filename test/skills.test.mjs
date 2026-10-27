@@ -46,7 +46,7 @@ test('init injects telos ctx init and stays short', () => {
 // Variants (SPEC §5.0): same body as the base skill, which injects the shared instructions via
 // `telos ctx shared <name>` (cat of plugin files is blocked outside the session's working dirs).
 const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do', 'quick-hard': 'quick', 'map-hard': 'map' };
-const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet' };
+const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet' };
 const SHARED = fileURLToPath(new URL('../shared/', import.meta.url));
 const FIELDS = ['disable-model-invocation', 'allowed-tools', 'argument-hint'];
 
@@ -234,4 +234,17 @@ test('the map instructions run the fixed refresh command and prove byte preserva
   assert.match(map, /only the (?:listed|affected) blocks/i);
   assert.match(map, /compare/i);
   assert.match(map, /refresh[^\n]*PROJECT|PROJECT[^\n]*refresh/i);
+});
+
+test('profile injects its fixed bundle, keeps the requested profile in the body and switches via the CLI', () => {
+  const { field, body } = read('profile');
+  assert.match(body, /^## Context\n!`telos ctx profile`$/m);
+  assert.match(body, /^## Request\n\$ARGUMENTS$/m);
+  assert.equal(body.split('$ARGUMENTS').length - 1, 1);
+  assert.equal((body.match(/!`/g) ?? []).length, 1);
+  assert.equal(field('allowed-tools'), 'Bash(telos *)');
+  assert.ok(body.includes('`telos profile <profile>`'));
+  for (const s of ['REFUSED:', 'retained', 'CLAUDE.md', 'Exit 2', 'exit 1']) assert.ok(body.includes(s), s);
+  assert.doesNotMatch(body, /init --force|git (add|commit|push) |--no-verify/);
+  assert.ok(body.trim().split('\n').length <= 40);
 });
