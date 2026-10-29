@@ -327,3 +327,86 @@ test('a huge phase keeps the deep obligations and every blocker within the cap',
     assert.ok(r.stdout.includes(part), part);
   }
 });
+
+// 05-13 (D-04, D-05): deep promotion goes adr new → bounded body → HISTORY link → CONTEXT marker.
+const CONTEXT_PATH = join(DEMO, '01-CONTEXT.md');
+const decisionLine = (out, id) => new RegExp(`^- ${id}: .*$`, 'm').exec(out)?.[0];
+const fillBody = (root, file, extra = '') => edit(root, join('.telos', 'decisions', file), (t) => t
+  .replace('## Context\n', '## Context\nGreetings must survive restarts.\n')
+  .replace('## Decision\n', '## Decision\nUse SQLite.\n')
+  .replace(/## Alternatives\n(<!--.*-->\n)?- \n/, '## Alternatives\n$1- JSON file — no concurrent writes\n')
+  .replace(/## Consequences\n(<!--.*-->\n)?- \n/, `## Consequences\n$1- one more dependency\n${extra}`)
+  .replace(/^Reverse by: .*$/m, 'Reverse by: export rows and switch the store module')
+  .replace(/^Links: .*$/m, 'Links: HISTORY 01 decision'));
+
+test('deep promotion walks adr new, body, HISTORY link and CONTEXT marker, and each retry resumes', async (t) => {
+  const root = allDone(repo(t, { profile: 'deep' }));
+  let out = (await telos(root, 'ctx', 'done')).stdout;
+  assert.equal(decisionLine(out, 'D-01'), '- D-01: Store greetings in SQLite. [candidate → if hard to reverse: telos adr new "<title>" --source 01:D-01]');
+  assert.match(out, /^Promotion \(deep\): adr new → body ≤ 30 lines incl\. Reverse by and Links → telos history add decision "ADR NNN" → CONTEXT marker → ADR NNN$/m);
+  assert.match(out, /^Retro: one clause in the phase entry text \(…; retro: …\) and the reply; propose lessons via \/telos:lesson, never edit LESSONS\.md or PROJECT\.md$/m);
+
+  assert.equal((await telos(root, 'adr', 'new', 'Store greetings in SQLite', '--source', '01:D-01')).code, 0);
+  out = (await telos(root, 'ctx', 'done')).stdout;
+  assert.equal(decisionLine(out, 'D-01'), '- D-01: Store greetings in SQLite. [ADR 001; body needed: Context, Decision, Alternatives, Consequences, Reverse by, Links]');
+  assert.match(out, /^Close: ready$/m);
+
+  fillBody(root, '001-store-greetings-in-sqlite.md');
+  out = (await telos(root, 'ctx', 'done')).stdout;
+  assert.equal(decisionLine(out, 'D-01'), '- D-01: Store greetings in SQLite. [ADR 001; history link needed: telos history add decision "ADR 001" "01:D-01: Store greetings in SQLite."]');
+
+  assert.equal((await telos(root, 'history', 'add', 'decision', 'ADR 001', '01:D-01: Store greetings in SQLite.')).code, 0);
+  out = (await telos(root, 'ctx', 'done')).stdout;
+  assert.equal(decisionLine(out, 'D-01'), '- D-01: Store greetings in SQLite. [ADR 001 linked; marker needed: end the CONTEXT line with → ADR 001]');
+
+  edit(root, CONTEXT_PATH, (s) => s.replace('in SQLite.', 'in SQLite. → ADR 001'));
+  out = (await telos(root, 'ctx', 'done')).stdout;
+  assert.equal(decisionLine(out, 'D-01'), '- D-01: Store greetings in SQLite. → ADR 001 [promoted → ADR 001]');
+  assert.match(out, /^Close: ready$/m);
+  // A retried adr new reuses the ADR; nothing duplicates.
+  assert.match((await telos(root, 'adr', 'new', 'Store greetings in SQLite', '--source', '01:D-01')).stdout, / · reused\n$/);
+  assert.equal(readHistory(root).log.filter((e) => e.kind === 'decision').length, 1);
+  assert.deepEqual(readdirSync(join(root, '.telos', 'decisions')), ['001-store-greetings-in-sqlite.md']);
+});
+
+test('markers without ADRs, mismatched markers, non-accepted ADRs and oversized bodies block the close', async (t) => {
+  const root = allDone(repo(t, { profile: 'deep' }));
+  edit(root, CONTEXT_PATH, (s) => s.replace('in SQLite.', 'in SQLite. → ADR 004'));
+  let out = (await telos(root, 'ctx', 'done')).stdout;
+  assert.match(out, /^- D-01: marker → ADR 004 but no ADR has source 01:D-01; fix the CONTEXT marker or the ADR$/m);
+  assert.match(out, /^Close: blocked$/m);
+
+  edit(root, CONTEXT_PATH, (s) => s.replace(' → ADR 004', ''));
+  assert.equal((await telos(root, 'adr', 'new', 'Store greetings in SQLite', '--source', '01:D-01')).code, 0);
+  edit(root, CONTEXT_PATH, (s) => s.replace('in SQLite.', 'in SQLite. → HISTORY'));
+  out = (await telos(root, 'ctx', 'done')).stdout;
+  assert.match(out, /^- D-01: marker → HISTORY but ADR 001 has source 01:D-01; fix the CONTEXT marker or the ADR$/m);
+
+  edit(root, CONTEXT_PATH, (s) => s.replace(' → HISTORY', ''));
+  fillBody(root, '001-store-greetings-in-sqlite.md', '- x\n'.repeat(12));
+  out = (await telos(root, 'ctx', 'done')).stdout;
+  assert.match(out, /^- D-01: ADR 001 has \d+ lines, over 30; shorten its body$/m);
+  assert.match(decisionLine(out, 'D-01'), /\[inconsistent\]$/);
+
+  edit(root, join('.telos', 'decisions', '001-store-greetings-in-sqlite.md'), (s) => s.replace('Status: accepted', 'Status: reverted (2026-01-03, 01-02)'));
+  out = (await telos(root, 'ctx', 'done')).stdout;
+  assert.match(out, /^- D-01: ADR 001 is reverted \(2026-01-03, 01-02\), not binding; decide an explicit follow-up \(new decision or revise\), never promote it as accepted$/m);
+  assert.match(decisionLine(out, 'D-01'), /\[conflict\]$/);
+  assert.match(out, /^Close: blocked$/m);
+});
+
+test('a malformed ADR file blocks a deep close; standard keeps HISTORY-only promotion and ignores decisions/', async (t) => {
+  const root = allDone(repo(t, { profile: 'deep' }));
+  mkdirSync(join(root, '.telos', 'decisions'));
+  writeFileSync(join(root, '.telos', 'decisions', '001-bad.md'), '# 001 · Bad\n');
+  const out = (await telos(root, 'ctx', 'done')).stdout;
+  assert.match(out, /^- ADRs unreadable: 001-bad\.md: malformed ADR header/m);
+  assert.match(out, /^Close: blocked$/m);
+  const standard = allDone(repo(t));
+  mkdirSync(join(standard, '.telos', 'decisions'));
+  writeFileSync(join(standard, '.telos', 'decisions', '001-bad.md'), '# 001 · Bad\n');
+  const s = (await telos(standard, 'ctx', 'done')).stdout;
+  assert.match(s, /^- D-01: Store greetings in SQLite\. \[candidate\]$/m);
+  assert.doesNotMatch(s, /ADR|Promotion|Retro/);
+  assert.match(s, /^Close: ready$/m);
+});

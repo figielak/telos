@@ -432,6 +432,20 @@ test('deep done reviews critical work and syncs docs after verification and befo
   assert.ok(tools.includes('Edit'));
 });
 
+test('deep done promotes through ADRs in a resumable order and adds a retro without memory edits', () => {
+  const { body } = read('done');
+  const at = (s) => { const i = body.indexOf(s); assert.ok(i >= 0, s); return i; };
+  assert.ok(at('telos check --level full --phase <NN>') < at('telos adr new'));
+  assert.ok(at('telos adr new') < at('≤ 30 lines'));
+  assert.ok(at('≤ 30 lines') < at('telos history add decision "ADR <NNN>"'));
+  assert.ok(at('telos history add decision "ADR <NNN>"') < at('→ ADR <NNN>'));
+  assert.ok(at('→ ADR <NNN>') < at('rerun `telos ctx done`'));
+  assert.ok(at('rerun `telos ctx done`') < at('telos history add phase'));
+  for (const s of ['[inconsistent]', '[conflict]', 'retro:', '/telos:lesson', 'never edit LESSONS.md or PROJECT.md',
+    'each ADR path', 'telos history add decision <NN>']) assert.ok(body.includes(s), s);
+  assert.ok(body.trim().split('\n').length <= 60);
+});
+
 test('undo injects a fixed bundle, validates the id from Request and confirms before any git revert', () => {
   const { field, body } = read('undo');
   assert.match(body, /^## Context\n!`telos ctx undo`$/m);

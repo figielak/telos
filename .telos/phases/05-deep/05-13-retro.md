@@ -2,7 +2,7 @@
 id: 05-13
 title: Retrospective and decision promotion
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard        # normal | hard
 depends: [05-10, 05-12]
@@ -62,8 +62,12 @@ Finish deep close with a short retrospective and retry-safe promotion of hard-to
 5. README.md: document deep ADR promotion, retro, retention and recovery behavior.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Interrupted deep close can resume promotion without duplicate ADRs or HISTORY links, and never auto-confirms proposed decisions.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Interrupted deep close can resume promotion without duplicate ADRs or HISTORY links, and never auto-confirms proposed decisions.
 
 ## Result
+Deep `ctx done` tags each confirmed decision by ADR promotion state (candidate, body needed, history link needed with the exact command, marker needed, promoted → ADR NNN) and blocks the close on inconsistent markers, oversized ADRs, superseded/reverted source ADRs or unreadable ADR files; HISTORY links are `decision ADR NNN` entries.
+`/telos:done` deep promotes adr new → bounded body → HISTORY link → `→ ADR NNN` marker, rerunning ctx done before the phase entry; retro is one clause in the phase entry plus a ≤ 3-line reply with proposed /telos:lesson lines; standard keeps HISTORY-only promotion.
+552 tests pass (+4). lib/ctx/done.mjs needed no change (phaseReport covers both bundles).
+Deviations: none

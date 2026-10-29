@@ -42,20 +42,25 @@ commands; edit only the phase CONTEXT. Never push, amend, tag or use `--no-verif
    uncommitted for the user to inspect; never mark tasks done, tick
    boxes or edit checks to make the close pass. Report what failed and `Next: /telos:check`.
 5. **Promote** confirmed decisions that are hard to reverse (data model, storage, public API,
-   protocol, dependency, security); leave the others. Per `Decisions:` tag:
-   - `[candidate]` worth promoting → `telos history add decision <NN> "D-MM: <text>"`, then Edit
-     the CONTEXT line to end with ` → HISTORY`;
-   - `[in HISTORY; add → HISTORY to CONTEXT]` → only the Edit; `[promoted]` → skip.
+   protocol, dependency, security); leave the others. Standard, per `Decisions:` tag: `[candidate]`
+   worth promoting → `telos history add decision <NN> "D-MM: <text>"`, then Edit the CONTEXT line to
+   end with ` → HISTORY`; `[in HISTORY; …]` → only that Edit; `[promoted]` → skip. Deep follows each
+   tag in order, skipping done steps: `telos adr new "<title>" --source <NN>:D-MM` → Edit only its
+   body sections, `Reverse by:` and `Links:` (≤ 30 lines) →
+   `telos history add decision "ADR <NNN>" "<NN>:D-MM: <text>"` → CONTEXT line ends ` → ADR <NNN>`;
+   then rerun `telos ctx done`: any `[inconsistent]`, `[conflict]` or unfinished ADR tag → stop.
 6. **Record**, in this order (a retry skips what the context shows as recorded):
-   - `History: phase entry missing` → `telos history add phase <NN> "closed <NN-name>: <done when>"`;
+   - `History: phase entry missing` → `telos history add phase <NN> "closed <NN-name>: <done when>"`
+     (deep appends `; retro: <one surprise or lesson>`);
    - `telos roadmap set <NN> done`;
    - `telos status set task=none next="/telos:plan"` and
      `telos status add recent "<NN-name> closed: <one line>"`.
 7. **Commit**: `Auto-commit: yes` → `git add .telos/ROADMAP.md .telos/STATUS.md .telos/HISTORY.md
    <CONTEXT path>` (+ `.telos/HISTORY-archive.md` when `git status` shows it, + each changed doc path
-   of step 4, named explicitly), then
+   of step 4 and each ADR path, named explicitly), then
    `git commit -m "docs(telos): close phase <NN-name>" -m "- <2–3 bullets>"`. `Auto-commit: no` →
    do not commit; list the changed paths. A failing commit: show the error and stop.
 8. **Reply** in ≤ 10 lines: verdicts, promoted decision IDs, the commit subject (or the
-   uncommitted paths), a hint to run `/compact` before the next phase; last line
+   uncommitted paths), deep: a ≤ 3-line retro with proposed `/telos:lesson "<lesson>"` lines
+   (never edit LESSONS.md or PROJECT.md), a hint to run `/compact` before the next phase; last line
    `Next: /telos:plan`.
