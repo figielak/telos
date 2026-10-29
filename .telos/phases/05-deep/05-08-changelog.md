@@ -2,7 +2,7 @@
 id: 05-08
 title: Conventional-commit changelog drafts
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: []
@@ -42,8 +42,12 @@ Draft changelog material from phase conventional commits without changing the ch
 3. Register the CLI and document its distinction between raw candidates and the skill's ≤10-line final entry.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] telos changelog never edits files or invents a release; its output is sufficient for targeted phase-close condensation.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] telos changelog never edits files or invents a release; its output is sufficient for targeted phase-close condensation.
 
 ## Result
+Implemented deep-only changelog candidates from the exact phase tag to pinned HEAD, preserving conventional categories/scopes, breaking notes and revert targets while excluding planning-only docs(telos).
+Bounded history and report output expose omitted commits/candidates; quoted messages stay data, signatures are not verified through repository programs, and no release version or CHANGELOG edits are produced.
+Validation: 9 new changelog tests pass; npm test passes all 513 tests; telos accept 05-08: PASS, scope ok and both manual items verified against history, rendering and no-write tests.
+Deviations: none
