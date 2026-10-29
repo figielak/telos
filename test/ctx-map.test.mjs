@@ -287,3 +287,18 @@ test('refresh validates the whole saved MAP and keeps authored PROJECT sections 
   ({ text } = await ctxMap(root, '--refresh'));
   assert.match(text, /^Map validation: FAIL .*token budget exceeded/m);
 });
+
+// 05-14: the bundle states the commit policy for the confirmed docs(telos): map commit.
+test('the bundle names the map commit policy from git.auto_commit', async () => {
+  const root = repo({ profile: 'deep' });
+  const yes = (await ctxMap(root)).text;
+  assert.match(yes, /^Auto-commit: yes$/m);
+  assert.match(yes, /^Commit after PASS: ask once; on yes `git add \.telos\/MAP\.md` \(\+ `\.telos\/PROJECT\.md` when changed\), then `git commit -m "docs\(telos\): map" -- <those paths>`; other staged paths → no commit$/m);
+  const path = join(root, '.telos', 'config.json');
+  const cfg = JSON.parse(readFileSync(path, 'utf8'));
+  writeFileSync(path, JSON.stringify({ ...cfg, git: { ...cfg.git, auto_commit: false } }));
+  const no = (await ctxMap(root)).text;
+  assert.match(no, /^Auto-commit: no$/m);
+  assert.match(no, /^Commit: none — git\.auto_commit is false; no git writes, leave docs\(telos\): map to the user$/m);
+  assert.doesNotMatch(no, /Commit after PASS/);
+});

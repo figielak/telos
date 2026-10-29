@@ -195,7 +195,10 @@ test('map skills inject the fixed bundle and shared body; arguments only appear 
     for (const t of ['Bash(telos *)', 'Read', 'Grep', 'Glob', 'Edit(.telos/MAP.md)', 'Edit(.telos/PROJECT.md)', 'Write(.telos/MAP.md)', 'Write(.telos/PROJECT.md)']) {
       assert.ok(tools.split(/,\s*/).includes(t), `${name}: ${t}`);
     }
-    assert.doesNotMatch(tools, /git|push|Edit\(\.telos\/\*\*\)|Write\(\*|ROADMAP/, name);
+    assert.doesNotMatch(tools, /push|reset|Edit\(\.telos\/\*\*\)|Write\(\*|ROADMAP/, name);
+    assert.deepEqual(tools.split(/,\s*/).filter((t) => /git/.test(t)).sort(),
+      ['Bash(git add .telos/MAP.md*)', 'Bash(git commit *)', 'Bash(git diff --cached*)', 'Bash(git status*)'], name);
+    assert.ok(tools.split(/,\s*/).includes('AskUserQuestion'), name);
   }
 });
 
@@ -220,15 +223,23 @@ test('the map instructions draft PROJECT for confirmation without needing questi
   assert.match(map, /≤ 60 lines/);
   assert.match(map, /no stack|stack or check/i);
   assert.match(map, /without asking|never ask|no questions/i);
-  assert.doesNotMatch(map, /AskUserQuestion/);
+  // The only question is the commit confirmation after a successful validation.
+  assert.equal(map.match(/AskUserQuestion/g).length, 1);
+  assert.ok(map.indexOf('Map validation: PASS') < map.indexOf('AskUserQuestion'));
 });
 
-test('the map instructions never touch git or ROADMAP and report unsupported arguments', () => {
+test('the map instructions commit only a confirmed validated map with explicit paths and never touch ROADMAP', () => {
   const map = readFileSync(join(SHARED, 'map.md'), 'utf8');
-  assert.match(map, /never commit/i);
   assert.match(map, /ROADMAP/);
   assert.match(map, /usage/i);
-  assert.doesNotMatch(map, /git (add|commit|push)/);
+  const at = (s) => { const i = map.indexOf(s); assert.ok(i >= 0, s); return i; };
+  assert.ok(at('Map validation: PASS') < at('Commit after PASS'));
+  assert.ok(at('Commit after PASS') < at('git diff --cached --name-only'));
+  assert.ok(at('git diff --cached --name-only') < at('git add .telos/MAP.md'));
+  assert.ok(at('git add .telos/MAP.md') < at('git commit -m "docs(telos): map" --'));
+  for (const s of ['Auto-commit: no', 'headless', 'declined']) assert.ok(map.includes(s), s);
+  assert.match(map, /no git (writes|command)/i);
+  assert.doesNotMatch(map, /git (add (-A|--all|\.\/?(?=[\s`]|$))|push)|--no-verify/m);
 });
 
 test('the map instructions run the fixed refresh command and prove byte preservation', () => {

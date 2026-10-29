@@ -2,7 +2,7 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 05-deep
-Task: 05-14
+Task: 05-15
 Next: /telos:do
 Blockers: none
 Awaiting user: none
@@ -15,6 +15,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 05-14 done: deep Stop map-staleness reminder and confirmed docs(telos): map commit (560 tests)
 - 05-13 done: deep ADR promotion states, resumable promotion order and close retro (552 tests)
 - 05-12 done: deep close gates critical evidence, one phase review and doc-sync before promotion (548 tests)
-- 05-11 done: ADR-aware undo with explicit selection and adr revert after verified revert (542 tests)

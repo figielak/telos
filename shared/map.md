@@ -1,6 +1,6 @@
 <!-- Shared by /telos:map and /telos:map-hard (SPEC §5.0, §6). Injected via `telos ctx shared map`. -->
-Work from the context above. Write only `.telos/MAP.md` and `.telos/PROJECT.md`. Never commit, never
-touch git, never edit ROADMAP, STATUS or config. Never read or enumerate `.telos/` beyond the
+Work from the context above. Write only `.telos/MAP.md` and `.telos/PROJECT.md`. Git only in step 10;
+never edit ROADMAP, STATUS or config. Never read or enumerate `.telos/` beyond the
 `Existing MAP` and `Project` pointers; never read the whole repo.
 
 1. **Request**: empty → use the context above (full build). Exactly `--refresh` → run the fixed command
@@ -37,9 +37,16 @@ touch git, never edit ROADMAP, STATUS or config. Never read or enumerate `.telos
    code or docs you read. Conventions and Out of scope: only what the evidence shows. Whole file
    ≤ 60 lines. No stack, no check commands, no rules inferred from the detected stack. Leave a
    section as `- none` when evidence is thin.
-8. **Ask nothing**: work without asking questions, so the run also completes headless. List every
-   guess as `Assumed: …`.
+8. **Ask nothing** while mapping: work without asking questions, so the run also completes
+   headless. List every guess as `Assumed: …`.
 9. **Reply** in ≤ 10 lines: Mode (and Reason), `Map validation: PASS <tokens>/<limit>`, blocks or
    files changed, files read, PROJECT sections drafted or preserved, the `Assumed:` list, and for a
    full build "PROJECT draft is unconfirmed: review it and edit or tell me what to change".
-   Last line: `Next: review .telos/MAP.md (and PROJECT.md), then commit docs(telos): map`.
+   Last line: `Next: review .telos/MAP.md (and PROJECT.md)` (+ `, then commit docs(telos): map` when
+   not committed).
+10. **Commit after PASS** only (`Map validation: PASS …`, nothing restored) and only with
+   `Auto-commit: yes`: ask once with AskUserQuestion `Commit docs(telos): map` / `Leave uncommitted`.
+   A declined question, headless or `Auto-commit: no` → no git writes. On yes: `git diff --cached --name-only`;
+   any staged path other than `.telos/MAP.md` / `.telos/PROJECT.md` → no commit, say so. Else
+   `git add .telos/MAP.md` (+ `.telos/PROJECT.md` when changed), then
+   `git commit -m "docs(telos): map" -- <those paths>`; a failing commit: show it and stop.

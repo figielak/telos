@@ -2,7 +2,7 @@
 id: 05-14
 title: Deep map reminders and commit prompt
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard        # normal | hard
 depends: []
@@ -70,8 +70,12 @@ Warn about deep map staleness at Stop and complete map maintenance with the carr
 5. skills/map*/SKILL.md, tests and README.md: grant narrow commit/prompt tools and document both map variants and reminder.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Deep map drift is advisory; a map commit occurs only after requested confirmation and includes no unrelated work.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Deep map drift is advisory; a map commit occurs only after requested confirmation and includes no unrelated work.
 
 ## Result
+`lib/map-stale.mjs`: deep-only `mapStaleness` compares top-level dirs (git ls-tree + porcelain, dot/vendor/build/cache excluded) and package.json/pyproject entry keys against the MAP header commit; Stop emits it as a once-per-session nonblocking `systemMessage` only when no check failed, so exit 2 stays reserved for failures.
+`ctx map` adds `Auto-commit` and the commit policy; `/telos:map*` ask once after PASS to commit `docs(telos): map` with explicit paths, refusing when other paths are staged; declined/headless/auto_commit=false → no git writes; narrow git tools + AskUserQuestion granted.
+560 tests pass (+9). Surprise: package.json `exports` keys render as `exports..` / `exports../cli` (field.key join), kept as-is for exactness.
+Deviations: none

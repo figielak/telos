@@ -4,7 +4,7 @@ description: Same as /telos:map on a stronger model, for large or tangled reposi
 argument-hint: "[--refresh]"
 disable-model-invocation: true
 model: opus
-allowed-tools: Bash(telos *), Read, Grep, Glob, Edit(.telos/MAP.md), Edit(.telos/PROJECT.md), Write(.telos/MAP.md), Write(.telos/PROJECT.md)
+allowed-tools: Bash(telos *), Read, Grep, Glob, Edit(.telos/MAP.md), Edit(.telos/PROJECT.md), Write(.telos/MAP.md), Write(.telos/PROJECT.md), AskUserQuestion, Bash(git status*), Bash(git diff --cached*), Bash(git add .telos/MAP.md*), Bash(git commit *)
 ---
 ## Context
 !`telos ctx map`

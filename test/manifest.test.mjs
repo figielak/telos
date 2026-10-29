@@ -53,6 +53,9 @@ test('hooks.json queues edits on PostToolUse and runs the edited-file checks at 
   const [stop] = hooks.Stop[0].hooks;
   assert.equal(stop.command, 'node "${CLAUDE_PLUGIN_ROOT}/hooks/stop.mjs"');
   assert.ok(stop.timeout >= 240, 'Stop timeout covers format + types at 120 s each');
+  // 05-14: the deep map-staleness reminder runs inside the same single Stop hook.
+  assert.equal(hooks.Stop[0].hooks.length, 1);
+  assert.match(readFileSync(new URL('../hooks/stop.mjs', import.meta.url), 'utf8'), /mapStaleness/);
 });
 
 test('hooks.json saves the session before compaction', () => {
