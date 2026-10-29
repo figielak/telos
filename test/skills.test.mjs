@@ -426,6 +426,12 @@ test('undo injects a fixed bundle, validates the id from Request and confirms be
   assert.ok(at('git revert --no-commit <hash>') < at('telos check --level full'));
   assert.ok(at('telos check --level full') < at('telos task set <NN-MM> status=reverted'));
   assert.ok(at('telos task set <NN-MM> status=reverted') < at('telos history add revert'));
+  // Deep ADRs: chosen in the one confirmation, changed only after the verified revert, before task/history state.
+  assert.ok(at('AskUserQuestion') < at('ADR selection'));
+  assert.ok(at('telos check --level full') < at('telos adr revert <NNN> --task <NN-MM>'));
+  assert.ok(at('telos adr revert <NNN> --task <NN-MM>') < at('telos task set <NN-MM> status=reverted'));
+  for (const s of ['explicitly selected', 'never reactivate', 'no second question']) assert.ok(body.includes(s), s);
+  assert.match(body, /adr revert[^\n]*\n?[^\n]*non-zero[^.]*stop before any task, STATUS or HISTORY change/i);
   for (const s of ['REFUSED:', 'Revert order', 'Block after undo', 'status=blocked', 'telos roadmap set <NN> active',
     '--diff-filter=U', 'git revert --abort', 'Auto-commit: no', 'revert(<NN-MM>)']) assert.ok(body.includes(s), s);
   assert.match(body, /never reverted/i);

@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { AdrError, createAdr, readAdrs } from '../lib/adr.mjs';
+import { AdrError, createAdr, readAdrs, revertAdr } from '../lib/adr.mjs';
 import { main } from '../lib/cli.mjs';
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -231,4 +231,105 @@ test('a malformed ADR header fails closed for readers and writers', async (t) =>
   const r = await adr(root, 'new', 'Use SQLite', '--source', '02:D-01');
   assert.equal(r.code, 1);
   assert.match(r.err, /001-bad\.md.*header/);
+});
+
+// adr revert (05-11): a task undo marks only ADRs whose source is one of the task's decisions.
+const task = (root, id, decisions, phase = '02-store') => put(root, `.telos/phases/${phase}/${id}-t.md`, [
+  '---', `id: ${id}`, 'title: T', 'type: code', 'status: done', 'critical: false', 'effort: normal',
+  'depends: []', `decisions: [${decisions.join(', ')}]`, 'scope: [src/]', '---', '## Goal', 'x', '',
+].join('\n'));
+const REVERTED = (id) => new RegExp(`^Date: \\S+ · Status: reverted \\((\\d{4}-\\d{2}-\\d{2}), ${id}\\) · Source: `, 'm');
+
+test('adr revert marks a linked accepted ADR reverted, keeps the body and is idempotent', async (t) => {
+  const root = repo(t);
+  task(root, '02-03', ['D-01']);
+  assert.equal((await adr(root, 'new', 'Use SQLite', '--source', '02:D-01')).code, 0);
+  const before = read(root, '001-use-sqlite.md').replace('## Context\n', '## Context\nKeep this prose.\n');
+  writeFileSync(join(dir(root), '001-use-sqlite.md'), before);
+  const r = await adr(root, 'revert', '001', '--task', '02-03');
+  assert.equal(r.code, 0, r.err);
+  assert.match(r.out, /^\.telos\/decisions\/001-use-sqlite\.md · ADR 001 · reverted \(\d{4}-\d{2}-\d{2}, 02-03\)\n$/);
+  const after = read(root, '001-use-sqlite.md');
+  const date = REVERTED('02-03').exec(after)?.[1];
+  assert.ok(DATE.test(date ?? ''), after);
+  assert.equal(after, before.replace('Status: accepted', `Status: reverted (${date}, 02-03)`));
+  const again = await adr(root, 'revert', '001', '--task', '02-03');
+  assert.equal(again.code, 0, again.err);
+  assert.match(again.out, / · unchanged\n$/);
+  assert.equal(read(root, '001-use-sqlite.md'), after);
+});
+
+test('adr revert refuses unlinked tasks, unknown ids and malformed selectors without mutation', async (t) => {
+  const root = repo(t);
+  task(root, '02-03', ['D-01']);
+  task(root, '02-04', ['D-04']);
+  task(root, '03-01', ['D-01'], '03-other');
+  assert.equal((await adr(root, 'new', 'Use SQLite', '--source', '02:D-01')).code, 0);
+  const before = snapshot(root);
+  for (const [args, why] of [
+    [['001', '--task', '02-04'], /ADR 001 \(source 02:D-01\) is not a decision of task 02-04/],
+    [['001', '--task', '03-01'], /ADR 001 \(source 02:D-01\) is not a decision of task 03-01/],
+    [['001', '--task', '02-09'], /no task 02-09/],
+    [['009', '--task', '02-03'], /ADR 009 not found/],
+  ]) {
+    const r = await adr(root, 'revert', ...args);
+    assert.equal(r.code, 1, args.join(' '));
+    assert.match(r.err, why);
+    assert.deepEqual(snapshot(root), before);
+  }
+  for (const args of [['1', '--task', '02-03'], ['001', '--task', '2-3'], ['001'], ['001', '002', '--task', '02-03'],
+    ['001', '--task', '02-03', '--task', '02-04'], ['001', '--task', '02-03', '--source', '02:D-01'], ['../001', '--task', '02-03']]) {
+    const r = await adr(root, 'revert', ...args);
+    assert.equal(r.code, 2, JSON.stringify(args));
+    assert.deepEqual(snapshot(root), before);
+  }
+});
+
+test('superseded or already reverted ADRs are never reactivated or overwritten; the chain is reported', async (t) => {
+  const root = repo(t);
+  task(root, '02-03', ['D-01']);
+  task(root, '02-05', ['D-05']);
+  task(root, '02-06', ['D-05']);
+  assert.equal((await adr(root, 'new', 'Use SQLite', '--source', '02:D-01')).code, 0);
+  assert.equal((await adr(root, 'new', 'Move to Postgres', '--source', '02:D-05', '--supersedes', '001')).code, 0);
+  let before = snapshot(root);
+  const superseded = await adr(root, 'revert', '001', '--task', '02-03');
+  assert.equal(superseded.code, 1);
+  assert.match(superseded.err, /ADR 001 is superseded by 002; not binding, nothing to revert/);
+  assert.deepEqual(snapshot(root), before);
+
+  const r = await adr(root, 'revert', '002', '--task', '02-05');
+  assert.equal(r.code, 0, r.err);
+  assert.match(r.out, /^Chain: ADR 001 stays superseded by 002 \(not reactivated\); no ADR binds 02:D-01 or 02:D-05 now, record an explicit follow-up decision$/m);
+  assert.match(read(root, '001-use-sqlite.md'), /Status: superseded by 002/);
+  before = snapshot(root);
+  const other = await adr(root, 'revert', '002', '--task', '02-06');
+  assert.equal(other.code, 1);
+  assert.match(other.err, /ADR 002 is already reverted \(\S+, 02-05\)/);
+  assert.deepEqual(snapshot(root), before);
+});
+
+test('a failed status write keeps the ADR, never reports success and the same command retries', async (t) => {
+  const root = repo(t);
+  task(root, '02-03', ['D-01']);
+  assert.equal((await adr(root, 'new', 'Use SQLite', '--source', '02:D-01')).code, 0);
+  const before = snapshot(root);
+  assert.throws(() => revertAdr(root, { number: '001', task: '02-03' }, { beforePublish() { throw new Error('disk full'); } }),
+    (err) => err instanceof AdrError && /ADR 001 status unchanged: disk full; rerun `telos adr revert 001 --task 02-03`/.test(err.message));
+  assert.deepEqual(snapshot(root), before);
+  writeFileSync(join(dir(root), '.adr.lock'), 'pid 1\n');
+  const locked = await adr(root, 'revert', '001', '--task', '02-03');
+  assert.equal(locked.code, 1);
+  assert.match(locked.err, /another ADR writer/);
+  rmSync(join(dir(root), '.adr.lock'));
+  assert.equal((await adr(root, 'revert', '001', '--task', '02-03')).code, 0);
+  assert.match(read(root, '001-use-sqlite.md'), REVERTED('02-03'));
+});
+
+test('adr revert is deep only', async (t) => {
+  const root = repo(t, { profile: 'standard' });
+  task(root, '02-03', ['D-01']);
+  const r = await adr(root, 'revert', '001', '--task', '02-03');
+  assert.equal(r.code, 1);
+  assert.equal(r.err, 'Requires deep profile. Switch with /telos:profile deep.\n');
 });

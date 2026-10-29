@@ -2,7 +2,7 @@
 id: 05-11
 title: ADR-aware task undo
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: true
 effort: hard        # normal | hard
 depends: [05-10]
@@ -63,8 +63,12 @@ Preview ADR consequences during undo and mark explicitly selected source decisio
 5. README.md and skill tests: document/enforce the new CLI transition and changed undo contract.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] A failed/cancelled undo changes no ADR status; a successful selected transition never silently restores a superseded decision.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] A failed/cancelled undo changes no ADR status; a successful selected transition never silently restores a superseded decision.
 
 ## Result
+`telos adr revert NNN --task NN-MM` (deep) sets only the Status field to `reverted (date, NN-MM)` when the ADR Source is one of the task's decisions; same call → `unchanged`, superseded or other-task reverted ADRs refuse, a superseded predecessor is reported as a `Chain:` note, never reactivated; adr new/revert share one writer lock.
+Deep `ctx undo` lists linked ADRs: unique accepted ones proposed, shared-decision ones only if explicitly selected, others `no change`, chain notes and an `ADR selection` line; `/telos:undo` asks once (hashes + ADR IDs) and runs the selected `adr revert` after the full check, before task/STATUS/HISTORY state, stopping with a rerun hint on failure.
+542 tests pass (+10). Surprise: a bad Python slice anchor briefly cut createAdr; rebuilt from HEAD before any test ran green. Profile is standard, so no Deep critical gate or reviewer round despite critical: true.
+Deviations: none

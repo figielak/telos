@@ -1,11 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { AdrError, readAdrs, revertAdr } from '../lib/adr.mjs';
 import { main } from '../lib/cli.mjs';
 import { requireMessage } from '../lib/config.mjs';
 import { CAP } from '../lib/ctx/index.mjs';
@@ -105,6 +106,7 @@ test('ctx undo previews exact hashes, stats, metadata paths and transitive depen
   assert.match(r.stdout, /^Dependents \(transitive, never reverted\): 01-02 \[done\], 01-03 \[draft\]$/m);
   assert.match(r.stdout, /^Block after undo: 01-02$/m);
   assert.match(r.stdout, /^Phase after undo: stays active$/m);
+  assert.doesNotMatch(r.stdout, /ADR/);
   assert.ok(r.stdout.length <= CAP + 1);
   assert.deepEqual(state(root), before);
 });
@@ -230,4 +232,103 @@ test('undoing a task of a closed phase says the phase reopens', async (t) => {
   commit(root, 'docs(telos): close phase 01-demo', ['.telos/ROADMAP.md']);
   const r = await telos(root, 'ctx', 'undo', '01-01');
   assert.match(r.stdout, /^Phase after undo: reopen with `telos roadmap set 01 active`$/m);
+});
+
+// Deep: ADRs whose Source is one of the task's decisions (05-11, D-04).
+function withAdrs(root) {
+  edit(root, T1, 'decisions: []', 'decisions: [D-01, D-02, D-03]');
+  edit(root, T2, 'decisions: []', 'decisions: [D-02]');
+  mkdirSync(join(root, '.telos/decisions'));
+  const adr = (file, title, status, source, supersedes = 'none') => write(root, `.telos/decisions/${file}`,
+    `# ${file.slice(0, 3)} · ${title}\nDate: 2026-01-02 · Status: ${status} · Source: ${source}\nSupersedes: ${supersedes}\n\n## Context\nprose ${file}\n`);
+  adr('001-old-store.md', 'Old store', 'superseded by 002', '00:D-09');
+  adr('002-use-sqlite.md', 'Use SQLite', 'accepted', '01:D-01', '001');
+  adr('003-shared-cache.md', 'Shared cache', 'accepted', '01:D-02');
+  adr('004-dropped-idea.md', 'Dropped idea', 'reverted (2026-01-01, 01-09)', '01:D-03');
+  commit(root, 'docs(telos): record adrs', [T1, T2, '.telos/decisions']);
+}
+const statuses = (root) => Object.fromEntries(readAdrs(root).map((a) => [a.number, a.status]));
+const adrTexts = (root) => readAdrs(root).map((a) => readFileSync(a.path, 'utf8'));
+
+test('deep undo preview lists unique candidates, shared sources needing selection and nonbinding ADRs', async (t) => {
+  const { root } = repo(t, { profile: 'deep' });
+  withAdrs(root);
+  const before = { ...state(root), adrs: adrTexts(root) };
+  const r = await telos(root, 'ctx', 'undo', '01-01');
+  assert.equal(r.code, 0, r.stderr);
+  const lines = [
+    'ADRs linked to 01-01 decisions (D-01, D-02, D-03):',
+    '- ADR 002 [accepted] 01:D-01 "Use SQLite" → revert on confirm: `telos adr revert 002 --task 01-01`',
+    '- ADR 003 [accepted] 01:D-02 "Shared cache" · shared with 01-02 → only if explicitly selected: `telos adr revert 003 --task 01-01`',
+    '- ADR 004 [reverted (2026-01-01, 01-09)] 01:D-03 "Dropped idea" → no change',
+    '- Chain: ADR 002 supersedes 001; 001 stays superseded after undo (never reactivated), decide explicitly',
+    'ADR selection: proposed 002 · explicit only 003',
+  ];
+  assert.ok(r.stdout.includes(lines.join('\n')), r.stdout);
+  assert.ok(r.stdout.indexOf('Block after undo') < r.stdout.indexOf('ADRs linked'));
+  assert.ok(r.stdout.length <= CAP + 1);
+  assert.deepEqual({ ...state(root), adrs: adrTexts(root) }, before);
+});
+
+test('a deep task without linked ADRs says so; malformed ADR files refuse the preview', async (t) => {
+  const { root } = repo(t, { profile: 'deep' });
+  assert.match((await telos(root, 'ctx', 'undo', '01-01')).stdout, /^ADRs linked to 01-01: none$/m);
+  withAdrs(root);
+  write(root, '.telos/decisions/005-bad.md', '# 005 · Bad\nStatus: ?\n');
+  commit(root, 'docs(telos): bad adr', ['.telos/decisions/005-bad.md']);
+  assert.match((await telos(root, 'ctx', 'undo', '01-01')).stdout, /^REFUSED: 005-bad\.md: malformed ADR header.*; fix the ADR file, then rerun/m);
+});
+
+async function revertCode(root, hashes, telosPaths) {
+  for (const hash of hashes) {
+    const r = spawnSync('git', ['-C', root, 'revert', '--no-commit', hash], { encoding: 'utf8' });
+    const conflicts = git(root, 'diff', '--name-only', '--diff-filter=U').split('\n').filter(Boolean);
+    assert.ok(r.status === 0 || conflicts.every((c) => c.startsWith('.telos/')), r.stderr);
+    if (conflicts.length) git(root, 'restore', '--source=HEAD', '--staged', '--worktree', '--', ...conflicts);
+    if (existsSync(join(root, '.git/REVERT_HEAD'))) git(root, 'revert', '--quit');
+  }
+  git(root, 'restore', '--source=HEAD', '--staged', '--worktree', '--', ...telosPaths);
+  assert.equal((await telos(root, 'check', '--level', 'full')).code, 0);
+}
+
+test('after a verified revert only the selected ADR becomes reverted; superseded predecessors stay', async (t) => {
+  const { root, feat, fix } = repo(t, { profile: 'deep' });
+  withAdrs(root);
+  const texts = adrTexts(root);
+  await revertCode(root, [fix, feat], [STATUS, T1]);
+  const r = await telos(root, 'adr', 'revert', '002', '--task', '01-01');
+  assert.equal(r.code, 0, r.stderr);
+  assert.match(r.stdout, /^Chain: ADR 001 stays superseded by 002/m);
+  assert.deepEqual(statuses(root), { '001': 'superseded by 002', '002': `reverted (${new Date().toISOString().slice(0, 10)}, 01-01)`,
+    '003': 'accepted', '004': 'reverted (2026-01-01, 01-09)' });
+  const after = adrTexts(root);
+  assert.equal(after[1], texts[1].replace('Status: accepted', `Status: ${statuses(root)['002']}`));
+  for (const i of [0, 2, 3]) assert.equal(after[i], texts[i]);
+  assert.equal((await telos(root, 'task', 'set', '01-01', 'status=reverted')).code, 0);
+});
+
+test('an ADR write failure after the code revert stops before task or history success', async (t) => {
+  const { root, feat, fix } = repo(t, { profile: 'deep' });
+  withAdrs(root);
+  const texts = adrTexts(root);
+  await revertCode(root, [fix, feat], [STATUS, T1]);
+  assert.throws(() => revertAdr(root, { number: '002', task: '01-01' }, { beforePublish() { throw new Error('EIO'); } }),
+    (err) => err instanceof AdrError && /rerun `telos adr revert 002 --task 01-01`/.test(err.message));
+  assert.deepEqual(adrTexts(root), texts);
+  assert.equal(loadTask(root, '01-01').meta.status, 'done');
+  assert.equal(readHistory(root).log.filter((e) => e.kind === 'revert').length, 0);
+  assert.ok(!existsSync(join(root, 'src/c.ts')), 'the staged code revert stays for the retry');
+});
+
+test('a cancelled undo or a code conflict changes no ADR status', async (t) => {
+  const { root, feat } = repo(t, { profile: 'deep' });
+  withAdrs(root);
+  const before = statuses(root);
+  await telos(root, 'ctx', 'undo', '01-01');
+  assert.deepEqual(statuses(root), before);
+  write(root, 'src/a.ts', read(root, 'src/a.ts').replace('export const a2 = 2;', 'export const a2 = 22;'));
+  commit(root, 'fix(quick): change a2', ['src/a.ts']);
+  assert.notEqual(spawnSync('git', ['-C', root, 'revert', '--no-commit', feat]).status, 0);
+  git(root, 'revert', '--abort');
+  assert.deepEqual(statuses(root), before);
 });

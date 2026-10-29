@@ -21,9 +21,11 @@ commands. Never reset, stash, push, amend, rebase or use `--no-verify`.
    and use that bundle. **Stop** when it is `Requires standard profile. …` or starts with
    `REFUSED:` (show the reason and its remedy; change nothing).
 2. **Confirm**: show every commit (full hash, subject, stat), `Telos files`, `Dependents`
-   (they are never reverted) and `Block after undo`. Ask once with AskUserQuestion:
-   `Revert <n> commits: <short hashes>` or `Cancel`. Anything but that confirmation → stop;
-   no git revert, no state change.
+   (they are never reverted), `Block after undo` and any `ADRs linked` lines. Ask once with
+   AskUserQuestion, no second question: `Revert <n> commits: <short hashes>` (+ the proposed
+   IDs of `ADR selection`), one more option adding its explicit-only IDs when there are any,
+   or `Cancel`. Shared-source ADRs change only when explicitly selected. Anything but a revert
+   option → stop; no git revert, no ADR or state change.
 3. **Revert**, one commit at a time in `Revert order` (newest first):
    `git revert --no-commit <hash>`. On a non-zero exit list the conflicts with
    `git diff --name-only --diff-filter=U`:
@@ -36,16 +38,21 @@ commands. Never reset, stash, push, amend, rebase or use `--no-verify`.
    on the Telos files line>`, so other tasks, STATUS and ROADMAP keep their current content.
 5. **Verify**: `telos check --level full` must exit 0; otherwise stop before any state change,
    leave the staged revert and report the failures.
-6. **State**, only now and through the CLI:
+6. **ADRs** (only the IDs the confirmation selected, after the check passed):
+   `telos adr revert <NNN> --task <NN-MM>`
+   once per ID. A non-zero exit → stop before any task, STATUS or HISTORY change, keep the staged
+   revert and tell the user to rerun that command, then continue from step 7. Report each
+   `Chain:` line as printed; never reactivate a superseded ADR.
+7. **State**, only now and through the CLI:
    - `telos task set <NN-MM> status=reverted`;
    - `Block after undo` ids → `telos task set <id> <id> … status=blocked`;
    - `Phase after undo: reopen …` → run that `telos roadmap set <NN> active`;
    - `telos status set blockers="<blocked ids>: depend on reverted <NN-MM>" next="/telos:revise <notes> to redo <NN-MM>"`
      (`blockers=` unchanged when nothing was blocked);
-   - `telos history add revert <NN-MM> "reverted <NN-MM>: <title> (<n> commits)"` — once.
-7. **Commit**: git revert already staged the code. `Auto-commit: yes` → `git add` each changed
+   - `telos history add revert <NN-MM> "reverted <NN-MM>: <title> (<n> commits[, ADR <NNN…> reverted])"` — once.
+8. **Commit**: git revert already staged the code. `Auto-commit: yes` → `git add` each changed
    `.telos/` path explicitly (task files, STATUS, ROADMAP, HISTORY; see `git status`), then
    `git commit -m "revert(<NN-MM>): undo <title>" -m "- reverts <short hashes>" -m "- <blocked or reopened, if any>"`.
    `Auto-commit: no` → leave it staged and list the paths. A failing commit: show it and stop.
-8. **Reply** in ≤ 8 lines: reverted hashes, blocked dependents, reopened phase, check verdict,
+9. **Reply** in ≤ 8 lines: reverted hashes, blocked dependents, reopened phase, check verdict, reverted ADRs and `Chain:` notes,
    the commit subject; last line `Next: /telos:revise <notes>` or `/telos:plan`.
