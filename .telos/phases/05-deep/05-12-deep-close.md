@@ -2,7 +2,7 @@
 id: 05-12
 title: Deep close verification and doc-sync
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard        # normal | hard
 depends: [05-06, 05-08, 05-09]
@@ -62,8 +62,12 @@ Extend deep phase close with critical-work review and targeted documentation syn
 5. README.md: document deep versus standard close, unchanged-state failure outcomes and evidence limits.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] A deep phase closes only after critical evidence, review and doc-sync checks; standard close remains compatible.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] A deep phase closes only after critical evidence, review and doc-sync checks; standard close remains compatible.
 
 ## Result
+Deep `ctx check`/`ctx done` add the close sequence, per-critical-task RED/GREEN/review evidence (task review reused only when its PASS EvidenceId equals current complete evidence), the review route (none, reuse, or one phase review via telos:reviewer-hard) and exact doc-sync commands; missing RED/GREEN blocks the close; over the cap tasks/evidence compact to ids.
+`/telos:done` deep branch: review → docs-scan/changelog doc-sync (behavior-neutral, ≤ 10 changelog lines, no duplicates) → rerun targeted checks/accepts before promotion; stops leave the phase active; commits name each doc path; standard skips it.
+548 tests pass (+6); the 05-05 e2e-ready test now also records RED/GREEN, as the new gate requires. lib/ctx/done.mjs needed no change (it reuses phaseReport).
+Deviations: none

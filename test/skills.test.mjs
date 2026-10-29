@@ -414,6 +414,24 @@ test('done verifies before any state change, promotes once, records via telos an
   assert.doesNotMatch(body, /git add (-A|--all|\.\/?)(?=[\s`]|$)|git commit[^\n]*--no-verify|git push|git tag /m);
 });
 
+test('deep done reviews critical work and syncs docs after verification and before promotion, standard skips it', () => {
+  const { field, body } = read('done');
+  const at = (s) => { const i = body.indexOf(s); assert.ok(i >= 0, s); return i; };
+  assert.ok(at('telos accept <id>') < at('Deep only'));
+  assert.ok(at('Deep only') < at('`Review:` line'));
+  assert.ok(at('`Review:` line') < at('telos docs-scan <NN>'));
+  assert.ok(at('telos docs-scan <NN>') < at('telos changelog <NN>'));
+  assert.ok(at('telos changelog <NN>') < at('telos check --level full --phase <NN>'));
+  assert.ok(at('telos check --level full --phase <NN>') < at('telos history add decision'));
+  for (const s of ['Critical evidence', 'Review: reuse', 'no re-review', 'HIGH or CRITICAL', 'UNVERIFIED', 'telos:reviewer-hard',
+    '≤ 10', 'never invent', 'no duplicate', 'Sync: NOT VERIFIED', 'behavior-neutral', 'standard profile skips',
+    'each changed doc path']) assert.ok(body.includes(s), s);
+  assert.match(body, /never (invoke|run) \/telos:review|not the user-only/i);
+  const tools = field('allowed-tools').split(/,\s*/);
+  assert.deepEqual(tools.filter((t) => /^(Agent|Task)\b/.test(t)), ['Agent(telos:reviewer-hard)']);
+  assert.ok(tools.includes('Edit'));
+});
+
 test('undo injects a fixed bundle, validates the id from Request and confirms before any git revert', () => {
   const { field, body } = read('undo');
   assert.match(body, /^## Context\n!`telos ctx undo`$/m);
