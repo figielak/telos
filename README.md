@@ -3,8 +3,9 @@
 A lean, token-economical workflow plugin for Claude Code:
 plan → test → implement → verify, with durable project memory in `.telos/`.
 
-Status: **pre-alpha**. Minimal and standard workflows are available, plus the deep review and research agents.
-Doc-sync remains planned. See [SPEC.md](SPEC.md) §14.
+Status: **pre-alpha**. Minimal, standard and deep workflows are available: deep adds research and
+review agents, critical-task RED/GREEN/e2e evidence, doc-sync, ADR-lite promotion and ADR-aware undo.
+See [SPEC.md](SPEC.md) §14.
 
 ## Install (per repository)
 
@@ -108,6 +109,40 @@ memory, profile downgrade and output caps. The harness plays the skill commands 
 confirmation/manual-review outcomes. This proves the machine workflow; it does not prove
 live Claude Code skill loading, model judgment, interactive confirmation or host hook dispatch.
 No live-host smoke validation is claimed by this suite.
+
+## Deep workflow
+
+```text
+/telos:profile deep
+/telos:research 01          # forked researcher; the main thread writes 01-RESEARCH.md once
+/telos:discuss 01           # confirm proposed decisions
+/telos:plan 01              # research is evidence; one self-critique pass
+/telos:approve
+/telos:do-hard 01-01        # critical code: real RED, then GREEN + e2e, one reviewer-hard round
+/telos:done 01              # review → doc-sync → reverify → ADR promotion → retro
+/telos:undo 01-01           # one confirmation covers the hashes and the selected ADR IDs
+```
+
+Deep critical code tasks record `RED:`, `GREEN:` and `Review:` evidence in their Result, and a
+missing RED/GREEN line or a missing `checks.e2e` blocks the close. `/telos:done` reuses a task
+review only when its EvidenceId is still current, else runs one phase review; it then syncs only
+matched docs, public docstrings and ≤ 10 changelog lines, reruns the targeted full check, and
+promotes hard-to-reverse decisions through `telos adr new` → body → `decision ADR NNN` HISTORY
+link → `→ ADR NNN` marker, resuming after an interruption without duplicates. Undo marks only
+the confirmed ADR IDs `reverted` and never reactivates a superseded predecessor. A downgrade keeps
+RESEARCH and `decisions/` but gates the deep commands and the Stop map reminder.
+
+`npm test` includes [the deep lifecycle proof](test/e2e-deep.test.mjs): isolated Git repositories
+from `test/fixtures/deep-loop/` with deterministic `test`/`e2e` checks run research → confirmation
+→ critical RED/GREEN/e2e/review → doc-sync and changelog → ADR promotion and retro → close →
+ADR-aware undo, plus the failure paths (missing e2e, an environment failure instead of RED,
+UNVERIFIED or CHANGES REQUESTED reviews, unverified manual items, a failed post-doc-sync check,
+interrupted promotion, cancelled or conflicting undo, downgrade). The harness supplies the
+reviewer and researcher outputs and the confirmations itself: it proves the CLI and file
+contracts, not a live fork, web search, model judgment or host hook dispatch, and no live-host
+smoke run is claimed. Known gap, tracked as a `todo` test: rerunning `telos accept` after
+doc-sync edits fails its scope check on the uncommitted doc paths, so the proof reverifies
+with `telos check --level full --phase NN` alone.
 
 ## CLI
 

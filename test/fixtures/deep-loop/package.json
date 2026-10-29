@@ -1,0 +1,11 @@
+{
+  "name": "deep-loop",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.mjs",
+  "scripts": {
+    "test": "node src/index.mjs test",
+    "e2e": "node src/index.mjs e2e"
+  }
+}
