@@ -2,7 +2,7 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 05-deep
-Task: 05-06
+Task: 05-07
 Next: /telos:do
 Blockers: none
 Awaiting user: none
@@ -15,6 +15,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 05-06 done: deep critical do gates RED, targeted e2e check and one reviewer-hard round (489 tests)
 - 05-05 done: targeted full checks and required e2e for deep critical code (482 tests)
 - 05-04 done: deep plan bundle includes bounded research evidence and one self-critique pass (472 tests)
-- 05-03 done: ctx research bundle, read-only researcher agents and /telos:research skills (467 tests)

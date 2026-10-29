@@ -193,3 +193,67 @@ test('a long bundle cuts excerpts, never the task file', async () => {
   assert.match(out, /^--- src\/a\.ts:1-3 \(greet\)\nexport function greet\(name\) \{\n  return `hello \$\{name\}`;\n\}$/m);
   assert.match(out, /^…\[cut; open long\.ts:1-300 for the rest\]$/m);
 });
+
+// D-02: deep critical code gets mandatory execution requirements ahead of the excerpts.
+function deep(root, { e2e = 'npm run e2e', critical = true, type = 'code', status } = {}) {
+  edit(root, '.telos/config.json', (t) => {
+    const cfg = JSON.parse(t);
+    return JSON.stringify({ ...cfg, profile: 'deep', checks: { test: 'npm test', ...(e2e ? { e2e } : {}) } });
+  });
+  editTask(root, '01-02-second-task.md', (t) => t.replace('critical: false', `critical: ${critical}`)
+    .replace('type: code ', `type: ${type} `).replace(/^status: \w+/m, `status: ${status ?? 'approved'}`));
+}
+
+test('deep critical code exposes profile, RED, exact task check, e2e and reviewer-hard before the excerpts', async () => {
+  const root = repo();
+  deep(root);
+  const out = await ctxDo(root);
+  assert.match(out, /^Profile: deep$/m);
+  const gate = out.indexOf('Deep critical (D-02):');
+  assert.ok(gate > 0 && gate < out.indexOf('Read first:'), 'requirements precede the excerpts');
+  assert.match(out, /^- RED: .*failing.*before implementing.*already green.*environment.*not RED/im);
+  assert.match(out, /^- GREEN\/e2e: `telos check --level full --task 01-02` → exit 0 incl\. e2e=npm run e2e$/m);
+  assert.match(out, /^- Review: once via agent telos:reviewer-hard with `telos ctx review 01-02`.*CHANGES REQUESTED.*UNVERIFIED.*blocked/m);
+  assert.match(out, /^- Result: .*RED:.*GREEN:.*Review:/m);
+  assert.doesNotMatch(out, /^- Evidence:/m, 'fresh task has nothing to recover');
+});
+
+test('deep critical code without checks.e2e is blocked up front', async () => {
+  const root = repo();
+  deep(root, { e2e: null });
+  assert.match(await ctxDo(root), /^- GREEN\/e2e: `telos check --level full --task 01-02`; checks\.e2e not configured → blocked \(UNVERIFIED\)$/m);
+});
+
+test('a resumed deep critical task recovers its recorded RED or must block, never fabricate it', async () => {
+  const root = repo();
+  deep(root, { status: 'in-progress' });
+  assert.match(await ctxDo(root), /^- Evidence: no RED recorded in Result → blocked; never re-create RED after implementing$/m);
+  editTask(root, '01-02-second-task.md', (t) => t.replace('## Result', '## Result\nRED: npm test → exit 1: greet is not defined'));
+  assert.match(await ctxDo(root), /^- Evidence: recorded RED: npm test → exit 1: greet is not defined$/m);
+});
+
+test('noncritical, doc/audit and lower-profile tasks get no deep gates', async () => {
+  for (const opts of [{ critical: false }, { type: 'doc' }, { type: 'audit' }]) {
+    const root = repo();
+    deep(root, opts);
+    const out = await ctxDo(root);
+    assert.match(out, /^Profile: deep$/m);
+    assert.doesNotMatch(out, /Deep critical|reviewer-hard|--task 01-02/, JSON.stringify(opts));
+  }
+  const root = repo();
+  editTask(root, '01-02-second-task.md', (t) => t.replace('critical: false', 'critical: true'));
+  const out = await ctxDo(root);
+  assert.match(out, /^Profile: minimal$/m);
+  assert.doesNotMatch(out, /Deep critical|reviewer-hard/);
+});
+
+test('deep requirements survive a long bundle within the cap', async () => {
+  const root = repo();
+  deep(root);
+  writeFileSync(join(root, 'long.ts'), 'const filler = 1; // padding padding padding\n'.repeat(400));
+  editTask(root, '01-02-second-task.md', readFirst(['- long.ts:1-300 (filler)']));
+  const out = await ctxDo(root);
+  assert.ok(out.length <= CAP + 1, String(out.length));
+  assert.match(out, /^- Review: once via agent telos:reviewer-hard/m);
+  assert.match(out, /^…\[cut; open long\.ts:1-300 for the rest\]$/m);
+});

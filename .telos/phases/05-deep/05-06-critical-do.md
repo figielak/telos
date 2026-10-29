@@ -2,7 +2,7 @@
 id: 05-06
 title: Critical TDD and review execution
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard        # normal | hard
 depends: [05-02, 05-05]
@@ -63,8 +63,12 @@ Require review and recorded RED/GREEN/e2e evidence before completing deep critic
 5. README.md: document the changed execution and evidence contract.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Deep critical completion requires meaningful RED, green e2e and a resolved review; lower profiles retain their workflow.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Deep critical completion requires meaningful RED, green e2e and a resolved review; lower profiles retain their workflow.
 
 ## Result
+ctx do adds `Profile:` and, for deep critical code only, a never-cut `Deep critical (D-02)` block: real-RED rule, exact `telos check --level full --task <id>` with e2e (missing → blocked), one reviewer-hard round on `telos ctx review <id>`, Result evidence lines and recorded-RED recovery on resume.
+shared/do.md gates deep critical work on real RED written to Result before implementing, the targeted check and one review before state changes (unfixable HIGH/CRITICAL, UNVERIFIED or REFUSED → blocked); do/do-hard allow only `Agent(telos:reviewer-hard)`.
+489 tests pass (+7). README do/do-hard and ctx do rows updated.
+Deviations: none

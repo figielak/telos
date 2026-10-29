@@ -13,7 +13,14 @@ reset or skip hooks.
    `telos status set task=<id> next="finish <id>: <current step>"`.
 2. **Work** by `type`, inside `scope` and on the `Files` list only:
    - `code`: write the tests from `## Tests` first and run them (`test_related` or `test` from
-     Checks); they must fail (RED) for the right reason. Then implement and rerun until green.
+     Checks); they must fail (RED) for the right reason, then implement and rerun until green.
+   - **Deep critical** (only when the context has a `Deep critical` block; other tasks and
+     profiles skip it): RED counts only when the new test fails on an assertion about the
+     missing behavior. A test already green, or an environment failure (missing module, syntax,
+     setup, timeout), is no RED: fix the test or environment and rerun; none → step 6b.
+     At RED, before any implementation, write `RED: <cmd> → exit <n>: <reason>` into `## Result`.
+     Resumed without a recorded `RED:` line (`Evidence:` says so) → step 6b; never fabricate RED.
+     When green, run `telos check --level full --task <id>`: exit 0 incl. e2e; no e2e → step 6b.
    - `doc`: edit the listed docs; run doc checks (build, links) when Checks has them.
    - `audit`: inspect Read first and the listed paths; write findings, edit no code.
    Follow Constraints, Interface and Rules; every Edge case needs a passing test.
@@ -22,10 +29,18 @@ reset or skip hooks.
    - `SCOPE FAIL` only: revert the out-of-scope edit, or keep it and name it in `Deviations:`
      (step 4), then rerun.
    - `MANUAL` items: check each yourself; one you cannot verify → step 6b.
+   - **Review** (Deep critical only, after accept passes, before any state change): run
+     `telos ctx review <id>` and `telos ctx shared review`, then launch the agent
+     `telos:reviewer-hard` once with both outputs as its prompt. `REFUSED:` or Verdict
+     `UNVERIFIED` → step 6b. CHANGES REQUESTED: fix each supported finding within scope, then
+     rerun the task check and `telos accept <id>` (counts toward the 2 fix attempts).
+     A HIGH or CRITICAL finding you cannot fix in scope → step 6b. One round only, no re-review.
 4. **Result**: Edit the task file's `## Result` (fill it, never rewrite the file): 3–5 lines of
    what was built, the test count, surprises (audit: ≤ 10 lines of findings and proposed
    follow-up tasks). Last line `Deviations: none` or `Deviations: <path> — <why>; …` for every
    file changed outside scope. Tick every Acceptance box that passed (`- [x]`).
+   Deep critical: keep the `RED:` line and add `GREEN: <check cmd> → exit 0 · e2e PASS` and
+   `Review: <verdict> · EvidenceId <id> · fixed <findings or none>` within those lines.
 5. **State**:
    - `telos task set <id> status=done`
    - `telos status add recent "<id> done: <one line>"`

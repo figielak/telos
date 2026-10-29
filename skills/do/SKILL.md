@@ -4,7 +4,7 @@ description: Execute the next approved Telos task (tests, implement, accept, com
 argument-hint: "[task-id]"
 disable-model-invocation: true
 model: sonnet
-allowed-tools: Bash(telos *), Bash(git status*), Bash(git diff*), Bash(git add *), Bash(git commit *)
+allowed-tools: Bash(telos *), Bash(git status*), Bash(git diff*), Bash(git add *), Bash(git commit *), Agent(telos:reviewer-hard)
 ---
 ## Context
 !`telos ctx do $ARGUMENTS`

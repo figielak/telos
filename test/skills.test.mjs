@@ -335,6 +335,31 @@ test('quick derives safe --area selectors in an explicit rerun and plan turns me
   }
 });
 
+test('do and do-hard may hand off only to the named reviewer-hard agent', () => {
+  for (const name of ['do', 'do-hard']) {
+    const agents = read(name).field('allowed-tools').split(/,\s*/).filter((t) => /^(Agent|Task)\b/.test(t));
+    assert.deepEqual(agents, ['Agent(telos:reviewer-hard)'], name);
+  }
+});
+
+test('the do instructions gate deep critical code on real RED, targeted checks and one review before state changes', () => {
+  const body = readFileSync(join(SHARED, 'do.md'), 'utf8');
+  const at = (s) => { const i = body.indexOf(s); assert.ok(i >= 0, s); return i; };
+  assert.ok(at('Deep critical') < at('**Verify**'));
+  assert.match(body, /At RED, before any\s+implementation, write `RED: <cmd> → exit <n>: <reason>`/);
+  assert.ok(at('write `RED:') < at('telos check --level full --task <id>'));
+  assert.ok(at('telos ctx review <id>') < at('telos task set <id> status=done'));
+  assert.ok(at('telos:reviewer-hard') < at('**Commit**'));
+  for (const s of ['already green', 'environment', 'never fabricate', 'telos check --level full --task <id>',
+    'telos ctx shared review', 'CHANGES REQUESTED', 'UNVERIFIED', 'no re-review', 'Review:', 'GREEN:']) {
+    assert.ok(body.includes(s), s);
+  }
+  assert.match(body, /only when the context has a `Deep critical` block/i);
+  assert.match(body, /HIGH or CRITICAL[^.]*(cannot|can't)[^.]*→ step 6b/i);
+  assert.match(body, /2 fix attempts/);
+  assert.match(body, /`Auto-commit: no`/);
+});
+
 test('check and done inject one fixed bundle and keep the phase argument under Request', () => {
   for (const name of ['check', 'done']) {
     const { field, body } = read(name);
