@@ -53,7 +53,7 @@ test('init injects telos ctx init and stays short', () => {
 // Variants (SPEC §5.0): same body as the base skill, which injects the shared instructions via
 // `telos ctx shared <name>` (cat of plugin files is blocked outside the session's working dirs).
 const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do', 'quick-hard': 'quick', 'map-hard': 'map', 'review-hard': 'review', 'research-hard': 'research' };
-const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet', discuss: 'opus', lesson: 'sonnet', check: 'sonnet', done: 'sonnet', undo: 'sonnet', review: 'sonnet', 'review-hard': 'opus', research: 'sonnet', 'research-hard': 'opus' };
+const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet', discuss: 'opus', lesson: 'sonnet', check: 'sonnet', done: 'sonnet', undo: 'sonnet', review: 'sonnet', 'review-hard': 'opus', docs: 'sonnet', research: 'sonnet', 'research-hard': 'opus' };
 const SHARED = fileURLToPath(new URL('../shared/', import.meta.url));
 const FIELDS = ['disable-model-invocation', 'allowed-tools', 'argument-hint', 'context'];
 
@@ -358,6 +358,26 @@ test('the do instructions gate deep critical code on real RED, targeted checks a
   assert.match(body, /HIGH or CRITICAL[^.]*(cannot|can't)[^.]*→ step 6b/i);
   assert.match(body, /2 fix attempts/);
   assert.match(body, /`Auto-commit: no`/);
+});
+
+test('docs injects one fixed bundle, keeps scopes under Request and may edit only docs without touching state', () => {
+  const { field, body } = read('docs');
+  assert.equal(field('model'), 'sonnet');
+  assert.equal(field('argument-hint'), '"[scope path…]"');
+  assert.match(body, /^## Context\n!`telos ctx docs`$/m);
+  assert.match(body, /^## Request\n\$ARGUMENTS$/m);
+  assert.equal(body.split('$ARGUMENTS').length - 1, 1);
+  assert.equal((body.match(/!`/g) ?? []).length, 1);
+  const at = (s) => { const i = body.indexOf(s); assert.ok(i >= 0, s); return i; };
+  assert.ok(at('literal repo-relative') < at('telos ctx docs --scope <path>'));
+  for (const s of ['Requires deep profile', 'REFUSED:', 'Sync: NO-OP', 'Sync: NOT VERIFIED', 'targeted', 'public', 'docstring',
+    'telos check', 'never invent', 'Changed:', 'unrelated text']) assert.ok(body.includes(s), s);
+  assert.match(body, /never (read|open) (all|every) doc/i);
+  assert.match(body, /no (task|STATUS|ROADMAP)[^.]*git/i);
+  const tools = field('allowed-tools').split(/,\s*/);
+  assert.deepEqual(tools.filter((t) => t.startsWith('Bash')).sort(), ['Bash(telos check *)', 'Bash(telos ctx docs *)']);
+  assert.doesNotMatch(field('allowed-tools'), /git|push|reset|Agent|Task/);
+  assert.ok(body.trim().split('\n').length <= 60);
 });
 
 test('check and done inject one fixed bundle and keep the phase argument under Request', () => {
