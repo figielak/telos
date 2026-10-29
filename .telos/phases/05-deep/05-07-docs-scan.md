@@ -2,7 +2,7 @@
 id: 05-07
 title: Diff-driven documentation scan
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard        # normal | hard
 depends: []
@@ -57,8 +57,12 @@ List changed paths and documentation references cheaply so later doc-sync edits 
 4. lib/cli.mjs and README.md: register/document docs-scan and its read-only deep gate.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] Scan output identifies only candidate docs with evidence and makes every resource/coverage limit explicit.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] Scan output identifies only candidate docs with evidence and makes every resource/coverage limit explicit.
 
 ## Result
+Implemented deep-only docs-scan from the phase tag through committed, staged, unstaged and untracked changes, with literal scopes, before/after symbols and deduplicated documentation line ranges.
+Bounded source/docs reads, traversal, candidates and report output expose omissions; symlinks, binaries, vendor/generated trees and submodules are skipped. Git clean/process filters and monitors are disabled to prevent repository execution.
+Validation: 15 new docs-scan tests pass; npm test passes all 504 tests; telos accept 05-07: PASS, scope ok and both manual items verified against tests and report rendering.
+Deviations: none
