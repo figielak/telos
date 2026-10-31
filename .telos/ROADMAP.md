@@ -6,4 +6,4 @@
 - 03-map [done] map-scan, map, incremental refresh, PROJECT draft · done when: MAP.md for a real Astro and a real Python repo under limits
 - 04-standard [done] discuss, CONTEXT, check, done, undo, lesson, profile switching, std hooks · done when: standard phase incl. undo works
 - 05-deep [done] reviewer, researcher, research, review, critical/TDD/e2e, docs, ADR, retro · done when: deep phase incl. doc-sync works
-- 06-measure [planned] budget measurements on 2–3 real repos, trim templates and prompts · done when: targets in SPEC §12 met or documented
+- 06-measure [active] budget measurements on 2–3 real repos, trim templates and prompts · done when: targets in SPEC §12 met or documented
