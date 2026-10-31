@@ -410,3 +410,9 @@ test('a malformed ADR file blocks a deep close; standard keeps HISTORY-only prom
   assert.doesNotMatch(s, /ADR|Promotion|Retro/);
   assert.match(s, /^Close: ready$/m);
 });
+
+test('only the deep close bundle emits accept --close NN; check and standard keep plain accept', async (t) => {
+  const root = allDone(repo(t, { profile: 'deep' }));
+  assert.match((await telos(root, 'ctx', 'done')).stdout, /^Accept: telos accept 01-01 --close 01 · telos accept 01-02 --close 01 · telos accept 01-03 --close 01$/m);
+  assert.match((await telos(root, 'ctx', 'check')).stdout, /^Accept: telos accept 01-01 · telos accept 01-02 · telos accept 01-03$/m);
+});

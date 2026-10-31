@@ -2,7 +2,7 @@
 id: 06-02
 title: Deep close reverify without scope bypasses
 type: code
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard
 depends: []
@@ -63,9 +63,14 @@ Resolve the known doc-sync reverify failure and remove the deep lifecycle test's
 5. README.md: CLI and Commands — document the final behavior and prove standard/minimal compatibility.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] The deep lifecycle has no SCOPE-error whitelist or TODO for doc-sync reverify.
-- [ ] Both successful retries and blocked out-of-scope/command failures use the shipped close commands.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] The deep lifecycle has no SCOPE-error whitelist or TODO for doc-sync reverify.
+- [x] Both successful retries and blocked out-of-scope/command failures use the shipped close commands.
 
 ## Result
+Added `telos accept <id> --close NN` (deep only; task done, in NN, phase active): besides scope/Deviations it admits only *uncommitted* docs-scan matches, the configured changelog when the phase has changelog candidates, and other done tasks' scope paths; task commits, other dirty paths and every command stay strict. `ctx done` emits it on the deep `Accept:` line; `ctx check` and standard keep plain accept. skills/done reruns those exact commands after doc-sync.
+e2e-deep: removed `acceptOk` and the TODO; close() runs the bundle's accept commands before and after doc-sync; new cases: close accept PASS vs plain SCOPE FAIL, dirty source / out-of-scope task commit / wrong selectors fail, dirty-source close retry, auto_commit=false retry with no intermediate commit.
+Tests: +1 accept, +1 ctx-close, +4 e2e-deep (todo removed), skills assertions; suite 582 pass, 0 todo.
+Surprise: the close test commit used to run unconditionally; it now follows the bundle's Auto-commit line, and a missing config under --close exited with a crash until wrapped as exit 1.
+Deviations: none

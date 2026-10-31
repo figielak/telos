@@ -264,26 +264,20 @@ async function promote(root, stopAfter) {
   return 'no progress';
 }
 
-const DOC_SYNC = ['docs/api.md', 'CHANGELOG.md'];
-/**
- * Accept verdict for the close: PASS, or a FAIL made only of SCOPE lines for uncommitted doc-sync
- * paths of an earlier attempt (workaround for the known 05-12 defect, see the todo test). Any
- * command FAIL or other out-of-scope path still stops the close.
- */
-function acceptOk(r) {
-  if (r.code === 0) return true;
-  const fails = r.stdout.split('\n').filter((l) => /FAIL/.test(l) && !/^accept /.test(l));
-  return fails.length > 0 && fails.every((l) => DOC_SYNC.some((p) => l === `SCOPE  FAIL ${p} (not in scope, not in Deviations)`));
-}
-
 /** Play /telos:done on deep; every early return leaves the phase active without a phase entry. */
-async function close(root, { manualVerified = true, review = 'PASS', failReverify = false, stopAfter } = {}) {
+async function close(root, { manualVerified = true, review = 'PASS', failReverify = false, dirty, stopAfter } = {}) {
   const preview = await ok(root, 'ctx', 'done');
   if (/^REFUSED:|^Close: blocked/m.test(preview)) return 'blocked';
   assert.match(preview, /^Deep close: /m);
   if ((await telos(root, 'check', '--level', 'full', '--phase', '01')).code !== 0) return 'check failed';
-  const ids = [...preview.matchAll(/telos accept (\d{2}-\d{2})/g)].map((m) => m[1]);
-  for (const id of ids) if (!acceptOk(await telos(root, 'accept', id))) return 'accept failed';
+  // The close bundle's own accept commands, run before and again after doc-sync.
+  const accepts = [...preview.matchAll(/telos (accept \d{2}-\d{2} --close \d{2})/g)].map((m) => m[1].split(' '));
+  assert.ok(accepts.length > 0, 'close bundle names its accept commands');
+  const acceptAll = async () => {
+    for (const args of accepts) if ((await telos(root, ...args)).code !== 0) return false;
+    return true;
+  };
+  if (!await acceptAll()) return 'accept failed';
   if (!manualVerified) return 'manual unverified';
   if (/^Review: one phase review/m.test(preview)) {
     const result = reviewer(await ok(root, 'ctx', 'review', '01'), review, root);
@@ -302,9 +296,9 @@ async function close(root, { manualVerified = true, review = 'PASS', failReverif
   const log = existsSync(join(root, 'CHANGELOG.md')) ? read(root, 'CHANGELOG.md') : '# Changelog\n';
   if (!log.includes(`## ${today()}`)) write(root, 'CHANGELOG.md', log.replace('# Changelog\n', `# Changelog\n\n## ${today()}\n${entries.join('\n')}\n`));
   if (failReverify) write(root, '.telos/.cache/fail-test', 'x');
-  // Reverify with the targeted full check only: rerunning `telos accept` here SCOPE-fails on the
-  // uncommitted doc-sync edits (known 05-12 defect, see the todo test below).
+  if (dirty) write(root, dirty, 'export const stray = 1;\n');
   if ((await telos(root, 'check', '--level', 'full', '--phase', '01')).code !== 0) return 'reverify failed';
+  if (!await acceptAll()) return 'reverify accept failed';
   const promoted = await promote(root, stopAfter);
   if (promoted !== 'promoted') return promoted;
   assert.match(await ok(root, 'ctx', 'done'), /^Close: ready$/m);
@@ -314,7 +308,9 @@ async function close(root, { manualVerified = true, review = 'PASS', failReverif
   await ok(root, 'roadmap', 'set', '01', 'done');
   await ok(root, 'status', 'set', 'task=none', 'next=/telos:plan');
   await ok(root, 'status', 'add', 'recent', '01-store closed: messages verified');
-  commit(root, 'docs(telos): close phase 01-store', [CONTEXT, HISTORY, ROADMAP, STATUS, ADR, 'docs/api.md', 'CHANGELOG.md']);
+  if (/^Auto-commit: yes$/m.test(preview)) {
+    commit(root, 'docs(telos): close phase 01-store', [CONTEXT, HISTORY, ROADMAP, STATUS, ADR, 'docs/api.md', 'CHANGELOG.md']);
+  }
   return 'closed';
 }
 
@@ -507,8 +503,68 @@ test('agent and variant contracts validate as files only, not as a live Claude h
   }
 });
 
-test('after doc-sync edits, rerunning telos accept passes for the phase tasks', { todo: 'known defect from 05-12: accept SCOPE-fails on uncommitted doc-sync edits outside task scope; follow-up proposed' }, async (t) => {
+test('after doc-sync edits the close accept passes, while plain accept keeps strict scope', async (t) => {
+  const { root } = await completed(t);
+  assert.match(await ok(root, 'ctx', 'done'), /^Accept: telos accept 01-01 --close 01 · telos accept 01-02 --close 01$/m);
+  assert.match(await ok(root, 'ctx', 'check'), /^Accept: telos accept 01-01 · telos accept 01-02$/m);
+  write(root, 'docs/api.md', read(root, 'docs/api.md').replace('exports `message(name)`.', 'exports `message(name)`; returns `Hello, <name>!`.'));
+  write(root, 'CHANGELOG.md', `# Changelog\n\n## ${today()}\n- add greet (01-01)\n`);
+  assert.match(await ok(root, 'accept', '01-01', '--close', '01'), /accept 01-01: PASS/);
+  const plain = await telos(root, 'accept', '01-01');
+  assert.equal(plain.code, 1);
+  assert.match(plain.stdout, /^SCOPE  FAIL docs\/api\.md \(not in scope, not in Deviations\)$/m);
+});
+
+test('the close accept still fails unrelated dirty source, out-of-scope task commits and wrong selectors', async (t) => {
   const { root } = await completed(t);
   write(root, 'docs/api.md', read(root, 'docs/api.md').replace('exports `message(name)`.', 'exports `message(name)`; returns `Hello, <name>!`.'));
-  assert.match(await ok(root, 'accept', '01-01'), /accept 01-01: PASS/);
+  write(root, 'src/stray.mjs', 'export const stray = 1;\n');
+  const dirty = await telos(root, 'accept', '01-01', '--close', '01');
+  assert.equal(dirty.code, 1);
+  assert.match(dirty.stdout, /^SCOPE  FAIL src\/stray\.mjs /m);
+  assert.doesNotMatch(dirty.stdout, /FAIL docs\/api\.md/);
+  rmSync(join(root, 'src/stray.mjs'));
+
+  write(root, 'notes.txt', 'out of scope\n');
+  commit(root, 'fix(01-02): sneak a note in', ['notes.txt']);
+  const committed = await telos(root, 'accept', '01-02', '--close', '01');
+  assert.equal(committed.code, 1);
+  assert.match(committed.stdout, /^SCOPE  FAIL notes\.txt /m);
+
+  for (const [args, code, text] of [
+    [['01-01', '--close', '02'], 1, /not in phase 02/],
+    [['01-01', '--close', '1'], 2, /usage/],
+    [['01-01', '--close'], 2, /usage/],
+    [['01-01', '--bogus', '01'], 2, /usage/],
+  ]) {
+    const r = await telos(root, 'accept', ...args);
+    assert.equal(r.code, code, args.join(' '));
+    assert.match(r.stderr, text, args.join(' '));
+  }
+});
+
+test('unrelated dirty source after doc-sync blocks the close; the retry without it closes once', async (t) => {
+  const { root } = await completed(t);
+  assert.equal(await close(root, { dirty: 'src/stray.mjs' }), 'reverify accept failed');
+  assert.equal(phaseEntries(root).length, 0);
+  assert.match(read(root, ROADMAP), /^- 01-store \[active\]/m);
+  assert.match(read(root, 'docs/api.md'), /returns `Hello, <name>!`/, 'doc edits stay for inspection');
+  rmSync(join(root, 'src/stray.mjs'));
+  assert.equal(await close(root), 'closed');
+  assert.equal(phaseEntries(root).length, 1);
+});
+
+test('with auto_commit=false a failed reverify retries to a close without any intermediate commit', async (t) => {
+  const { root } = await completed(t);
+  const cfg = JSON.parse(read(root, '.telos/config.json'));
+  write(root, '.telos/config.json', JSON.stringify({ ...cfg, git: { ...cfg.git, auto_commit: false } }, null, 2));
+  const head = git(root, 'rev-parse', 'HEAD').trim();
+  assert.equal(await close(root, { failReverify: true }), 'reverify failed');
+  assert.equal(phaseEntries(root).length, 0);
+  rmSync(join(root, '.telos/.cache/fail-test'));
+  assert.equal(await close(root), 'closed');
+  assert.equal(git(root, 'rev-parse', 'HEAD').trim(), head);
+  assert.equal(phaseEntries(root).length, 1);
+  assert.equal((read(root, 'CHANGELOG.md').match(/^## /gm) ?? []).length, 1);
+  assert.match(git(root, 'status', '--porcelain'), /docs\/api\.md/);
 });

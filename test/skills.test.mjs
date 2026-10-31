@@ -434,6 +434,8 @@ test('deep done reviews critical work and syncs docs after verification and befo
   assert.ok(at('telos docs-scan <NN>') < at('telos changelog <NN>'));
   assert.ok(at('telos changelog <NN>') < at('telos check --level full --phase <NN>'));
   assert.ok(at('telos check --level full --phase <NN>') < at('telos history add decision'));
+  assert.ok(at('--close <NN>') < at('Deep only'));
+  assert.match(body, /any FAIL, SCOPE included → stop/);
   for (const s of ['Critical evidence', 'Review: reuse', 'no re-review', 'HIGH or CRITICAL', 'UNVERIFIED', 'telos:reviewer-hard',
     '≤ 10', 'never invent', 'no duplicate', 'Sync: NOT VERIFIED', 'behavior-neutral', 'standard profile skips',
     'each changed doc path']) assert.ok(body.includes(s), s);

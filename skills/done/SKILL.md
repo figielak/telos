@@ -23,7 +23,8 @@ commands; edit only the phase CONTEXT. Never push, amend, tag or use `--no-verif
    configure checks) and stop, changing nothing.
 3. **Verify, before any state change**:
    - `telos check --level full` must exit 0; FAIL or UNVERIFIED → stop.
-   - each `telos accept <id>` on the `Accept:` line must end `PASS`; a FAIL → stop.
+   - each `telos accept <id>` (deep: `--close <NN>`) on the `Accept:` line must end `PASS`;
+     any FAIL, SCOPE included → stop.
    - manual items: accept exit 0 never proves them. Read each done task's Acceptance and Result
      and check every item without a command yourself; one you cannot verify → stop.
 4. **Deep only** (`Deep close` in the context; the standard profile skips to step 5):
@@ -37,7 +38,8 @@ commands; edit only the phase CONTEXT. Never push, amend, tag or use `--no-verif
      them with targeted reads first; no match → no-op. `telos changelog <NN>`: no candidates →
      no-op; else ≤ 10 entry lines under one version or date heading in the configured changelog
      (never invent a version; no duplicate heading or entry when a retry finds them).
-   - After any edit rerun `telos check --level full --phase <NN>` and the `Accept:` commands.
+   - After any edit rerun `telos check --level full --phase <NN>` and the `Accept:` commands as listed
+     (`--close` admits only uncommitted doc-sync edits); nothing is committed before they pass.
    On any stop in steps 3–4 the phase stays active, no history is written, doc edits stay
    uncommitted for the user to inspect; never mark tasks done, tick
    boxes or edit checks to make the close pass. Report what failed and `Next: /telos:check`.

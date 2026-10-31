@@ -162,3 +162,19 @@ test('a task without acceptance items still checks scope', async () => {
   assert.match(cli.stdout, /^no acceptance items$/m);
   assert.match(cli.stdout, /^SCOPE  FAIL lib\/x\.ts/m);
 });
+
+test('--close is deep-only, validated, and plain accept stays strict', async () => {
+  const root = repoWith({}, { 'docs/api.md': 'x\n' });
+  assert.match((await telos(root, 'accept', '02-04', '--close', '02')).stderr, /config\.json/);
+  write(root, '.telos/config.json', '{ "version": 1, "profile": "standard" }\n');
+  for (const [args, code, text] of [
+    [['02-04', '--close', '02'], 1, /Requires deep profile/],
+    [['02-04', '--close', '2'], 2, /usage: accept <id> \[--close NN\]/],
+    [['02-04', '--close', '02', 'x'], 2, /usage/],
+  ]) {
+    const r = await telos(root, 'accept', ...args);
+    assert.equal(r.code, code, args.join(' '));
+    assert.match(r.stderr, text, args.join(' '));
+  }
+  assert.deepEqual(accept(root, '02-04').outside, ['docs/api.md']);
+});
