@@ -2,7 +2,7 @@
 id: 06-01
 title: Deterministic budget report
 type: code
-status: draft       # draft | approved | in-progress | done | blocked | reverted
+status: approved    # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard
 depends: []

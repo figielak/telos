@@ -2,7 +2,7 @@
 id: 06-04
 title: Astro map and refresh measurements
 type: doc
-status: draft       # draft | approved | in-progress | done | blocked | reverted
+status: approved    # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal
 depends: [06-01, 06-03]

@@ -3,9 +3,9 @@
 Measure SPEC §12 on two real repositories, resolve the carried workflow defects, and trim demonstrated prompt overhead. Publish a scorecard whose estimates, live usage, failures and remaining gaps are distinguishable.
 
 ## Decisions
-- D-01 [proposed]: Add read-only `telos budget [--ctx <bundle> [args...]]`; use the existing UTF-16 length / 4 estimate, label it, and report stored files and rendered injections separately. Actual host usage is external evidence.
-- D-02 [proposed]: Use two real repositories (one Astro, one Python), pinned disposable copies and a shared run manifest. Measure both map variants and refresh, a three-task plan, one representative do and one deep phase review per repo; compare plan-lite on identical input. No third repository unless evidence warrants a revised task.
-- D-03 [proposed]: Tune once, at most two measured shared bodies plus one template. Preserve model defaults and delete-zone warning policy; document evidence-backed recommendations and seek confirmation before any policy change.
+- D-01: Add read-only `telos budget [--ctx <bundle> [args...]]`; use the existing UTF-16 length / 4 estimate, label it, and report stored files and rendered injections separately. Actual host usage is external evidence.
+- D-02: Use two real repositories (one Astro, one Python), pinned disposable copies and a shared run manifest. Measure both map variants and refresh, a three-task plan, one representative do and one deep phase review per repo; compare plan-lite on identical input. No third repository unless evidence warrants a revised task.
+- D-03: Tune once, at most two measured shared bodies plus one template. Preserve model defaults and delete-zone warning policy; document evidence-backed recommendations and seek confirmation before any policy change.
 
 ## Constraints
 - Work on the current deep profile; preserve minimal/standard behavior. Node >=20.10, no dependencies; CLI never writes git.

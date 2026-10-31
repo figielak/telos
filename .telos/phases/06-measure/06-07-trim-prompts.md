@@ -2,7 +2,7 @@
 id: 06-07
 title: Trim measured prompt and template overhead
 type: code
-status: draft       # draft | approved | in-progress | done | blocked | reverted
+status: approved    # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard
 depends: [06-04, 06-05, 06-06]

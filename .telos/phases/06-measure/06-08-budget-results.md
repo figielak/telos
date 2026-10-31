@@ -2,7 +2,7 @@
 id: 06-08
 title: Publish budget results and remaining decisions
 type: doc
-status: draft       # draft | approved | in-progress | done | blocked | reverted
+status: approved    # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal
 depends: [06-07]

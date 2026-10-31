@@ -2,7 +2,7 @@
 id: 06-06
 title: Measure planning execution and review overhead
 type: doc
-status: draft       # draft | approved | in-progress | done | blocked | reverted
+status: approved    # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal
 depends: [06-01, 06-02, 06-03, 06-04, 06-05]
