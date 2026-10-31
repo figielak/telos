@@ -16,6 +16,7 @@
      kinds: decision | phase | revert | remove | quick | profile | init
      ref: NN, NN-MM, ADR NNN, quick, telos
      Archive is installed first; after an interrupted write it may duplicate live Log rows. -->
+- 2026-10-29 profile telos: standard → deep
 - 2026-10-29 phase 05: closed 05-deep: deep phase incl. doc-sync works
 - 2026-10-29 decision 05: D-04: ADRs need a confirmed source and CLI-owned retryable header transitions; undo reverts only explicitly selected ADRs and never reactivates a superseded predecessor.
 - 2026-10-29 decision 05: D-02: Result stores compact real RED/GREEN/e2e and review evidence; full checks take --task/--phase selectors and deep critical code requires a configured e2e.

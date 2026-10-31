@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "profile": "standard",
+  "profile": "deep",
   "files_language": "en",
   "stack": [
     "javascript"
