@@ -67,3 +67,13 @@ test('a command needing .telos/ exits 1 when not initialized', async () => {
   assert.equal(ran, false);
   assert.equal(stderr.text.trim(), 'Telos not initialized. Run /telos:init.');
 });
+
+test('budget is registered, read-only and needs .telos/', () => {
+  const help = run('--help');
+  assert.match(help.stdout, /budget\s+Estimated sizes/);
+  const root = tempDir();
+  mkdirSync(join(root, '.git'));
+  const r = spawnSync(bin, ['budget'], { cwd: root, encoding: 'utf8' });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /Telos not initialized/);
+});

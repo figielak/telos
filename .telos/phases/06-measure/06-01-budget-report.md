@@ -2,7 +2,7 @@
 id: 06-01
 title: Deterministic budget report
 type: code
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard
 depends: []
@@ -59,9 +59,14 @@ Add the read-only `telos budget` report required by SPEC §12, separating determ
 4. test/budget.test.mjs: fixtures — prove units, limits, refusals and read-only behavior; document the contract in README.md.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] `bin/telos budget` → exit 0
-- [ ] Every estimate is labeled; stored memory, injected text and unmeasured host usage cannot be confused.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] `bin/telos budget` → exit 0
+- [x] Every estimate is labeled; stored memory, injected text and unmeasured host usage cannot be confused.
 
 ## Result
+Built read-only `telos budget [--ctx <bundle> [args...]]` (lib/budget.mjs): stored `.telos/` rows (raw) with explicit missing core/standard files, rendered rows for the CLAUDE.md block, SessionStart hook output and an optional bundle rendered through the real `ctxCommand`; bytes, UTF-16 chars and `~N est. tokens`, separate totals, `Omitted:` reasons and a `Host usage: not measured` line.
+Limits: 256 KiB/file, 1000 entries, depth 6, 200 listed rows (rest counted); `.cache`, archives, symlinks and non-regular files are omitted without reading. Refusals (`REFUSED:`, profile gate, unknown shared name) exit 1 with `not measured`; malformed selection exits 2.
+Tests: 8 in test/budget.test.mjs + 1 in test/cli.test.mjs; full suite 576 pass, 1 todo (06-02 known defect).
+Surprise: a 1000-entry tree printed ~1000 rows, so listed rows got their own cap. This repo: stored ~71.5K est. tokens (79 files, mostly closed phases), injected ~270 (CLAUDE block ~166, SessionStart ~104); `ctx do` hits the 6000-char cap.
+Deviations: none
