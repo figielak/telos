@@ -6,6 +6,7 @@ Measure SPEC §12 on two real repositories, resolve the carried workflow defects
 - D-01: Add read-only `telos budget [--ctx <bundle> [args...]]`; use the existing UTF-16 length / 4 estimate, label it, and report stored files and rendered injections separately. Actual host usage is external evidence.
 - D-02: Use two real repositories (one Astro, one Python), pinned disposable copies and a shared run manifest. Measure both map variants and refresh, a three-task plan, one representative do and one deep phase review per repo; compare plan-lite on identical input. No third repository unless evidence warrants a revised task.
 - D-03: Tune once, at most two measured shared bodies plus one template. Preserve model defaults and delete-zone warning policy; document evidence-backed recommendations and seek confirmation before any policy change.
+- D-04: Measurement repositories (was Q-01), used only through disposable copies. Python: `/home/figielak/Documents/Projects/telos_testing/BlueVest` (`git@github.com:figielak/BlueVest.git`), baseline `4063adce89449bcb713151be1b675ab7b2eec3a4`, refresh `89d4b098d52f92f216d649c59b6f1e41e40e8c03` (payouts update; 13 files incl. generated `ui_compiled/`). Astro: `/home/figielak/Documents/Projects/telos_testing/knml.edu.pl` (`git@github.com:knmlprz/knml.edu.pl.git`; Astro app in `new-website/`, legacy Hugo in `old-website/`), baseline `2a47a6d49b09e076f4fe0d305f691809c84e3b93`, refresh `8d29d1008a785757fdb172ad1e5e95facea21341` (EN version; 47 files, 7 added).
 
 ## Constraints
 - Work on the current deep profile; preserve minimal/standard behavior. Node >=20.10, no dependencies; CLI never writes git.
@@ -19,7 +20,7 @@ Measure SPEC §12 on two real repositories, resolve the carried workflow defects
 - Plan self-critique must preserve strict task acceptance, deep retry behavior, configured output caps and explicit evidence limitations.
 
 ## Open questions
-- Q-01: Which Astro and Python repository paths/URLs and baseline/refresh revisions should the disposable measurement runs use? User will provide them.
+- none (Q-01 answered as D-04)
 
 ## Carried over
 - headless map/refresh proof on one real Astro and one real Python repo at pinned revisions (map + map-hard, evidence, §12 usage) → 03-CONTEXT D-09, D-07 ⇒ 06-04, 06-05

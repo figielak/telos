@@ -5,7 +5,7 @@ Phase: 06-measure
 Task: 06-01
 Next: /telos:do
 Blockers: none
-Awaiting user: 06:Q-01
+Awaiting user: none
 <!-- Blockers: "NN-MM: reason". Awaiting user: IDs only, e.g. "02:Q-01, 02:D-03" -->
 
 ## Carry-over
