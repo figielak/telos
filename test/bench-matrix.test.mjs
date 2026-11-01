@@ -53,7 +53,7 @@ test('invalid manifests fail with the file and field named', (t) => {
   bad(t, (j) => { j.tasks[0].steps = ['x']; }, /tasks\[0\]: .*both/);
   bad(t, (j) => { delete j.tasks[0].prompt; }, /tasks\[0\]\.prompt/);
   bad(t, (j) => { j.tasks[3].type = 'single'; }, /tasks\[3\]\.type/);
-  bad(t, (j) => { j.tasks[0].b = 'b/missing/CLAUDE.md'; }, /tasks\[0\]\.b: .*not found/);
+  bad(t, (j) => { j.tasks[0].b = 'r1/missing/CLAUDE.md'; }, /tasks\[0\]\.b: .*not found/);
   bad(t, (j) => { j.tasks[0].acceptance = '../outside'; }, /tasks\[0\]\.acceptance: .*inside/);
   bad(t, (j) => { j.repetitions = 0; }, /repetitions/);
   bad(t, (j) => { j.variants = ['A', 'E']; }, /variants/);

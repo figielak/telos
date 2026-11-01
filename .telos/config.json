@@ -6,7 +6,8 @@
     "javascript"
   ],
   "checks": {
-    "test": "npm test"
+    "test": "npm test",
+    "e2e": "node --test test/e2e-*.test.mjs"
   },
   "docs": {
     "readme": "README.md",

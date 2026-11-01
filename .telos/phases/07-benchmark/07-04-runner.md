@@ -2,7 +2,7 @@
 id: 07-04
 title: Disposable copies, setup snapshots and sandbox
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: true
 effort: hard        # normal | hard
 depends: [07-03]    # task IDs, e.g. [01-01]
@@ -66,10 +66,16 @@ Prepare everything a session may see, and nothing more: a disposable copy at the
 5. bench/README.md: isolation design; run `npm test`.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `node --test test/bench-workspace.test.mjs` → exit 0
-- [ ] `npm test` → exit 0
+- [x] all listed tests pass
+- [x] `node --test test/bench-workspace.test.mjs` → exit 0
+- [x] `npm test` → exit 0
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+RED: node --test test/bench-workspace.test.mjs → exit 1: 11/11 fail against empty stubs (Missing expected exception for leak/native/symlink/B refusals, HEAD≠start, export lacks runtime paths)
+bench/lib/workspace.mjs: prepareCopy (clone --no-local, one `bench` branch at start, refs/tags/remotes/reflog stripped, gc, leak +
+native-instruction + symlink checks, B/C/D placement), ensureSnapshot (hash of start/profile/Telos commit/map files, atomic rebuild).
+bench/lib/sandbox.mjs: exportPlugin (tracked runtime paths only), sessionEnv (fresh config dir, memory off, web tools denied, sandbox net = model API, scrubbed env).
+11 tests in test/bench-workspace.test.mjs; npm test 613/613. Sandbox setting keys are unverified against the host until the 07-08 canaries.
+GREEN: telos check --level full --task 07-04 → exit 0 · e2e PASS
+Review: PASS WITH NOTES · EvidenceId 9780b1e2e6088e4027cb6564d64688d261fd32163d085b8dd0c58c355e461d66 · fixed MEDIUM export dir containing source/checkout, LOW work dir containing checkout, LOW snapshot overlay limited to added files, LOW docstrings
+Deviations: test/bench-matrix.test.mjs — fixture B files moved to the D-10 layout <repo>/<start>/CLAUDE.md, one path in a 07-03 test updated; .telos/config.json — checks.e2e added (user-approved) so the critical GREEN gate can run
