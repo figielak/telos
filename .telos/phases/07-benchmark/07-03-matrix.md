@@ -2,7 +2,7 @@
 id: 07-03
 title: Benchmark task manifest and run matrix
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [07-02]    # task IDs, e.g. [01-01]
@@ -47,10 +47,14 @@ Load and validate the benchmark manifest (repositories and tasks as JSON) and ex
 - Run `npm test`.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `node --test test/bench-matrix.test.mjs` → exit 0
-- [ ] `npm test` → exit 0
+- [x] all listed tests pass
+- [x] `node --test test/bench-matrix.test.mjs` → exit 0
+- [x] `npm test` → exit 0
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+RED: node --test test/bench-matrix.test.mjs → exit 1: modules bench/lib/{manifest,matrix}.mjs missing (tests first).
+bench/lib/manifest.mjs `loadManifest(dir)` validates manifest.json (40-hex commits, single|multi, files must exist inside the dir) with
+`manifest.json: <field>: …` UsageErrors; bench/lib/matrix.mjs `expandMatrix` builds ids `<task>.<variant>.<rep>`, setup keys
+`<repo>.<start>.<profile>` and a queue with each setup before its first cell. Orders are sha256(seed, key) sorts, so filters, reps:1 and resume keep relative order.
+8 new tests; npm test 602/602. Choice: multi tasks use `steps[]` with steps[0] as the task text (README says so); PROTOCOL §6.3 wording is slightly looser.
+Deviations: none
