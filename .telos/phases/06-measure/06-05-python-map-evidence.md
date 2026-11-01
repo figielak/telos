@@ -2,7 +2,7 @@
 id: 06-05
 title: Python map and refresh measurements
 type: doc
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal
 depends: [06-01, 06-03]
@@ -40,9 +40,13 @@ Record real headless map/map-hard and refresh evidence on the user-selected Pyth
 - Spot-check at least five MAP navigation references per variant against source, verify PROJECT preservation, and compare measured usage with SPEC §12.
 
 ## Acceptance
-- [ ] `npm test` → exit 0
-- [ ] The Python report pins real repository/Telos revisions and includes full-build and refresh evidence for both variants.
-- [ ] MAP validation, configured limit, navigation spot-checks and refresh preservation are recorded with actual results.
-- [ ] Missing access/usage, failed runs and target misses remain explicit; absent real runs cannot be labeled PASS.
+- [x] `npm test` → exit 0
+- [x] The Python report pins real repository/Telos revisions and includes full-build and refresh evidence for both variants.
+- [x] MAP validation, configured limit, navigation spot-checks and refresh preservation are recorded with actual results.
+- [x] Missing access/usage, failed runs and target misses remain explicit; absent real runs cannot be labeled PASS.
 
 ## Result
+- Live headless runs on BlueVest (baseline 4063adc, refresh 89d4b09): full build PASS for map (sonnet, 653/1500) and map-hard (opus, 751/1500); both `--refresh` runs fell back to Mode full (9/9 and 9/10 units affected), validated PASS (719 and 901/1500), PROJECT byte-identical. Report: .telos/phases/06-measure/06-PYTHON-EVIDENCE.md.
+- Spot-checks 5/5 per variant; all path:range refs resolve (baseline 23/23 and 25/25, refreshed 28/28 and 32/32). §12 targets MISS under the fresh-cache-write+output reading (build ≈51K, refresh ≈50K); noop/incremental refresh and the unchanged-block byte compare were not exercised. `npm test` 588/588.
+- Contrast with 06-04: here refresh worked (as full), there it was REFUSED.
+Deviations: none
