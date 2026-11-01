@@ -2,7 +2,7 @@
 id: 07-02
 title: Pre-registered benchmark protocol
 type: doc           # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: []         # task IDs, e.g. [01-01]
@@ -41,10 +41,14 @@ Write the benchmark protocol before any run: hypotheses with descriptive verdict
 - Sections "Amendments" (dated, only before the final preregistration commit) and "Known limitations" (F1–F5, F7, F8 per D-03; sample size; single host version; shipped-workflow comparison).
 
 ## Acceptance
-- [ ] PROTOCOL.md answers every BLOCKER and MAJOR item of BENCHMARK-PLAN-REVIEW.md or names it as a known limitation
-- [ ] `grep -q "## Amendments" bench/PROTOCOL.md` → exit 0
-- [ ] `npm test` → exit 0
+- [x] PROTOCOL.md answers every BLOCKER and MAJOR item of BENCHMARK-PLAN-REVIEW.md or names it as a known limitation
+- [x] `grep -q "## Amendments" bench/PROTOCOL.md` → exit 0
+- [x] `npm test` → exit 0
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+bench/PROTOCOL.md (draft, ~3.5K words): disclosure, variants, H1–H5 with unit weighting and supported/contradicted/inconclusive
+thresholds, repo/commit selection and review, hidden behavioural + regression acceptance, B rules, isolation checklist and
+canaries, setup keying and the full C/D transition script with A/B step equivalents, run/cache/retry/cap/resume rules,
+metrics, analysis with horizon break-even, evidence/redaction, known limitations, a §13 map of every review BLOCKER/MAJOR.
+Surprise: BENCHMARK-PLAN-REVIEW.md is not in the repo (only in the user's trash); read from there, not restored. npm test green.
+Deviations: none
