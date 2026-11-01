@@ -158,3 +158,18 @@ test('status preserves custom Next, active phase/task and blockers', async () =>
   assert.match(blocked, /^Blockers: 01-01: broken$/m);
   assert.match(blocked, /^Awaiting user: decide$/m);
 });
+
+test('status shows /telos:do-hard <id> for a stored /telos:do on an effort: hard task', async () => {
+  const taskRepo = (effort, next = '/telos:do') => {
+    const root = mapRepo({ next, set: { Phase: '01-core', Task: '01-02' } });
+    mkdirSync(join(root, '.telos', 'phases', '01-core'), { recursive: true });
+    writeFileSync(join(root, '.telos', 'phases', '01-core', '01-02-x.md'), `---\nid: 01-02\nstatus: approved\neffort: ${effort}\n---\n`);
+    return root;
+  };
+  const hard = taskRepo('hard');
+  const before = statusText(hard);
+  assert.match((await telos(hard, 'status')).stdout, /^Next: \/telos:do-hard 01-02$/m);
+  assert.equal(statusText(hard), before);
+  assert.match((await telos(taskRepo('normal'), 'status')).stdout, /^Next: \/telos:do$/m);
+  assert.match((await telos(taskRepo('hard', 'finish 01-02: step'), 'status')).stdout, /^Next: finish 01-02: step$/m);
+});

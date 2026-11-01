@@ -22,7 +22,8 @@ state only through `telos` commands. Never push, amend or use `--no-verify`.
 3. **Run**, in this order:
    - `telos task set <id> <id> … status=approved` (all picked ids in one call);
    - `telos roadmap set <NN> active`;
-   - `telos status set task=<first approved id whose depends are done> next="/telos:do"`.
+   - `telos status set task=<first approved id whose depends are done> next="/telos:do"`
+     (`next="/telos:do-hard <id>"` when that task has `effort: hard`).
 4. **Commit** only these paths, listed explicitly:
    `git add .telos/phases/<NN-name>/ .telos/ROADMAP.md .telos/STATUS.md`, then
    `git commit -m "docs(telos): plan phase <NN-name>" -m "- <2–4 bullets: what the phase delivers, task count>"`.
@@ -33,4 +34,4 @@ state only through `telos` commands. Never push, amend or use `--no-verify`.
 5. **Tag**: only when `Tag:` says `missing`, run `git tag telos/<NN>-start` after the commit.
    It stays local; the user pushes when they want.
 6. **Reply** in ≤ 5 lines: approved ids, ids left in draft and why, the commit subject, the tag,
-   last line `Next: /telos:do`.
+   last line `Next: <the next you set>`.

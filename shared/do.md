@@ -45,7 +45,8 @@ reset or skip hooks.
    - `telos task set <id> status=done`
    - `telos status add recent "<id> done: <one line>"`
    - next task = the first `approved` task of the phase whose depends are done (task index in
-     STATUS or ROADMAP); `telos status set task=<next id> next="/telos:do"`.
+     STATUS or ROADMAP); `telos status set task=<next id> next="/telos:do"`, or
+     `next="/telos:do-hard <next id>"` when that task has `effort: hard`.
    - no task left: minimal profile → `telos roadmap set <NN> done` and
      `telos status set task=none next="/telos:plan"`; standard/deep → the phase stays active,
      `telos status set task=none next="close phase <NN> (/telos:done)"`.
