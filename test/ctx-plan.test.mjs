@@ -107,14 +107,16 @@ test('ctx approve on a clean phase shows ok, draft ids and blocked tasks', async
   assert.match(r.stdout, /^Blocked:\n- 01-03: D-02 is proposed$/m);
 });
 
-test('a decision listed in Awaiting user blocks its task', async () => {
+test('a decision listed in Awaiting user blocks its task unless CONTEXT confirms it', async () => {
   const root = repo();
   writeFileSync(join(root, DEMO, '01-CONTEXT.md'), '# 01 · Demo\n## Decisions\n- D-01: keep it small\n');
+  edit(root, '01-02-second-task.md', (t) => t.replace('decisions: []', 'decisions: [D-04]'));
   edit(root, '01-03-third-task.md', (t) => t.replace('decisions: []', 'decisions: [D-01]'));
   const status = join(root, '.telos', 'STATUS.md');
-  writeFileSync(status, readFileSync(status, 'utf8').replace('Awaiting user: none', 'Awaiting user: 01:D-01, 02:D-03'));
+  writeFileSync(status, readFileSync(status, 'utf8').replace('Awaiting user: none', 'Awaiting user: 01:D-01, 01:D-04, 02:D-03'));
   const r = await ctx(root, 'approve', '01');
-  assert.match(r.stdout, /^- 01-03: D-01 awaits the user$/m);
+  assert.match(r.stdout, /^- 01-02: D-04 awaits the user$/m);
+  assert.doesNotMatch(r.stdout, /01-03: D-01/);
 });
 
 test('the task index and format survive a long CONTEXT; the cut lands in the CONTEXT', async () => {

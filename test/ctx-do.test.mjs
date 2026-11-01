@@ -79,8 +79,18 @@ test('a proposed or awaited decision is refused', async () => {
   editTask(root, '01-02-second-task.md', (t) => t.replace('decisions: []', 'decisions: [D-02]'));
   assert.equal(await ctxDo(root), 'REFUSED: decision D-02 awaits the user\n');
   editTask(root, '01-02-second-task.md', (t) => t.replace('decisions: [D-02]', 'decisions: [D-01]'));
+  editTask(root, '01-02-second-task.md', (t) => t.replace('decisions: [D-01]', 'decisions: [D-03]'));
+  edit(root, '.telos/STATUS.md', (t) => t.replace('Awaiting user: none', 'Awaiting user: 01:D-03'));
+  assert.equal(await ctxDo(root), 'REFUSED: decision D-03 awaits the user\n');
+});
+
+test('an Awaiting user entry for a decision confirmed in CONTEXT no longer blocks', async () => {
+  const root = repo();
+  writeFileSync(join(root, DEMO, '01-CONTEXT.md'),
+    '# 01 · Demo\n## Goal\nGreet people.\n## Decisions\n- D-01: keep it small\n');
+  editTask(root, '01-02-second-task.md', (t) => t.replace('decisions: []', 'decisions: [D-01]'));
   edit(root, '.telos/STATUS.md', (t) => t.replace('Awaiting user: none', 'Awaiting user: 01:D-01'));
-  assert.equal(await ctxDo(root), 'REFUSED: decision D-01 awaits the user\n');
+  assert.doesNotMatch(await ctxDo(root), /awaits the user/);
 });
 
 test('effort hard adds a hint and keeps the full bundle', async () => {
