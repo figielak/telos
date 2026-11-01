@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cpSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -107,6 +107,24 @@ test('stackLine formats detected versions; empty stack is unknown', () => {
   const root = repo('astro-ts');
   assert.equal(stackLine(root, { stack: ['astro', 'typescript'] }), 'Stack: astro 5 · typescript 5.6 · node >=22');
   assert.equal(stackLine(repo(), { stack: [] }), 'Stack: unknown');
+});
+
+test('ctx status derives the first-plan hint only for init\'s map hint plus a built MAP', async () => {
+  const root = repo('python-uv');
+  initialize(root, { stack: ['python'] });
+  const status = join(root, '.telos', 'STATUS.md');
+  writeFileSync(status, render('STATUS.md', { next: 'run /telos:map to map the existing code' }));
+  const map = '<!-- telos-map: commit aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa · 2026-10-29 · files 3 -->\n# Map\n\n## Structure\n- `lib/` — code\n\n## Entry points\n- `bin/telos:1-1` — start\n\n## Flows\n- run → `lib/a.mjs:1-2`\n\n## Areas\n### Core\n- `lib/a.mjs:1-2` — core\n\n## Find\n- lookup → `lib/a.mjs:1-2`\n';
+  writeFileSync(join(root, '.telos', 'MAP.md'), map);
+  const before = readFileSync(status, 'utf8');
+  const r = await ctx(root, 'status');
+  assert.equal(r.code, 0, r.stderr);
+  assert.match(r.stdout, /^Next: plan the first phase with \/telos:plan$/m);
+  assert.ok(r.stdout.length <= CAP);
+  assert.equal(readFileSync(status, 'utf8'), before);
+
+  writeFileSync(status, render('STATUS.md', { next: 'review the map first' }));
+  assert.match((await ctx(root, 'status')).stdout, /^Next: review the map first$/m);
 });
 
 test('ctx status: view, stack line and file pointers; uninitialized is one line', async () => {

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
@@ -110,4 +110,51 @@ test('lib/status.mjs can be imported before lib/cli.mjs', () => {
     cwd: fileURLToPath(new URL('..', import.meta.url)), encoding: 'utf8',
   });
   assert.equal(r.status, 0, r.stderr);
+});
+
+// Read-time Next after map (06-03): init's exact map hint is replaced once MAP is valid.
+const INIT_MAP = 'run /telos:map to map the existing code';
+const FIRST_PLAN = 'plan the first phase with /telos:plan';
+const BUILT_MAP = '<!-- telos-map: commit aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa · 2026-10-29 · files 3 -->\n# Map\n\n## Structure\n- `lib/` — code\n\n## Entry points\n- `bin/telos:1-1` — start\n\n## Flows\n- run → `lib/a.mjs:1-2`\n\n## Areas\n### Core\n- `lib/a.mjs:1-2` — core\n\n## Find\n- lookup → `lib/a.mjs:1-2`\n';
+
+function mapRepo({ next = INIT_MAP, map = BUILT_MAP, set = {}, limit } = {}) {
+  const root = repo();
+  if (limit) writeConfig(root, { ...DEFAULTS, limits: { ...DEFAULTS.limits, map_tokens: limit } });
+  const path = join(root, '.telos', 'STATUS.md');
+  let text = render('STATUS.md', { next });
+  for (const [label, value] of Object.entries(set)) text = text.replace(new RegExp(`^${label}: .*$`, 'm'), `${label}: ${value}`);
+  writeFileSync(path, text);
+  writeFileSync(join(root, '.telos', 'MAP.md'), map);
+  return root;
+}
+
+test('status derives the first-plan hint when MAP is built and Next is init\'s map hint', async () => {
+  const root = mapRepo();
+  const before = statusText(root);
+  const r = await telos(root, 'status');
+  assert.match(r.stdout, new RegExp(`^Next: ${FIRST_PLAN}$`, 'm'));
+  assert.equal(statusText(root), before);
+});
+
+test('status keeps the map hint for missing, stub, malformed and over-budget MAP', async () => {
+  for (const [map, limit] of [
+    ['<!-- telos-map: not built -->\n# Map\n\nNot built yet: run `/telos:map`.\n', undefined],
+    ['# Map\n\nhand-written, no header\n', undefined],
+    [BUILT_MAP, 10],
+  ]) {
+    const r = await telos(mapRepo({ map, limit }), 'status');
+    assert.match(r.stdout, new RegExp(`^Next: ${INIT_MAP}$`, 'm'));
+  }
+  const missing = mapRepo();
+  rmSync(join(missing, '.telos', 'MAP.md'));
+  assert.match((await telos(missing, 'status')).stdout, new RegExp(`^Next: ${INIT_MAP}$`, 'm'));
+});
+
+test('status preserves custom Next, active phase/task and blockers', async () => {
+  assert.match((await telos(mapRepo({ next: 'run tests' }), 'status')).stdout, /^Next: run tests$/m);
+  assert.match((await telos(mapRepo({ set: { Phase: '01-core' } }), 'status')).stdout, new RegExp(`^Next: ${INIT_MAP}$`, 'm'));
+  assert.match((await telos(mapRepo({ set: { Task: '01-01' } }), 'status')).stdout, new RegExp(`^Next: ${INIT_MAP}$`, 'm'));
+  const blocked = (await telos(mapRepo({ set: { Blockers: '01-01: broken', 'Awaiting user': 'decide' } }), 'status')).stdout;
+  assert.match(blocked, /^Blockers: 01-01: broken$/m);
+  assert.match(blocked, /^Awaiting user: decide$/m);
 });

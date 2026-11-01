@@ -146,6 +146,12 @@ for (const fixtureName of ['astro-ts', 'python-uv']) {
       assert.deepEqual([...map.matchAll(/^## (.+)$/gm)].map((m) => m[1]), ['Structure', 'Entry points', 'Flows', 'Areas', 'Find']);
       assert.ok(map.startsWith(headerFrom(bundle, root)));
       assert.doesNotMatch(map, /Not built yet/);
+      // Read-time Next: init's map hint yields the first-plan hint once MAP is valid; STATUS untouched.
+      const status = read(root, '.telos/STATUS.md');
+      assert.match(status, /^Next: run \/telos:map to map the existing code$/m);
+      assert.match(cli(root, 'status'), /^Next: plan the first phase with \/telos:plan$/m);
+      assert.match(cli(root, 'ctx', 'status'), /^Next: plan the first phase with \/telos:plan$/m);
+      assert.equal(read(root, '.telos/STATUS.md'), status);
       authoredClassification = projectLine(bundle);
       assert.match(authoredClassification, /draft: Rules, Out of scope · preserve: Purpose .*Conventions/);
       cli(root, 'roadmap', 'add', 'navigation', 'Use the authored MAP', 'A source location is found');

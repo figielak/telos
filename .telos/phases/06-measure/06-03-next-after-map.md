@@ -2,7 +2,7 @@
 id: 06-03
 title: Derive the next step after a completed map
 type: code
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal
 depends: []
@@ -46,8 +46,13 @@ Replace init's stale map suggestion at read time once MAP is valid, consistently
 - Extend the map lifecycle proof and document the read-time behavior.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] status, ctx status and SessionStart agree without any STATUS write or manual repair.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] status, ctx status and SessionStart agree without any STATUS write or manual repair.
 
 ## Result
+- `view()` in lib/status.mjs now derives Next at read time: init's exact `run /telos:map to map the existing code` becomes `plan the first phase with /telos:plan` when Phase and Task are none and `inspectMap` reports MAP `built` within `limits.map_tokens`; status, ctx status and SessionStart share it.
+- Missing/stub/malformed/over-budget MAP, custom Next, active phase/task and an unreadable config keep the stored Next; Blockers and Awaiting user are untouched; no STATUS write.
+- Tests: 5 new (status 3, session 1, ctx 1) + e2e-map lifecycle assertions; `npm test` 587/587 pass.
+- Surprise: a built MAP header needs a full 40/64-hex commit, so test fixtures use a fake 40-char hash. The init hint strings are duplicated in status.mjs because lib/init.mjs was out of scope.
+Deviations: none
