@@ -2,7 +2,7 @@
 id: 06-06
 title: Measure planning execution and review overhead
 type: doc
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal
 depends: [06-01, 06-02, 06-03, 06-04, 06-05]
@@ -40,9 +40,14 @@ Measure the remaining SPEC §12 targets on the pinned real repositories and capt
 - Tabulate every non-map SPEC §12 target, measured values and unresolved attribution/access limitations.
 
 ## Acceptance
-- [ ] `npm test` → exit 0
-- [ ] Every non-map SPEC §12 target has evidence or an explicit UNVERIFIED limitation, with the measurement method stated.
-- [ ] Three-task plan, do-overhead attribution and deep phase review are separately reported for both real repositories.
-- [ ] Model/default and delete-zone findings cite observed behavior; no runtime policy has been changed.
+- [x] `npm test` → exit 0
+- [x] Every non-map SPEC §12 target has evidence or an explicit UNVERIFIED limitation, with the measurement method stated.
+- [x] Three-task plan, do-overhead attribution and deep phase review are separately reported for both real repositories.
+- [x] Model/default and delete-zone findings cite observed behavior; no runtime policy has been changed.
 
 ## Result
+- Live headless plan, plan-lite, do and deep review runs on both D-04 copies plus always-on/SessionStart probes and a delete-zone scenario; report .telos/phases/06-measure/06-WORKFLOW-EVIDENCE.md keeps host fields separate and states the fresh+output reading.
+- Targets: always-on MISS (363 measured, ~962 projected); SessionStart+CLAUDE block 369/615 combined (split UNVERIFIED); plan MISS (44–54K fresh) with plan-lite at 42–49% of plan cost; do overhead UNVERIFIED (proxy ≈2.9K est.); deep review UNVERIFIED (headless denied its own `git '--literal-pathspecs' diff` continuation).
+- Astro do blocked twice: my configured `node --test <dir>` check fails on Node 24 and the plan froze it into Acceptance; BlueVest do completed with RED/GREEN and commit.
+- Follow-ups: review continuation permission pattern, plugin template access from plan skills, ctx do cap truncation. No defaults or policies changed. `npm test` 588/588.
+Deviations: none

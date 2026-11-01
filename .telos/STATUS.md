@@ -2,8 +2,8 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 06-measure
-Task: 06-06
-Next: /telos:do
+Task: 06-07
+Next: /telos:do-hard 06-07
 Blockers: none
 Awaiting user: none
 <!-- Blockers: "NN-MM: reason". Awaiting user: IDs only, e.g. "02:Q-01, 02:D-03" -->
@@ -15,6 +15,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 06-06 done: plan/do/review/always-on usage measured on both repos; reviews UNVERIFIED (headless diff denied)
 - 06-05 done: Python map builds PASS; refresh ran as full fallback on both variants (evidence report)
 - 06-04 done: Astro map builds PASS; refresh REFUSED on both variants (evidence report)
-- 06-03 done: status/ctx/SessionStart derive the plan hint after a built MAP
