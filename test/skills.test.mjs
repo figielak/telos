@@ -88,6 +88,26 @@ test('every shared body a skill injects exists and stays short', () => {
   }
 });
 
+// 06-TUNING baseline: rendered per-run bodies at HEAD f1b1b10; growth needs a new measurement.
+test('the per-run do and plan bodies stay within the 06-TUNING baseline and keep their gates', async () => {
+  const { main } = await import('../lib/cli.mjs');
+  const shared = async (name) => {
+    const out = { text: '', write(s) { out.text += s; } };
+    assert.equal(await main(['ctx', 'shared', name], { cwd: SHARED, stdout: out, stderr: out }), 0);
+    return out.text;
+  };
+  const baseline = { do: 5367, plan: 5198 };
+  const gates = {
+    do: ['REFUSED:', 'HINT: effort hard', 'telos accept', 'RED: <cmd>', 'telos:reviewer-hard', 'Deviations:', 'status=blocked', 'never a directory wildcard'],
+    plan: ['REFUSED:', 'Never commit', '[proposed]', 'telos lint-plan', 'at most 3 rounds', 'Critique'],
+  };
+  for (const [name, max] of Object.entries(baseline)) {
+    const text = await shared(name);
+    assert.ok(text.length <= max, `shared ${name}: ${text.length} chars > baseline ${max}`);
+    for (const gate of gates[name]) assert.ok(text.includes(gate), `shared ${name} lost '${gate}'`);
+  }
+});
+
 test('the plan instructions use the telos commands and a short summary', () => {
   const plan = readFileSync(join(SHARED, 'plan.md'), 'utf8');
   for (const cmd of ['telos lint-plan', 'telos task new', 'telos roadmap set', 'telos roadmap add', 'telos status rm carry', 'telos status set']) {

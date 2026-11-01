@@ -2,7 +2,7 @@
 id: 06-07
 title: Trim measured prompt and template overhead
 type: code
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard
 depends: [06-04, 06-05, 06-06]
@@ -63,9 +63,13 @@ Reduce the largest demonstrated prompt/template overhead without losing workflow
 5. README.md: changed skill rows — keep commands accurate and link the measured tuning record.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
-- [ ] At most two shared bodies and one template changed, with before/after measurements or a justified no-change result.
-- [ ] Targeted live reruns show preserved behavior; unavailable live verification is explicitly UNVERIFIED.
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
+- [x] At most two shared bodies and one template changed, with before/after measurements or a justified no-change result.
+- [x] Targeted live reruns show preserved behavior; unavailable live verification is explicitly UNVERIFIED.
 
 ## Result
+- Justified no-change: fixed Telos injections (~1.3K est. shared body + ≤1.5K bundle) are ~3–6% of measured fresh usage; D-03-sized wording cuts would save <1% and touch followed gate text. Recorded in .telos/phases/06-measure/06-TUNING.md with baseline sizes, live context and four proposed follow-ups (conditional deep-critical injection, always-on descriptions, template access, review diff permission).
+- Added a skills test pinning rendered `ctx shared do` ≤ 5367 and `ctx shared plan` ≤ 5198 chars with their gates; README budget row links the record. No RED: the test guards existing behavior, nothing was implemented.
+- No live reruns (no prompt bytes changed); preserved-after-shortening claims stay UNVERIFIED. `npm test` 589/589.
+Deviations: none
