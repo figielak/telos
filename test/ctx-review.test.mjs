@@ -82,7 +82,7 @@ test('oversized diffs and acceptance retain mandatory fields and precise continu
   assert.match(r.stdout, /Completeness: UNVERIFIED/);
   assert.match(r.stdout, /Acceptance[\s\S]*omitted/);
   assert.match(r.stdout, /01-01-first-task\.md.*lines \d+-\d+/);
-  assert.match(r.stdout, /git .*diff.*--.*src\/a\.ts/);
+  assert.match(r.stdout, /^\| git diff --no-ext-diff .* -- ':\(literal\)src\/a\.ts'$/m);
   assert.match(r.stdout, /no clean verdict/i);
 });
 

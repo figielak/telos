@@ -6,7 +6,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { reviewEvidence } from '../lib/review.mjs';
+import { reviewDiff } from '../lib/git.mjs';
+import { command, reviewEvidence } from '../lib/review.mjs';
 
 const fixture = fileURLToPath(new URL('fixtures/telos-phase/', import.meta.url));
 const taskPath = '.telos/phases/01-demo/01-01-first-task.md';
@@ -175,6 +176,60 @@ test('snapshot includes omitted tails and binary bytes, and emitted shell contin
   write(root, 'src/data.bin', Buffer.from([0, 2]));
   git(root, 'add', '--', 'src/data.bin');
   assert.notEqual(reviewEvidence(root, '01-01').evidenceId, binaryBefore);
+});
+
+const sh = (root, line) => execFileSync('sh', ['-c', line], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+
+test('every diff continuation starts with a plain git diff, allowed by Bash(git diff *)', (t) => {
+  const { root } = repo(t);
+  write(root, 'src/a.ts', 'staged\n');
+  git(root, 'add', '--', 'src/a.ts');
+  write(root, 'src/a.ts', 'dirty\n');
+  const e = reviewEvidence(root, '01-01');
+  const continuations = e.diffBlocks.filter((b) => b.continuation.startsWith('git')).map((b) => b.continuation);
+  assert.ok(continuations.length >= 4, continuations.join('\n'));
+  for (const line of continuations) {
+    assert.ok(line.startsWith('git diff '), line);
+    assert.ok(!line.includes("'diff'") && !line.includes('--literal-pathspecs'), line);
+    assert.equal(sh(root, line), e.diffBlocks.find((b) => b.continuation === line).text);
+  }
+});
+
+test('pathspec magic and glob characters are matched literally in patch, numstat and continuation', (t) => {
+  const { root } = repo(t);
+  const odd = ['src/:weird', 'src/a*b.ts', 'src/a?b.ts', 'src/[x].bin'];
+  const decoys = ['src/axb.ts', 'src/x.bin'];
+  for (const p of [...odd, ...decoys]) write(root, p, 'before\n');
+  commit(root, 'chore: odd files', [...odd, ...decoys]);
+  for (const p of [...odd, ...decoys]) write(root, p, `after ${p}\n`);
+  write(root, 'src/[x].bin', Buffer.from([0, 9]));
+  const diff = reviewDiff(root, [], (c) => odd.includes(c.path));
+  assert.deepEqual(diff.changes.map((c) => c.path).sort(), [...odd].sort());
+  assert.equal(diff.changes.find((c) => c.path === 'src/[x].bin').kind, 'binary');
+  for (const p of decoys) assert.ok(!diff.text.includes(p), p);
+  for (const p of odd.slice(0, 3)) assert.ok(diff.text.includes(`after ${p}`), p);
+  assert.ok(diff.args.includes(':(literal)src/:weird'));
+  assert.equal(sh(root, command(diff.args)), diff.text);
+});
+
+test('a rename continuation names both sides literally', (t) => {
+  const { root } = repo(t);
+  renameSync(join(root, 'src/a.ts'), join(root, 'src/renamed.ts'));
+  git(root, 'add', '--', 'src/a.ts', 'src/renamed.ts');
+  const b = reviewEvidence(root, '01-01').diffBlocks.find((b) => b.source === 'index');
+  assert.ok(b.continuation.includes("':(literal)src/a.ts'") && b.continuation.includes("':(literal)src/renamed.ts'"), b.continuation);
+  assert.equal(sh(root, b.continuation), b.text);
+});
+
+test('only fixed flags and hex revisions stay unquoted; other revisions are shell-quoted and still run', (t) => {
+  const { root, last } = repo(t);
+  git(root, 'tag', 'v1;x', 'HEAD~1');
+  const diff = reviewDiff(root, ['v1;x', 'HEAD']);
+  const line = command(diff.args);
+  assert.match(line, /^git diff --no-ext-diff .*--binary 'v1;x' 'HEAD' -- ':\(literal\)src\/a\.ts'$/);
+  assert.equal(sh(root, line), diff.text);
+  assert.match(command(reviewDiff(root, ['HEAD~1', last]).args), new RegExp(`'HEAD~1' ${last} --`));
+  assert.match(command(['diff', '--cached', last, '--', 'x']), new RegExp(`^git diff --cached ${last} -- 'x'$`));
 });
 
 test('a phase tag on unrelated history refuses instead of selecting the whole orphan branch', (t) => {

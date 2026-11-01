@@ -2,7 +2,7 @@
 id: 07-01
 title: Review diff continuation matches git diff permissions
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard        # normal | hard
 depends: []         # task IDs, e.g. [01-01]
@@ -59,9 +59,13 @@ Make every review diff continuation start with a plain `git diff ` so the review
 5. Run `npm test`.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm test` → exit 0
+- [x] all listed tests pass
+- [x] `npm test` → exit 0
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+Review diff continuations now render as plain `git diff <REVIEW_DIFF> --binary <revs> -- ':(literal)<path>'…`: the global
+`--literal-pathspecs` is gone, each path carries `:(literal)` (patch and `--numstat` alike), and `command()` (now exported)
+leaves only `diff`, the fixed flags, `--cached`, `--` and hex revisions unquoted; everything else is single-quoted.
+4 new tests in test/review.test.mjs (prefix + sh round-trip for all blocks, `:`/`*`/`?`/`[x]` literal match incl. binary
+numstat, rename both sides, quoted non-hex revisions); ctx-review cap test pins the new format. npm test: 594/594.
+Deviations: none
