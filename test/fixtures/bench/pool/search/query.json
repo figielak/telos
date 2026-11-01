@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-15",
+  "endpoint": "search/repositories",
+  "q": "language:{language} license:mit license:apache-2.0 pushed:>=2025-01-01",
+  "sort": "stars",
+  "order": "desc",
+  "per_page": 30,
+  "slots": {
+    "python": "Python",
+    "web": "JavaScript",
+    "go": "Go"
+  }
+}

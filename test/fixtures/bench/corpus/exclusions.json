@@ -1,0 +1,3 @@
+[
+  { "kind": "repo", "id": "go-net", "reason": "network tests", "detail": "suite needs a live registry" }
+]

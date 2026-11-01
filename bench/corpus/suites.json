@@ -1,0 +1,62 @@
+{
+  "_doc": "Suite recipes for measure-suite.sh (PROTOCOL §3.2). setup runs with network; test runs without (unshare -rn, loopback up). The test command is the repository's own unit-test target at the start commit.",
+  "_host": {
+    "measured": "2026-11-01",
+    "kernel": "Linux 7.2.13-200.fc44.x86_64",
+    "cpus": 16,
+    "go": "go1.27.3",
+    "node": "v24.18.0",
+    "npm": "11.16.0",
+    "uv": "0.11.29",
+    "python": "3.12.13 (uv-managed, -p 3.12)",
+    "chrome": "156.0.8078.73",
+    "git": "2.56.0",
+    "pnpm": "from each start's packageManager field",
+    "note": "Logs of the counted runs were kept locally (~/bench-work/measure/<repo>-<commit>/{setup,offline,online}.log) and are not committed; suites.jsonl keeps every run, including superseded ones without a recipe hash."
+  },
+  "werkzeug": {
+    "url": "https://github.com/pallets/werkzeug.git",
+    "setup": "if [ -f uv.lock ]; then uv sync -q --locked -p 3.12 --no-default-groups --group tests; else uv venv -q -p 3.12 .venv && VIRTUAL_ENV=$PWD/.venv uv pip install -q -r requirements/tests.txt -e .; fi",
+    "test": ".venv/bin/pytest -q --tb=short"
+  },
+  "textual": {
+    "url": "https://github.com/Textualize/textual.git",
+    "setup": "uv venv -q -p 3.12 .venv && VIRTUAL_ENV=$PWD/.venv uvx --from 'poetry<2' poetry install -q --with dev --all-extras",
+    "test": ".venv/bin/pytest tests/ -q -n 16 --dist=loadgroup"
+  },
+  "eleventy": {
+    "url": "https://github.com/11ty/eleventy.git",
+    "setup": "npm ci --no-audit --no-fund",
+    "test": "npm test"
+  },
+  "preact": {
+    "url": "https://github.com/preactjs/preact.git",
+    "setup": "npm ci --no-audit --no-fund && npm run build",
+    "test": "CHROME_BIN=$(command -v google-chrome || command -v chromium) npm run test:unit"
+  },
+  "lazygit": {
+    "url": "https://github.com/jesseduffield/lazygit.git",
+    "setup": "go mod verify >/dev/null",
+    "test": "GOPROXY=off go test ./... -short"
+  },
+  "helm": {
+    "url": "https://github.com/helm/helm.git",
+    "setup": "go mod download",
+    "test": "GOPROXY=off go test ./..."
+  },
+  "cli": {
+    "url": "https://github.com/cli/cli.git",
+    "setup": "go mod download",
+    "test": "GOPROXY=off go test ./..."
+  },
+  "emberjs": {
+    "url": "https://github.com/emberjs/ember.js.git",
+    "setup": "PUPPETEER_SKIP_DOWNLOAD=1 npm install -g -s --prefix \"$HOME/pnpm\" pnpm@$(node -p \"require('./package.json').packageManager.split('@')[1].split('+')[0]\") && PUPPETEER_SKIP_DOWNLOAD=1 \"$HOME/pnpm/bin/pnpm\" install --frozen-lockfile",
+    "test": "\"$HOME/pnpm/bin/pnpm\" vite build --mode=development && PUPPETEER_EXECUTABLE_PATH=$(command -v google-chrome || command -v chromium) \"$HOME/pnpm/bin/pnpm\" test"
+  },
+  "mermaid": {
+    "url": "https://github.com/mermaid-js/mermaid.git",
+    "setup": "npm install -g -s --prefix \"$HOME/pnpm\" pnpm@$(node -p \"require('./package.json').packageManager.split('@')[1].split('+')[0]\") && CYPRESS_INSTALL_BINARY=0 PUPPETEER_SKIP_DOWNLOAD=1 \"$HOME/pnpm/bin/pnpm\" install --frozen-lockfile",
+    "test": "\"$HOME/pnpm/bin/pnpm\" exec vitest run"
+  }
+}

@@ -1,0 +1,560 @@
+{
+ "repos": [
+  {
+   "id": "pyrepo",
+   "url": "https://example.invalid/pyrepo.git",
+   "stack": "python",
+   "license": "MIT",
+   "commits": 900,
+   "contributors": 30,
+   "files": 500,
+   "offlineTests": true,
+   "suiteSeconds": 20,
+   "source": "owner",
+   "discovered": "2026-10-01",
+   "slot": "python"
+  },
+  {
+   "id": "webrepo",
+   "url": "https://example.invalid/webrepo.git",
+   "stack": "javascript",
+   "license": "MIT",
+   "commits": 700,
+   "contributors": 5,
+   "files": 900,
+   "offlineTests": true,
+   "suiteSeconds": 30,
+   "source": "owner",
+   "discovered": "2026-10-01",
+   "slot": "web"
+  },
+  {
+   "id": "go-big",
+   "url": "https://example.invalid/go-big.git",
+   "stack": "go",
+   "license": "MIT",
+   "commits": 9000,
+   "contributors": 400,
+   "files": 2565,
+   "offlineTests": true,
+   "suiteSeconds": 90,
+   "source": "search",
+   "discovered": "2026-10-02",
+   "slot": "go"
+  },
+  {
+   "id": "go-fast",
+   "url": "https://example.invalid/go-fast.git",
+   "stack": "go",
+   "license": "Apache-2.0",
+   "commits": 800,
+   "contributors": 20,
+   "files": 2300,
+   "offlineTests": true,
+   "suiteSeconds": 40,
+   "source": "search",
+   "discovered": "2026-10-02",
+   "slot": "go"
+  },
+  {
+   "id": "go-net",
+   "url": "https://example.invalid/go-net.git",
+   "stack": "go",
+   "license": "MIT",
+   "commits": 900,
+   "contributors": 20,
+   "files": 1000,
+   "offlineTests": false,
+   "suiteSeconds": 10,
+   "source": "search",
+   "discovered": "2026-10-02",
+   "slot": "go"
+  },
+  {
+   "id": "py-other",
+   "url": "https://example.invalid/py-other.git",
+   "stack": "python",
+   "license": "MIT",
+   "commits": 900,
+   "contributors": 20,
+   "files": 3000,
+   "offlineTests": true,
+   "suiteSeconds": 50,
+   "source": "search",
+   "discovered": "2026-10-02",
+   "slot": "python"
+  },
+  {
+   "id": "web-huge",
+   "url": "https://example.invalid/web-huge.git",
+   "slot": "web",
+   "stack": "javascript",
+   "license": "MIT",
+   "commits": 5000,
+   "contributors": 90,
+   "files": 9000,
+   "offlineTests": true,
+   "suiteSeconds": 5,
+   "source": "search",
+   "discovered": "2026-10-02"
+  },
+  {
+   "id": "web-gpl",
+   "url": "https://example.invalid/web-gpl.git",
+   "slot": "web",
+   "stack": "javascript",
+   "license": "GPL-3.0",
+   "commits": 5000,
+   "contributors": 90,
+   "files": 900,
+   "offlineTests": true,
+   "suiteSeconds": 5,
+   "source": "search",
+   "discovered": "2026-10-02"
+  },
+  {
+   "id": "rb-one",
+   "url": "https://example.invalid/rb-one.git",
+   "slot": "ruby",
+   "stack": "ruby",
+   "license": "MIT",
+   "commits": 5000,
+   "contributors": 90,
+   "files": 900,
+   "offlineTests": true,
+   "suiteSeconds": 5,
+   "source": "search",
+   "discovered": "2026-10-02"
+  },
+  {
+   "id": "go-stale",
+   "url": "https://example.invalid/go-stale.git",
+   "slot": "go",
+   "stack": "go",
+   "license": "MIT",
+   "commits": 5000,
+   "contributors": 90,
+   "files": 900,
+   "offlineTests": null,
+   "suiteSeconds": null,
+   "source": "search",
+   "discovered": "2026-10-02"
+  }
+ ],
+ "starts": [
+  {
+   "repo": "pyrepo",
+   "hash": "1000000000000000000000000000000000000001",
+   "date": "2025-01-01",
+   "testsGreen": true,
+   "native": false,
+   "following": [
+    {
+     "hash": "a000000000000000000000000000000000000001",
+     "product": false,
+     "files": 1,
+     "lines": 5,
+     "branchCommits": 1,
+     "tests": 0,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "a000000000000000000000000000000000000002",
+     "product": true,
+     "files": 2,
+     "lines": 40,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "a000000000000000000000000000000000000003",
+     "product": true,
+     "files": 9,
+     "lines": 90,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "a000000000000000000000000000000000000004",
+     "product": true,
+     "files": 3,
+     "lines": 100,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "a000000000000000000000000000000000000005",
+     "product": true,
+     "files": 12,
+     "lines": 400,
+     "branchCommits": 4,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    }
+   ]
+  },
+  {
+   "repo": "pyrepo",
+   "hash": "1000000000000000000000000000000000000002",
+   "date": "2025-02-01",
+   "testsGreen": false,
+   "native": false,
+   "following": [
+    {
+     "hash": "a000000000000000000000000000000000000011",
+     "product": true,
+     "files": 1,
+     "lines": 10,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "a000000000000000000000000000000000000012",
+     "product": true,
+     "files": 1,
+     "lines": 12,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "a000000000000000000000000000000000000013",
+     "product": true,
+     "files": 8,
+     "lines": 300,
+     "branchCommits": 3,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    }
+   ]
+  },
+  {
+   "repo": "webrepo",
+   "hash": "2000000000000000000000000000000000000001",
+   "date": "2025-03-01",
+   "testsGreen": true,
+   "native": false,
+   "following": [
+    {
+     "hash": "b000000000000000000000000000000000000001",
+     "product": true,
+     "files": 2,
+     "lines": 20,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "b000000000000000000000000000000000000002",
+     "product": true,
+     "files": 4,
+     "lines": 80,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "b000000000000000000000000000000000000003",
+     "product": true,
+     "files": 10,
+     "lines": 600,
+     "branchCommits": 5,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    }
+   ]
+  },
+  {
+   "repo": "go-big",
+   "hash": "3000000000000000000000000000000000000001",
+   "date": "2025-04-01",
+   "testsGreen": true,
+   "native": false,
+   "following": [
+    {
+     "hash": "d000000000000000000000000000000000000001",
+     "product": true,
+     "files": 1,
+     "lines": 10,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "d000000000000000000000000000000000000002",
+     "product": true,
+     "files": 2,
+     "lines": 30,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "d000000000000000000000000000000000000003",
+     "product": true,
+     "files": 7,
+     "lines": 500,
+     "branchCommits": 6,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    }
+   ]
+  },
+  {
+   "repo": "go-fast",
+   "hash": "4000000000000000000000000000000000000001",
+   "date": "2025-05-01",
+   "testsGreen": true,
+   "native": true,
+   "following": [
+    {
+     "hash": "c000000000000000000000000000000000000001",
+     "product": true,
+     "files": 1,
+     "lines": 10,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    }
+   ]
+  },
+  {
+   "repo": "go-fast",
+   "hash": "4000000000000000000000000000000000000002",
+   "date": "2025-06-01",
+   "testsGreen": true,
+   "native": false,
+   "following": [
+    {
+     "hash": "c000000000000000000000000000000000000011",
+     "product": true,
+     "files": 1,
+     "lines": 10,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "c000000000000000000000000000000000000012",
+     "product": true,
+     "files": 2,
+     "lines": 30,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "c000000000000000000000000000000000000013",
+     "product": true,
+     "files": 7,
+     "lines": 500,
+     "branchCommits": 6,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    }
+   ]
+  },
+  {
+   "repo": "go-fast",
+   "hash": "4000000000000000000000000000000000000003",
+   "date": "2025-06-10",
+   "testsGreen": false,
+   "native": false,
+   "following": [
+    {
+     "hash": "c000000000000000000000000000000000000021",
+     "product": true,
+     "files": 1,
+     "lines": 10,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "c000000000000000000000000000000000000022",
+     "product": true,
+     "files": 2,
+     "lines": 30,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "c000000000000000000000000000000000000023",
+     "product": true,
+     "files": 7,
+     "lines": 500,
+     "branchCommits": 6,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    }
+   ]
+  },
+  {
+   "repo": "go-fast",
+   "hash": "4000000000000000000000000000000000000004",
+   "date": "2025-07-01",
+   "testsGreen": true,
+   "native": false,
+   "following": [
+    {
+     "hash": "c000000000000000000000000000000000000031",
+     "product": true,
+     "files": 1,
+     "lines": 10,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "c000000000000000000000000000000000000032",
+     "product": true,
+     "files": 2,
+     "lines": 30,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "c000000000000000000000000000000000000033",
+     "product": true,
+     "files": 7,
+     "lines": 500,
+     "branchCommits": 6,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    }
+   ]
+  },
+  {
+   "repo": "pyrepo",
+   "hash": "1000000000000000000000000000000000000003",
+   "date": "2025-03-01",
+   "testsGreen": true,
+   "native": false,
+   "following": [
+    {
+     "hash": "a000000000000000000000000000000000000021",
+     "product": true,
+     "files": 1,
+     "lines": 10,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "a000000000000000000000000000000000000022",
+     "product": true,
+     "files": 1,
+     "lines": 12,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "a000000000000000000000000000000000000023",
+     "product": true,
+     "files": 8,
+     "lines": 300,
+     "branchCommits": 3,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    }
+   ]
+  },
+  {
+   "repo": "go-stale",
+   "hash": "5000000000000000000000000000000000000001",
+   "date": "2025-01-01",
+   "testsGreen": null,
+   "native": false,
+   "following": [
+    {
+     "hash": "e000000000000000000000000000000000000001",
+     "product": true,
+     "files": 1,
+     "lines": 10,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    }
+   ]
+  },
+  {
+   "repo": "py-other",
+   "hash": "6000000000000000000000000000000000000001",
+   "date": "2025-03-01",
+   "testsGreen": true,
+   "native": false,
+   "following": [
+    {
+     "hash": "b000000000000000000000000000000000000001",
+     "product": true,
+     "files": 2,
+     "lines": 20,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "b000000000000000000000000000000000000002",
+     "product": true,
+     "files": 4,
+     "lines": 80,
+     "branchCommits": 1,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    },
+    {
+     "hash": "b000000000000000000000000000000000000003",
+     "product": true,
+     "files": 10,
+     "lines": 600,
+     "branchCommits": 5,
+     "tests": 1,
+     "testDeletions": 0,
+     "appliesToStart": true
+    }
+   ]
+  }
+ ],
+ "slots": [
+  "go",
+  "python",
+  "web"
+ ]
+}

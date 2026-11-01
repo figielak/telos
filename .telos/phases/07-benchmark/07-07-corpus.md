@@ -2,7 +2,7 @@
 id: 07-07
 title: Corpus rules amendment and recorded candidate pool
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [07-02, 07-04]
@@ -48,11 +48,12 @@ Fix the corpus rules in PROTOCOL so they can be met, implement them in `bench/se
 - Run `npm test`.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `node bench/select.mjs --manifest bench/corpus --pool bench/corpus/search --check` → exit 0 (candidates.json matches the saved responses)
-- [ ] PROTOCOL §Amendments has the dated entry naming points 1–5 of the revise
-- [ ] `npm test` → exit 0
+- [x] all listed tests pass
+- [x] `node bench/select.mjs --manifest bench/corpus --pool bench/corpus/search --check` → exit 0 (candidates.json matches the saved responses)
+- [x] PROTOCOL §Amendments has the dated entry naming points 1–5 of the revise
+- [x] `npm test` → exit 0
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+Rules amended and frozen in PROTOCOL (amendment 2, points 1–5; §3.3 pool, §3.5 scenario 150–1500 lines without branch rule, 100-commit window, reference = start + task diff via `git merge-tree`, "does not apply" skip; §12 pool bias). `select.mjs` gained `--pool [--check]`, `referenceTree`, `WINDOW`, `--gather --manifest` (facts always, starts only past the static criteria, lock-protected writes for parallel runs). Query run 2026-11-01 (curl, `gh` not installed; `gh api` form in README); 90 candidates, 74 with git facts (16 have no commit before 2025-01-01), 33 with 154 starts. 16 new tests (40 in bench-select, 653 total), all green.
+Surprises: parallel `--gather` lost writes (fixed with a lock + test); /tmp quota forced clones to `~/bench-work/clones`. Old sample outputs (selection.json, b-effort.json, suites.jsonl, B dirs) dropped; exclusions.json reset to `[]` for the from-scratch run in 07-14.
+Deviations: none

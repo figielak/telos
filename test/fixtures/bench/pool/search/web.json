@@ -1,0 +1,25 @@
+{
+  "total_count": 1001,
+  "incomplete_results": false,
+  "items": [
+    {
+      "id": 127294,
+      "name": "site.js",
+      "full_name": "w/site.js",
+      "owner": {
+        "login": "w"
+      },
+      "html_url": "https://github.com/w/site.js",
+      "clone_url": "https://github.com/w/site.js.git",
+      "description": "noise",
+      "stargazers_count": 42,
+      "pushed_at": "2026-08-08T00:00:00Z",
+      "language": "JavaScript",
+      "default_branch": "main",
+      "license": {
+        "key": "isc",
+        "spdx_id": "ISC"
+      }
+    }
+  ]
+}

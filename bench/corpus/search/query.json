@@ -1,0 +1,10 @@
+{
+  "date": "2026-11-01",
+  "retrievedAt": "2026-11-01T20:43Z",
+  "endpoint": "search/repositories",
+  "q": "language:{language} license:mit license:apache-2.0 license:bsd-2-clause license:bsd-3-clause license:isc license:unlicense license:0bsd pushed:>=2025-01-01",
+  "sort": "stars",
+  "order": "desc",
+  "per_page": 30,
+  "slots": { "python": "Python", "web": "JavaScript", "go": "Go" }
+}

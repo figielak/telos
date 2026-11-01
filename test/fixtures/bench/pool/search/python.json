@@ -1,0 +1,63 @@
+{
+  "total_count": 1003,
+  "incomplete_results": false,
+  "items": [
+    {
+      "id": 22726,
+      "name": "Zeta_py",
+      "full_name": "b/Zeta_py",
+      "owner": {
+        "login": "b"
+      },
+      "html_url": "https://github.com/b/Zeta_py",
+      "clone_url": "https://github.com/b/Zeta_py.git",
+      "description": "noise",
+      "stargazers_count": 100,
+      "pushed_at": "2026-09-01T00:00:00Z",
+      "language": "Python",
+      "default_branch": "main",
+      "license": {
+        "key": "mit",
+        "spdx_id": "MIT"
+      }
+    },
+    {
+      "id": 425939,
+      "name": "alpha",
+      "full_name": "a/alpha",
+      "owner": {
+        "login": "a"
+      },
+      "html_url": "https://github.com/a/alpha",
+      "clone_url": "https://github.com/a/alpha.git",
+      "description": "noise",
+      "stargazers_count": 500,
+      "pushed_at": "2026-10-01T00:00:00Z",
+      "language": "Python",
+      "default_branch": "main",
+      "license": {
+        "key": "apache-2.0",
+        "spdx_id": "Apache-2.0"
+      }
+    },
+    {
+      "id": 925980,
+      "name": "beta",
+      "full_name": "c/beta",
+      "owner": {
+        "login": "c"
+      },
+      "html_url": "https://github.com/c/beta",
+      "clone_url": "https://github.com/c/beta.git",
+      "description": "noise",
+      "stargazers_count": 100,
+      "pushed_at": "2025-03-01T00:00:00Z",
+      "language": "Python",
+      "default_branch": "main",
+      "license": {
+        "key": "mit",
+        "spdx_id": "MIT"
+      }
+    }
+  ]
+}
