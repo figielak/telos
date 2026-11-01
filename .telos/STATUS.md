@@ -3,7 +3,7 @@
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 06-measure
 Task: none
-Next: close phase 06 (/telos:done)
+Next: /telos:plan
 Blockers: none
 Awaiting user: none
 <!-- Blockers: "NN-MM: reason". Awaiting user: IDs only, e.g. "02:Q-01, 02:D-03" -->
@@ -15,6 +15,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 06-measure closed: §12 scorecard published; map refresh and review gaps carried as follow-ups
 - 06-08 done: §12 scorecard published; 3 missed, 2 unverified, 2 met by estimate
 - 06-07 done: justified no-change tuning; per-run do/plan bodies pinned by test
-- 06-06 done: plan/do/review/always-on usage measured on both repos; reviews UNVERIFIED (headless diff denied)
