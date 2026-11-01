@@ -5,7 +5,7 @@ type: code          # code | doc | audit
 status: approved    # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
-depends: [07-07, 07-12]
+depends: [07-14, 07-12]
 decisions: [D-05, D-06]
 scope: ["bench/corpus/", "bench/calibrate.mjs", "bench/README.md", "test/bench-calibrate.test.mjs", "test/fixtures/bench/"]
 ---
@@ -14,7 +14,7 @@ Write the task texts and hidden behavioural acceptance for every selected commit
 
 ## Read first
 - bench/PROTOCOL.md (task rules, step texts for multi-session scenarios, acceptance rules)
-- bench/corpus/ selection output and REVIEW.md (from 07-07)
+- bench/corpus/ selection output and REVIEW.md (from 07-14)
 - bench/lib/manifest.mjs (task JSON format)
 
 ## Files
