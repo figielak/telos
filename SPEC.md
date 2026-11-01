@@ -506,6 +506,18 @@ Targets for v0 (to be measured on a real repo in the tuning phase):
 
 Measurement tools: `claude plugin details telos` (always-on tokens), `/context`, and a `telos budget` command that reports sizes of Telos files and the injected blocks.
 
+**Measured in 06-measure** (two real repos, deep profile, one headless run per cell; scorecard in `.telos/phases/06-measure/06-RESULTS.md`; targets above unchanged). Live values use fresh = input + cache_creation, with output listed separately:
+
+| Item | Result | Status |
+|---|---|---|
+| Always-on | 363 tokens measured (~962 projected) | missed |
+| SessionStart + CLAUDE.md block | ~71 + ~166 est.; 369–615 live combined | met by estimate, live split unverified |
+| `plan` (3 tasks) | 44–54K fresh + 10–15K output | missed (host floor ~22–27K) |
+| `do` overhead | ≈ 2.9K est. fixed injection; attribution unavailable | unverified |
+| `map` | build 46–65K fresh; refresh refused (Astro) or full fallback (Python) | missed |
+| `review` (deep) | 8.6–22.3K fresh, coverage incomplete (diff permission) | unverified |
+
+
 ## 13. Packaging and installation
 
 **Plugin repository layout**
@@ -577,7 +589,7 @@ From phase 03 on, Telos is developed with Telos (minimal profile) to validate th
 
 ## 15. Open questions
 
-1. Default models: `opus` for plan/discuss/revise may be heavy on the Pro plan. `plan-lite` / `revise-lite` cover cheap planning; measurements will show whether the defaults should flip. Also to verify: whether the `` !`cat …` `` injection of shared instructions behaves identically to inline content (permissions, size).
+1. Default models: `opus` for plan/discuss/revise may be heavy on the Pro plan. `plan-lite` / `revise-lite` cover cheap planning; measurements will show whether the defaults should flip. Also to verify: whether the `` !`cat …` `` injection of shared instructions behaves identically to inline content (permissions, size). *06-measure:* plan-lite cost 42–49% as much as plan for comparable lint-clean plans but missed one deep CONTEXT rule; recommendation: keep `opus` as the default (unconfirmed). Shared injection behaved like inline content; permission gaps were around it (template reads, the review diff continuation). The delete-zone guard stays warn-only (one observed scenario: warned, user informed).
 2. Scope of `stack-notes`: which Astro/Python conventions are worth encoding (keep each ≤ ~300 tokens).
 3. Windows support for hooks and CLI (Node makes it feasible; needs testing).
 4. Whether `.telos/` should be committed in full (recommended: yes, except `.cache/`).

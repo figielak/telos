@@ -2,7 +2,7 @@
 id: 06-08
 title: Publish budget results and remaining decisions
 type: doc
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal
 depends: [06-07]
@@ -40,9 +40,13 @@ Publish a traceable SPEC §12 scorecard and document achieved targets, misses an
 - Update README guidance and SPEC measurement notes without rewriting targets; list concrete follow-ups for misses.
 
 ## Acceptance
-- [ ] `npm test` → exit 0
-- [ ] Every SPEC §12 target is met or documented with evidence, a miss reason or an explicit UNVERIFIED gap.
-- [ ] Both real-repository map carry-over proofs are traceable; absent proof is visibly outstanding.
-- [ ] README and SPEC agree with the final CLI behavior and measurements; model/guard decisions are recommendations unless confirmed.
+- [x] `npm test` → exit 0
+- [x] Every SPEC §12 target is met or documented with evidence, a miss reason or an explicit UNVERIFIED gap.
+- [x] Both real-repository map carry-over proofs are traceable; absent proof is visibly outstanding.
+- [x] README and SPEC agree with the final CLI behavior and measurements; model/guard decisions are recommendations unless confirmed.
 
 ## Result
+- Published .telos/phases/06-measure/06-RESULTS.md: all seven §12 targets with baseline = tuned value (06-07 no-change), unit, source, status, reason and follow-up (F1–F9); live = input + cache_creation, output and estimates kept separate.
+- Status: always-on, plan and map missed; do overhead and deep review UNVERIFIED; SessionStart and CLAUDE block met by estimate only. Map carry-over: builds proven on both repos; Astro refresh and any incremental refresh remain outstanding.
+- SPEC §12 gains a measured-results table (targets untouched) and §15 Q1 a recommendation note (keep opus, warn-only delete-zone; unconfirmed); README budget row links the scorecard. `npm test` 589/589.
+Deviations: none
