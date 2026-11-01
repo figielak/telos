@@ -2,7 +2,7 @@
 id: 06-04
 title: Astro map and refresh measurements
 type: doc
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal
 depends: [06-01, 06-03]
@@ -40,9 +40,14 @@ Record real headless map/map-hard and refresh evidence on the user-selected Astr
 - Spot-check at least five MAP navigation references per variant against source, verify PROJECT preservation, and compare measured usage with SPEC §12.
 
 ## Acceptance
-- [ ] `npm test` → exit 0
-- [ ] The Astro report pins real repository/Telos revisions and includes full-build and refresh evidence for both variants.
-- [ ] MAP validation, configured limit, navigation spot-checks and refresh preservation are recorded with actual results.
-- [ ] Missing access/usage, failed runs and target misses remain explicit; absent real runs cannot be labeled PASS.
+- [x] `npm test` → exit 0
+- [x] The Astro report pins real repository/Telos revisions and includes full-build and refresh evidence for both variants.
+- [x] MAP validation, configured limit, navigation spot-checks and refresh preservation are recorded with actual results.
+- [x] Missing access/usage, failed runs and target misses remain explicit; absent real runs cannot be labeled PASS.
 
 ## Result
+- Live headless runs on knml.edu.pl (baseline 2a47a6d, refresh 8d29d1d): full build PASS for map (sonnet, 800/1500) and map-hard (opus, 789/1500); usage fields recorded separately in .telos/phases/06-measure/06-ASTRO-EVIDENCE.md.
+- Refresh FAILED on both variants: `telos ctx map --refresh` REFUSED (glob `src/sections/*.astro`; bracket route `[...slug].astro`), so no refresh mode, byte compare or 3–8K target was measured; MAP/PROJECT stayed byte-identical.
+- Spot-checks: map-hard 5/5 OK, map 3/5 (two non-repo-relative paths that validation still passed); `map` build ≈71K fresh+output tokens vs ~15–30K target = MISS (one run each).
+- Follow-ups proposed: align build/refresh reference syntax; make validation check path existence. `npm test` 587/587.
+Deviations: none

@@ -2,7 +2,7 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 06-measure
-Task: 06-04
+Task: 06-05
 Next: /telos:do
 Blockers: none
 Awaiting user: none
@@ -15,6 +15,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 06-04 done: Astro map builds PASS; refresh REFUSED on both variants (evidence report)
 - 06-03 done: status/ctx/SessionStart derive the plan hint after a built MAP
 - 06-02 done: deep close reverifies with accept --close; doc-sync TODO removed
-- 06-01 done: read-only telos budget reports stored and injected sizes as labeled estimates
