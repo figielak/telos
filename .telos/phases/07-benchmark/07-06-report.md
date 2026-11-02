@@ -2,7 +2,7 @@
 id: 07-06
 title: Aggregate results and render the report
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [07-05]    # task IDs, e.g. [01-01]
@@ -49,10 +49,11 @@ Aggregate metric rows into a CSV and the Markdown tables of the report: per-cell
 - Run `npm test`.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `node --test test/bench-report.test.mjs` → exit 0
-- [ ] `npm test` → exit 0
+- [x] all listed tests pass
+- [x] `node --test test/bench-report.test.mjs` → exit 0
+- [x] `npm test` → exit 0
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+Built `bench/lib/report.mjs` (`aggregate`, `verdicts`, `breakEven`/`cumulative`, `median`/`quartiles`, `toCsv`, `toMarkdown`) and `bench/report.mjs` (`--rows --manifest --out [--protocol]` → `runs.csv`, `tables.md`). USD per accepted run with acc n/N, full setup charged to every C/D run, H1–H5 per PROTOCOL §2.3–§2.4 (ties, n/a as +∞, exclusions listed), signed differences vs baseline, per-group break-even (first and sustained, measured vs extrapolated), missing and non-completed cells. 19 tests in `bench-report` (717 total), all green.
+Choices the task left open: IQR by Tukey hinges; break-even uses PROTOCOL's strict "cheaper" (the task text says ≤); break-even groups are `<repo>.<start>`; setup tokens/exploration not supplied → C/D fresh and exploration are n/a, not 0. The metric rows carry no `reason`/setup exploration, so the 07-09 run feeds `--protocol` setup entries.
+Deviations: none
