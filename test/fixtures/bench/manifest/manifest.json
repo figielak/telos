@@ -1,0 +1,18 @@
+{
+  "repetitions": 5,
+  "repos": [
+    { "id": "r1", "url": "https://example.invalid/r1.git" },
+    { "id": "r2", "url": "https://example.invalid/r2.git" }
+  ],
+  "tasks": [
+    { "id": "t-one", "repo": "r1", "start": "1111111111111111111111111111111111111111", "reference": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "type": "single",
+      "prompt": "Add a flag.", "expectedPaths": ["src/"], "acceptance": "acceptance/t-one.mjs", "b": "r1/1111111111111111111111111111111111111111/CLAUDE.md" },
+    { "id": "t-two", "repo": "r1", "start": "2222222222222222222222222222222222222222", "reference": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "type": "single",
+      "prompt": "Fix a typo.", "expectedPaths": ["docs/"], "acceptance": "acceptance/t-two.mjs", "b": "r1/2222222222222222222222222222222222222222/CLAUDE.md" },
+    { "id": "t-three", "repo": "r1", "start": "1111111111111111111111111111111111111111", "reference": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "type": "single",
+      "prompt": "Rename a helper.", "expectedPaths": ["src/"], "acceptance": "acceptance/t-three.mjs", "b": "r1/1111111111111111111111111111111111111111/CLAUDE.md" },
+    { "id": "t-multi", "repo": "r2", "start": "3333333333333333333333333333333333333333", "reference": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "type": "multi",
+      "steps": ["Build the export feature.", "Add the CLI option.", "Document it."],
+      "expectedPaths": ["lib/", "README.md"], "acceptance": "acceptance/t-multi.mjs", "b": "r2/3333333333333333333333333333333333333333/CLAUDE.md" }
+  ]
+}

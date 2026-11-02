@@ -2,7 +2,7 @@
 id: 07-12
 title: Run orchestration, hidden acceptance and spend accounting
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: true
 effort: hard        # normal | hard
 depends: [07-11]    # task IDs, e.g. [01-01]
@@ -59,10 +59,14 @@ Drive the matrix: per cell prepare the workspace, run the trajectory, mount and 
 5. Run `npm test`.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `node bench/run.mjs --manifest test/fixtures/bench/manifest --dry-run --seed 1 --cap-usd 1 --cell-usd 0.1 --out /tmp/telos-bench-dry` → exit 0
-- [ ] `npm test` → exit 0
+- [x] all listed tests pass
+- [x] `node bench/run.mjs --manifest test/fixtures/bench/manifest --dry-run --seed 1 --cap-usd 1 --cell-usd 0.1 --out /tmp/telos-bench-dry` → exit 0
+- [x] `npm test` → exit 0
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+RED: node --test test/bench-orchestrate.test.mjs → exit 1: 13/13 AssertionError (stub runMatrix writes no records, run.mjs ignores flags)
+GREEN: telos check --level full --task 07-12 → exit 0 · e2e PASS
+Review: CHANGES REQUESTED · EvidenceId f2832f950d6c7c4bb64a0414b393c13d382cfddb70c03c62d5a4c71a12e9a0a1 · fixed HIGH cap check before abandoned charges (pre-pass), HIGH patch capture ran the copy's git config/filters as host (scratch config-less GIT_DIR + alternates), MEDIUM grading as host user (graderArgv = launcher + node), LOW main docstring
+Built `bench/lib/orchestrate.mjs` (`runMatrix`: (task, rep) blocks start only while ledger spend + reservation ≤ cap, append-only `spend.jsonl`, in-progress markers, one rerun after an abandoned attempt, acceptance refused when readable, graded in a fresh `<out>/grading` dir only after the sessions, patch + changed paths, atomic records with gaps and versions) and `bench/run.mjs` (flags, `--dry-run`, resume via existing records, `--config` with real deps: copies, snapshots by `telos init` + `/telos:map`, 07-11 sessions). 16 tests in `bench-orchestrate` (683 total).
+The real deps of run.mjs (snapshot build, launcher grading) are only exercised by the pilot (07-08); tests use fake deps.
+Deviations: none
