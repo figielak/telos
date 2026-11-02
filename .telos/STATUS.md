@@ -2,8 +2,8 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 07-benchmark
-Task: 07-11
-Next: /telos:do-hard 07-11
+Task: 07-12
+Next: /telos:do-hard 07-12
 Blockers: none
 Awaiting user: 07:D-05, 07:D-06, 07:D-07, 07:D-08, 07:D-09, 07:D-11, 07:D-12
 <!-- Blockers: "NN-MM: reason". Awaiting user: IDs only, e.g. "02:Q-01, 02:D-03" -->
@@ -15,6 +15,6 @@ Awaiting user: 07:D-05, 07:D-06, 07:D-07, 07:D-08, 07:D-09, 07:D-11, 07:D-12
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 07-11 done: headless sessions (budget, timeout, retries) and C/D transition script
 - 07-07 done: corpus rules amended and frozen; recorded GitHub Search pool (90) with git facts and starts
 - 07-04 done: disposable leak-checked copies, keyed setup snapshots, plugin export and sandboxed session env
-- 07-03 done: manifest loader and seeded block-randomized run matrix with setup keys

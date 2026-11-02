@@ -2,7 +2,7 @@
 id: 07-11
 title: Headless session lifecycle and Telos transitions
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: hard        # normal | hard
 depends: [07-04]    # task IDs, e.g. [01-01]
@@ -62,10 +62,11 @@ Run the sessions of one cell: build each `claude -p` invocation, enforce per-ses
 4. bench/README.md: transition table; run `npm test`.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `node --test test/bench-session.test.mjs` → exit 0
-- [ ] `npm test` → exit 0
+- [x] all listed tests pass
+- [x] `node --test test/bench-session.test.mjs` → exit 0
+- [x] `npm test` → exit 0
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+Built `bench/lib/session.mjs` (`baseArgv`, `runSession`: launcher required, prompt as the last argv element after `--`, `--session-id`/`--max-budget-usd` per attempt, own process group with SIGTERM→SIGKILL on timeout, ≤ 2 pre-first-turn retries sharing the session budget, `usage`/`costUsd` null when absent, env names only) and `bench/lib/transitions.mjs` (`runTrajectory`: A/B step loop, C/D plan → lint → confirm → approve → Next loop, reservation shared across sessions). Fake host and fake `telos` fixtures; 14 tests in `bench-session` (667 total), all green; a mutation (killing the pid instead of the group) is caught.
+Interpretation: approval runs as a `/telos:approve` session (PROTOCOL §6.3 amendment), not `telos task set … approved` as the Tests line says; a blocker is followed only via the shipped `/telos:do` → `/telos:do-hard` escalation, otherwise `failed: blocker`. With a sudo-style launcher SIGKILL cannot reach the other user's processes; the SIGTERM relay is what the pilot canaries must confirm (README).
+Deviations: none

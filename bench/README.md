@@ -44,6 +44,37 @@ All of it lives under one `workDir` that neither lies inside nor contains this c
 - `sessionEnv(cell, { configTemplate, workDir })` → `{ env, settingsPath, readable }`. A fresh `config/<cell id>` holding only `settings.json` and, if `configTemplate.credentials` is given, `.credentials.json`. Settings keep the template's shared permission mode and allow list and add: `autoMemoryEnabled: false`, `WebFetch`/`WebSearch` denied, `sandbox.enabled` with `allowUnsandboxedCommands: false` and `network.allowedDomains` = the model API (`api.anthropic.com` unless `allowedDomains` is set). The env is built from scratch (no host variables except `PATH`, `LANG` and `passEnv` names): `HOME` = `CLAUDE_CONFIG_DIR` = the config dir, auto-memory, autoupdater and nonessential traffic disabled, a fixed bench git identity. `readable` = copy, plugin export (C/D only), config dir; the launcher running as the dedicated OS user enforces it (PROTOCOL §5.1 item 1), and the pilot's canaries verify it, including whether this host version honours the sandbox keys above.
 - B and C/D instructions are untracked files in the copy; the start commit itself stays byte-identical.
 
+## Sessions and transitions (PROTOCOL §6.2–§6.4, §7.2, §7.3)
+
+`baseArgv(variant, { launcher, claude, model, permissionMode, pluginDir })` · `runSession({ prompt, env, cwd, argvBase, budgetUsd, timeoutMs, killGraceMs?, spawn? })` (`bench/lib/session.mjs`) · `runTrajectory(cell, ctx)` (`bench/lib/transitions.mjs`)
+
+- **argv** = `<launcher…> <claude…> --model <id> --permission-mode <mode> --output-format json [--plugin-dir <export>] --session-id <uuid> --max-budget-usd <usd> -p -- <prompt>`. Same model and permission mode for every variant; `--plugin-dir` only for C/D; the prompt is always the last, single argv element after `--` (no shell). An empty `launcher` (the `sudo -u <bench user> --`-style prefix of D-08) is `REFUSED`, never a fallback to the author's user. The env comes from `sessionEnv` (07-04) and is passed as the process env; records keep only its names (`envNames`).
+- **Process group and timeout.** Each attempt runs detached in its own process group. At the time limit the group gets SIGTERM (a launcher such as sudo relays it), then SIGKILL after `killGraceMs` (default 5 s); on exit the group is killed once more, so no child outlives the session. A timeout is never retried.
+- **Retries (§7.2).** An attempt that exits non-zero with no turn (`num_turns` absent or 0) is a host error before the first turn: up to 2 retries, each with a fresh session id and the session budget minus what earlier attempts cost. Every attempt is kept in `attempts[]` with its own `usage` and `costUsd`; missing values stay `null`, never 0. `hostError: true` when the last attempt is still one.
+- **Budget (§7.3).** `runTrajectory` gives every session `--max-budget-usd` = cell reservation − cost of all earlier attempts of the cell. Spend ≥ reservation, or any attempt of unknown cost, stops the run before the next session (`failed: budget …`).
+- **Result** `{ status, reason?, sessions[], spentUsd }`; `status` ∈ `completed`, `failed`, `timeout` (session or run limit), `infra-failed` (host error after the retries). Each session record has `step`, `prompt`, `sessionId`, `argv`, `envNames`, `exit`, `json`, `usage`, `costUsd`, `ms`, `attempts`.
+
+| Variant · kind | Sessions |
+|---|---|
+| A/B single | the task text |
+| C/D single | `/telos:quick <task text>` |
+| A/B multi | `steps` joined by blank lines, then `continue the work in this repository: <step>` for `steps[1…]`, one fresh session each |
+| C/D multi | `/telos:plan <task text>` → `telos lint-plan` → `accept the recommended options` → `/telos:approve` → loop on `telos status` Next |
+
+C/D checks, all from `telos` output in the copy (no model judgement):
+
+| After | Check | Failure reason |
+|---|---|---|
+| plan | `telos lint-plan` exit 0 | `lint: <first line>` |
+| confirm | `telos status` has no `Awaiting user` | `awaiting: <ids>` |
+| approve | every task of `telos ctx approve` is `approved` (and there is one) | `not approved: <ids>` / `no tasks` |
+| loop, before each session | Next is `close phase NN (/telos:done)` with all tasks `done` → **completed** | `next: … with tasks not done: <ids>` |
+| | Next is `/telos:do` or `/telos:do-hard <id>` → run exactly that | `next: <value>` (e.g. `fix <id> by hand: …`) |
+| | Blockers is `none`, unless Next is `/telos:do-hard <id>` (the shipped escalation) | `blocker: <text>` |
+| | at most 2 × tasks loop sessions | `session limit: …` |
+| loop, after each session | Next or a task status changed | `no progress: <command>` |
+| any C/D session | no `REFUSED:` in the result, exit 0, not `is_error` | `refused: …` / `<step>: exit <code> (<subtype>)` |
+
 ## Corpus selection (PROTOCOL §3, §4.3)
 
 `node bench/select.mjs --manifest bench/corpus [--write | --check-b]` · `--manifest <dir> --pool <search-dir> [--check]` · `--gather <clone> --repo <id> [--manifest <dir>]` · `bench/corpus/measure-suite.sh <work-dir> <repo> <commit>`
