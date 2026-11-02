@@ -4,9 +4,9 @@
 **Material per round:** PROTOCOL §3–§4 and amendments, `select.mjs`, the corpus files, a `prepareCopy` view of every selected start, and the derived task commits with diffs (round 1 truncated, later rounds full).
 **Sessions:** round 1 `01a197ef-a546-7f90-9406-f1041642687a`, round 2 `01a19828-78a9-7372-9ef9-565e4212cbed`, round 3 `01a1983a-7566-72d2-afa5-4f78350f13db` (all 2026-11-01).
 
-## Status: 07-14 run blocked, no Python repository qualifies
+## Status: Python slot empty, amendment 3
 
-Task 07-14 ran the frozen rules once on 2026-11-02. `node bench/select.mjs --manifest bench/corpus` stops with `no repository qualifies for slot python (PROTOCOL §3.2)`. By D-04 this is a defect in the frozen rules: it is not patched here, there is no `selection.json`, no B file and no model check of this pool yet. It needs a user decision (an amendment before preregistration, e.g. a larger pool or a host with the missing toolchain).
+Task 07-14 ran the frozen rules once on 2026-11-02. `node bench/select.mjs --manifest bench/corpus` stopped with `no repository qualifies for slot python (PROTOCOL §3.2)`. By D-04 this was not patched in 07-14. The user then chose PROTOCOL amendment 3 (task 07-15) over a larger pool: an empty slot stays empty and is reported (§12), and the benchmark runs on the filled slots, Go and web. The same measurements now select lazygit (Go) and anything-llm (web), with Python listed under `unfilled`. B files and the model check of this pool follow in 07-14.
 
 ### 07-14 measurements
 

@@ -41,6 +41,26 @@ test('per slot: earliest qualifying start, next one is the pilot; tasks derive f
   assert.equal(py.pilotStart, '1000000000000000000000000000000000000003');
 });
 
+test('a slot without a qualifying repository stays empty and is listed in unfilled', () => {
+  const base = select();
+  const sel = select((c) => { for (const r of c.repos.filter((x) => x.slot === 'python')) r.files = 100; });
+  assert.deepEqual(sel.repos.map((r) => r.slot), ['go', 'web']);
+  assert.deepEqual(sel.repos, base.repos.filter((r) => r.slot !== 'python'));
+  assert.deepEqual(sel.unfilled, [{ slot: 'python', reason: 'no repository qualifies (PROTOCOL §3.2)' }]);
+  assert.deepEqual(base.unfilled, []);
+});
+
+test('fewer than two filled slots is a usage error', () => {
+  assert.throws(() => select((c) => { for (const r of c.repos.filter((x) => x.slot !== 'go')) r.files = 100; }),
+    /only 1 slot\(s\) filled.*python, web/);
+});
+
+test('unfilled slots keep the output deterministic', () => {
+  const empty = (c) => { for (const r of c.repos.filter((x) => x.slot === 'python')) r.files = 100; };
+  const reversed = (c) => { empty(c); c.repos.reverse(); c.starts.reverse(); c.slots = [...c.slots].reverse(); };
+  assert.equal(JSON.stringify(select(reversed)), JSON.stringify(select(empty)));
+});
+
 test('a slot picks its fastest qualifying suite, ties by id', () => {
   assert.equal(select().repos.find((r) => r.slot === 'go').id, 'go-fast');
   const tie = select((c) => { c.repos.find((r) => r.id === 'go-big').suiteSeconds = 40; });
@@ -205,10 +225,11 @@ test('an unknown exclusion reason is refused', () => {
   assert.throws(() => select((c) => { c.exclusions.push({ kind: 'repo', id: 'go-fast', reason: 'dislike' }); }), /reason/);
 });
 
-test('a slot without a qualifying repo or start is an error, not a silent gap', () => {
-  assert.throws(() => select((c) => { c.starts.find((s) => s.repo === 'webrepo').native = true; }), /slot web/);
+test('a slot without a qualifying repo is listed in unfilled, a chosen repo without a green start is an error', () => {
+  const slotOf = (sel) => sel.unfilled.map((u) => u.slot);
+  assert.deepEqual(slotOf(select((c) => { c.starts.find((s) => s.repo === 'webrepo').native = true; })), ['web']);
   assert.throws(() => select((c) => { c.starts.find((s) => s.repo === 'webrepo').testsGreen = false; }), /webrepo.*start/);
-  assert.throws(() => select((c) => { c.repos = c.repos.filter((r) => r.slot !== 'go' || r.id === 'go-net'); }), /slot go/);
+  assert.deepEqual(slotOf(select((c) => { c.repos = c.repos.filter((r) => r.slot !== 'go' || r.id === 'go-net'); })), ['go']);
 });
 
 test('gather derives start facts from git history (§3.5 classifier)', () => {

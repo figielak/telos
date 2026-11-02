@@ -22,6 +22,8 @@ const REASONS = ['licence', 'network tests', 'suite too slow', 'too small', 'too
 const SINGLE = { files: 5, lines: 150 };
 const SCENARIO = { minLines: 150, maxLines: 1500 };
 const POOL_SIZE = 30;
+/** Fewest filled slots that still give a comparison (§3.1, amendment 3). */
+const MIN_SLOTS = 2;
 const HEX = /^[a-f0-9]{40}$/;
 /** Start candidates per repo: the last first-parent commit before each date (§3.3). */
 export const START_DATES = Object.freeze(['2025-01-01', '2025-04-01', '2025-07-01', '2025-10-01', '2026-01-01']);
@@ -196,7 +198,7 @@ function historyProblem(start, listed) {
 /**
  * Apply the rule → `{ rule, repos, excluded }`; the same input always yields the same output.
  * Order: static criteria, then a start usable from history, then the measured suite; per slot the shortest suite wins
- * (ties: id). Its starts are checked in order until two have green tests: the measured start and the pilot start;
+ * (ties: id); a slot without one is listed in `unfilled`, and fewer than MIN_SLOTS filled slots is a usage error. Its starts are checked in order until two have green tests: the measured start and the pilot start;
  * an unmeasured start before that point is a usage error, later starts are not listed.
  */
 export function selectCorpus({ slots, repos: rawRepos, starts: rawStarts, exclusions = [], measurements = [] }) {
@@ -222,10 +224,12 @@ export function selectCorpus({ slots, repos: rawRepos, starts: rawStarts, exclus
   }
 
   const chosen = [];
+  const unfilled = [];
   for (const slot of [...slots].sort()) {
     const ranked = fit.filter((r) => r.slot === slot).sort((a, b) => a.suiteSeconds - b.suiteSeconds || byKey('id')(a, b));
     const repo = ranked[0];
-    if (!repo) throw new UsageError(`no repository qualifies for slot ${slot} (PROTOCOL §3.2)`);
+    // Amendment 3: an empty slot stays empty and is reported, it does not stop the selection.
+    if (!repo) { unfilled.push({ slot, reason: 'no repository qualifies (PROTOCOL §3.2)' }); continue; }
     for (const other of ranked.slice(1)) add('repo', other.id, `other: not selected, slower suite than ${repo.id}`);
     const usable = [];
     for (const s of startsOf(repo.id)) {
@@ -249,8 +253,11 @@ export function selectCorpus({ slots, repos: rawRepos, starts: rawStarts, exclus
     chosen.push({ slot, id: repo.id, url: repo.url, stack: repo.stack, start: usable[0].hash,
       pilotStart: usable[1]?.hash ?? null, singles: usable[0].tasks.slice(0, 2), scenario: usable[0].tasks[2] });
   }
+  if (chosen.length < MIN_SLOTS) {
+    throw new UsageError(`only ${chosen.length} slot(s) filled, ${MIN_SLOTS} needed; unfilled: ${unfilled.map((u) => u.slot).join(', ')} (PROTOCOL §3.1)`);
+  }
   excluded.sort((a, b) => byKey('kind')(a, b) || byKey('id')(a, b));
-  return { rule: 'bench/PROTOCOL.md §3.2–§3.5', repos: chosen, excluded };
+  return { rule: 'bench/PROTOCOL.md §3.2–§3.5', repos: chosen, unfilled, excluded };
 }
 
 const bPath = (dir, repo) => join(dir, repo.id, repo.start, 'CLAUDE.md');

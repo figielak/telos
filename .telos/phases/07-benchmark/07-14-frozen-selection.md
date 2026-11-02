@@ -2,10 +2,10 @@
 id: 07-14
 title: "Measured selection, B files and model check"
 type: code          # code | doc | audit
-status: blocked     # draft | approved | in-progress | done | blocked | reverted
+status: approved    # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
-depends: [07-07]
+depends: [07-07, 07-15]
 decisions: [D-02, D-04, D-10]
 scope: ["bench/corpus/", "bench/select.mjs", "bench/README.md", "test/bench-select.test.mjs", "test/fixtures/bench/"]
 ---
