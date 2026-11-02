@@ -14,49 +14,89 @@
     "pnpm": "from each start's packageManager field",
     "note": "Logs of the counted runs were kept locally (~/bench-work/measure/<repo>-<commit>/{setup,offline,online}.log) and are not committed; suites.jsonl keeps every run, including superseded ones without a recipe hash."
   },
-  "werkzeug": {
-    "url": "https://github.com/pallets/werkzeug.git",
-    "setup": "if [ -f uv.lock ]; then uv sync -q --locked -p 3.12 --no-default-groups --group tests; else uv venv -q -p 3.12 .venv && VIRTUAL_ENV=$PWD/.venv uv pip install -q -r requirements/tests.txt -e .; fi",
-    "test": ".venv/bin/pytest -q --tb=short"
+  "caddyserver-caddy": {
+    "url": "https://github.com/caddyserver/caddy.git",
+    "setup": "go mod download",
+    "test": "GOPROXY=off go test ./..."
   },
-  "textual": {
-    "url": "https://github.com/Textualize/textual.git",
-    "setup": "uv venv -q -p 3.12 .venv && VIRTUAL_ENV=$PWD/.venv uvx --from 'poetry<2' poetry install -q --with dev --all-extras",
-    "test": ".venv/bin/pytest tests/ -q -n 16 --dist=loadgroup"
+  "etcd-io-etcd": {
+    "url": "https://github.com/etcd-io/etcd.git",
+    "setup": "go mod download",
+    "test": "GOPROXY=off go test ./..."
   },
-  "eleventy": {
-    "url": "https://github.com/11ty/eleventy.git",
-    "setup": "npm ci --no-audit --no-fund",
-    "test": "npm test"
+  "fatedier-frp": {
+    "url": "https://github.com/fatedier/frp.git",
+    "setup": "go mod download",
+    "test": "GOPROXY=off go test ./..."
   },
-  "preact": {
-    "url": "https://github.com/preactjs/preact.git",
-    "setup": "npm ci --no-audit --no-fund && npm run build",
-    "test": "CHROME_BIN=$(command -v google-chrome || command -v chromium) npm run test:unit"
+  "gohugoio-hugo": {
+    "url": "https://github.com/gohugoio/hugo.git",
+    "setup": "go mod download",
+    "test": "GOPROXY=off go test ./..."
   },
-  "lazygit": {
+  "nektos-act": {
+    "url": "https://github.com/nektos/act.git",
+    "setup": "go mod download",
+    "test": "GOPROXY=off go test ./..."
+  },
+  "ollama-ollama": {
+    "url": "https://github.com/ollama/ollama.git",
+    "setup": "go mod download",
+    "test": "GOPROXY=off go test ./..."
+  },
+  "prometheus-prometheus": {
+    "url": "https://github.com/prometheus/prometheus.git",
+    "setup": "go mod download",
+    "test": "GOPROXY=off go test ./..."
+  },
+  "rclone-rclone": {
+    "url": "https://github.com/rclone/rclone.git",
+    "setup": "go mod download",
+    "test": "GOPROXY=off go test ./..."
+  },
+  "usememos-memos": {
+    "url": "https://github.com/usememos/memos.git",
+    "setup": "go mod download",
+    "test": "GOPROXY=off go test ./..."
+  },
+  "jesseduffield-lazygit": {
     "url": "https://github.com/jesseduffield/lazygit.git",
     "setup": "go mod verify >/dev/null",
     "test": "GOPROXY=off go test ./... -short"
   },
-  "helm": {
-    "url": "https://github.com/helm/helm.git",
-    "setup": "go mod download",
-    "test": "GOPROXY=off go test ./..."
-  },
-  "cli": {
+  "cli-cli": {
     "url": "https://github.com/cli/cli.git",
     "setup": "go mod download",
     "test": "GOPROXY=off go test ./..."
   },
-  "emberjs": {
-    "url": "https://github.com/emberjs/ember.js.git",
-    "setup": "PUPPETEER_SKIP_DOWNLOAD=1 npm install -g -s --prefix \"$HOME/pnpm\" pnpm@$(node -p \"require('./package.json').packageManager.split('@')[1].split('+')[0]\") && PUPPETEER_SKIP_DOWNLOAD=1 \"$HOME/pnpm/bin/pnpm\" install --frozen-lockfile",
-    "test": "\"$HOME/pnpm/bin/pnpm\" vite build --mode=development && PUPPETEER_EXECUTABLE_PATH=$(command -v google-chrome || command -v chromium) \"$HOME/pnpm/bin/pnpm\" test"
+  "yt-dlp-yt-dlp": {
+    "url": "https://github.com/yt-dlp/yt-dlp.git",
+    "setup": "uv venv -q -p 3.12 .venv && VIRTUAL_ENV=$PWD/.venv uv pip install -q -e '.[default,test]'",
+    "test": "PATH=\"$PWD/.venv/bin:$PATH\" python devscripts/run_tests.py core"
   },
-  "mermaid": {
-    "url": "https://github.com/mermaid-js/mermaid.git",
-    "setup": "npm install -g -s --prefix \"$HOME/pnpm\" pnpm@$(node -p \"require('./package.json').packageManager.split('@')[1].split('+')[0]\") && CYPRESS_INSTALL_BINARY=0 PUPPETEER_SKIP_DOWNLOAD=1 \"$HOME/pnpm/bin/pnpm\" install --frozen-lockfile",
-    "test": "\"$HOME/pnpm/bin/pnpm\" exec vitest run"
+  "langflow-ai-langflow": {
+    "url": "https://github.com/langflow-ai/langflow.git",
+    "setup": "uv sync -q --frozen --extra dev -p 3.12",
+    "test": ".venv/bin/pytest src/backend/tests --ignore=src/backend/tests/integration -m 'not api_key_required' -ra -q -n auto"
+  },
+  "paddlepaddle-paddleocr": {
+    "url": "https://github.com/PaddlePaddle/PaddleOCR.git",
+    "setup": "uv venv -q -p 3.12 .venv && VIRTUAL_ENV=$PWD/.venv uv pip install -q paddlepaddle pytest -r requirements.txt -e '.[all]'",
+    "test": ".venv/bin/python -m pytest tests/"
+  },
+  "vllm-project-vllm": {
+    "url": "https://github.com/vllm-project/vllm.git",
+    "setup": "uv venv -q -p 3.12 .venv && VIRTUAL_ENV=$PWD/.venv VLLM_TARGET_DEVICE=empty uv pip install -q -r requirements/test.txt -e .",
+    "test": ".venv/bin/pytest tests -q"
+  },
+  "louislam-uptime-kuma": {
+    "url": "https://github.com/louislam/uptime-kuma.git",
+    "setup": "npm ci --no-audit --no-fund",
+    "test": "npm run test-backend"
+  },
+  "mintplex-labs-anything-llm": {
+    "url": "https://github.com/Mintplex-Labs/anything-llm.git",
+    "setup": "npm install -g -s --prefix \"$HOME/yarn\" yarn@1 && \"$HOME/yarn/bin/yarn\" install --silent && cd server && \"$HOME/yarn/bin/yarn\" install --frozen-lockfile --silent",
+    "test": "\"$HOME/yarn/bin/yarn\" test"
   }
 }

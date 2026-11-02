@@ -252,6 +252,10 @@ test('countWords counts whitespace separated words', () => {
   assert.equal(countWords('# Title\n\nOne two  three\n'), 5);
 });
 
+const effort = (dir, sel, drop = null) => writeFileSync(join(dir, 'b-effort.json'), JSON.stringify({
+  minutes: Object.fromEntries(sel.repos.filter((r) => r.id !== drop).map((r) => [`${r.id}/${r.start}`, 2.5])),
+}));
+
 function selected(dir) {
   const sel = selectCorpus(loadCorpus(dir));
   writeFileSync(join(dir, 'selection.json'), `${JSON.stringify(sel, null, 2)}\n`);
@@ -269,6 +273,10 @@ test('--check-b fails when a B file is missing, over 400 words, or stale selecti
   assert.match(missing.stderr, /missing/);
 
   for (const r of sel.repos) put(dir, r.id, r.start, 'Run the tests with the suite command. '.repeat(10));
+  const noEffort = run();
+  assert.equal(noEffort.status, 1);
+  assert.match(noEffort.stderr, /b-effort\.json/);
+  effort(dir, sel);
   assert.equal(run().status, 0, run().stderr);
 
   put(dir, sel.repos[0].id, sel.repos[0].start, 'word '.repeat(401));
@@ -288,11 +296,43 @@ test('--check-b fails when a B file is missing, over 400 words, or stale selecti
   assert.match(stale.stderr, /selection\.json.*differs/);
 });
 
+test('--check-b fails when b-effort.json lacks minutes for a selected start', () => {
+  const dir = join(tmp, 'effort');
+  cpSync(FIXTURE, dir, { recursive: true });
+  const sel = selected(dir);
+  for (const r of sel.repos) put(dir, r.id, r.start, 'Run the tests.');
+  const run = () => spawnSync(process.execPath, [CLI, '--manifest', dir, '--check-b'], { encoding: 'utf8' });
+  const dropped = sel.repos[1];
+  effort(dir, sel, dropped.id);
+  const short = run();
+  assert.equal(short.status, 1);
+  assert.match(short.stderr, new RegExp(`b-effort\\.json.*${dropped.id}/${dropped.start}`));
+  assert.deepEqual(checkB(dir, sel).problems.length, 1);
+  writeFileSync(join(dir, 'b-effort.json'), JSON.stringify({ minutes: Object.fromEntries(sel.repos.map((r) => [`${r.id}/${r.start}`, 0])) }));
+  assert.equal(run().status, 1, 'zero minutes are not a recording');
+  effort(dir, sel);
+  assert.equal(run().status, 0, run().stderr);
+});
+
+test('the same candidates, suites.jsonl and exclusions write a byte-identical selection.json', () => {
+  const rows = [{ repo: 'go-fast', commit: '1000000000000000000000000000000000000001', offlineExit: 0, onlineExit: null, seconds: 30, recipe: 'x', host: 'h' }];
+  const outputs = ['one', 'two'].map((name) => {
+    const dir = join(tmp, `det-${name}`);
+    cpSync(FIXTURE, dir, { recursive: true });
+    writeFileSync(join(dir, 'suites.jsonl'), rows.map((r) => `${JSON.stringify(r)}\n`).join(''));
+    const run = spawnSync(process.execPath, [CLI, '--manifest', dir, '--write'], { encoding: 'utf8' });
+    assert.equal(run.status, 0, run.stderr);
+    return readFileSync(join(dir, 'selection.json'), 'utf8');
+  });
+  assert.equal(outputs[0], outputs[1]);
+  assert.equal(outputs[0], `${JSON.stringify(selectCorpus(loadCorpus(join(tmp, 'det-one'))), null, 2)}\n`);
+});
+
 test('checkB reports every problem, not just the first', () => {
   const dir = join(tmp, 'all');
   cpSync(FIXTURE, dir, { recursive: true });
   const sel = selected(dir);
-  assert.equal(checkB(dir, sel).problems.length, sel.repos.length);
+  assert.equal(checkB(dir, sel).problems.length, 2 * sel.repos.length);
 });
 
 test('CLI usage errors exit 2; --write stores selection.json', () => {

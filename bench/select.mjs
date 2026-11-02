@@ -255,11 +255,18 @@ export function selectCorpus({ slots, repos: rawRepos, starts: rawStarts, exclus
 
 const bPath = (dir, repo) => join(dir, repo.id, repo.start, 'CLAUDE.md');
 
-/** Check the B file of every selected `(repo, start)` → `{ ok, problems, words }`. */
+/**
+ * Check the B file of every selected `(repo, start)` and its recorded authoring minutes (`b-effort.json`:
+ * `{ minutes: { "<repo>/<start>": number } }`, §4.3) → `{ ok, problems, words }`.
+ */
 export function checkB(dir, selection) {
   const problems = [];
   const words = {};
+  const effortFile = join(dir, 'b-effort.json');
+  const minutes = existsSync(effortFile) ? read(effortFile).minutes ?? {} : {};
   for (const repo of selection.repos) {
+    const key = `${repo.id}/${repo.start}`;
+    if (!(minutes[key] > 0)) problems.push(`${effortFile}: no minutes for ${key}`);
     const path = bPath(dir, repo);
     if (!existsSync(path)) { problems.push(`missing B file ${path}`); continue; }
     words[repo.id] = countWords(readFileSync(path, 'utf8'));

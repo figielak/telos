@@ -4,7 +4,45 @@
 **Material per round:** PROTOCOL §3–§4 and amendments, `select.mjs`, the corpus files, a `prepareCopy` view of every selected start, and the derived task commits with diffs (round 1 truncated, later rounds full).
 **Sessions:** round 1 `01a197ef-a546-7f90-9406-f1041642687a`, round 2 `01a19828-78a9-7372-9ef9-565e4212cbed`, round 3 `01a1983a-7566-72d2-afa5-4f78350f13db` (all 2026-11-01).
 
-## Status: rules frozen, corpus not yet selected
+## Status: 07-14 run blocked, no Python repository qualifies
+
+Task 07-14 ran the frozen rules once on 2026-11-02. `node bench/select.mjs --manifest bench/corpus` stops with `no repository qualifies for slot python (PROTOCOL §3.2)`. By D-04 this is a defect in the frozen rules: it is not patched here, there is no `selection.json`, no B file and no model check of this pool yet. It needs a user decision (an amendment before preregistration, e.g. a larger pool or a host with the missing toolchain).
+
+### 07-14 measurements
+
+17 candidates pass the static and history rules (`--gather`). Each was measured with `measure-suite.sh` at its earliest start usable from history; `suites.jsonl` keeps every run (31 rows). Last run at that start:
+
+| candidate | slot | start | offline | online | s | runs |
+|---|---|---|---|---|---|---|
+| jesseduffield-lazygit | go | 2024-12-31 `1e1fba4ce6dc` | 0 | – | 21 | 1 |
+| etcd-io-etcd | go | 2025-07-01 `d5537ec25076` | 0 | – | 35 | 1 |
+| prometheus-prometheus | go | 2025-03-31 `26857cf5000f` | 0 | – | 187 | 1 |
+| cli-cli | go | 2024-12-27 `6c5145166003` | 1 | 0 | 46 | 1 |
+| caddyserver-caddy | go | 2024-12-31 `34cff4af7db1` | 1 | 1 | 37 | 1 |
+| fatedier-frp | go | 2025-12-25 `ef96481f5812` | 1 | 1 | 18 | 1 |
+| gohugoio-hugo | go | 2024-12-31 `2db43f841c7d` | 124 | 1 | 600 | 1 |
+| nektos-act | go | 2025-06-27 `dd58f5e20fa3` | 1 | 124 | 262 | 1 |
+| ollama-ollama | go | 2025-03-31 `66b253923891` | 1 | 1 | 19 | 1 |
+| rclone-rclone | go | 2024-12-30 `a389a2979b0a` | 1 | 1 | 454 | 2 |
+| usememos-memos | go | 2025-12-31 `f66c750075b1` | 1 | 0 | 179 | 1 |
+| langflow-ai-langflow | python | 2024-12-31 `c55edcd97f41` | 1 | 1 | 265 | 1 |
+| paddlepaddle-paddleocr | python | 2025-12-30 `6f425758d103` | 1 | 137 | 94 | 2 |
+| vllm-project-vllm | python | 2025-03-31 `e6e3c55ef28f` | setup failed | | | 2 |
+| yt-dlp-yt-dlp | python | 2025-06-30 `30fa54280b36` | 250 | 1 | 132 | 1 |
+| mintplex-labs-anything-llm | web | 2025-06-30 `89320588f3b1` | 0 | – | 2 | 2 |
+| louislam-uptime-kuma | web | 2025-12-31 `23a8a40eb9e1` | 1 | 1 | 228 | 1 |
+
+Would-be winners: go = lazygit (21 s), web = anything-llm (2 s). Python: langflow fails 20 of 832 tests also online; yt-dlp crashes offline (exit 250) and fails 36 tests online (`websockets` deprecation warnings under `-Werror`); paddleocr's tests download models (109 errors offline) and its online rerun was OOM-killed; vllm's `requirements/test.txt` does not resolve at its start (`xgrammar==0.1.16` unsatisfiable), and its own CI tests on GPU only.
+
+### Deviations during the 07-14 run (disclosed)
+
+- **Wrong start for 10 candidates in the first pass.** The author's plan took each candidate's earliest start instead of its earliest start usable from history. Those rows (other commits) stay in `suites.jsonl` and are ignored by the rule; the 10 were then measured at the right start.
+- **Recipes changed after a run whose test command did not execute the suite.** Criterion, applied to every candidate: rerun only when the tests never ran because of the recipe or the host, never when they ran and failed. yt-dlp (`run_tests.py` called `pytest` from PATH: `PATH` now includes `.venv/bin`; its failed run was at a wrong start), anything-llm (`yarn test` in `server/`, which has no test script; the start's own `yarn test` is jest at the root), paddleocr (missing `scikit-image`; now installed as its CI does) and vllm (`requirements-test.txt` moved to `requirements/test.txt`). This deviates from D-04 ("not tuned after a failing measurement"); the first rows stay in `suites.jsonl`.
+- **Host failures rerun with the same recipe.** prometheus and rclone first failed on `disk quota exceeded` in `/tmp` (a 4.5 GB `go-build` dir left by a killed `go test`); the reruns used `TMPDIR=~/bench-work/tmp`. Two runs whose `git clone` failed on DNS were not measurements and were removed from `suites.jsonl`.
+- **Memory.** The host has 14 GB RAM; paddleocr's online run OOM-killed the editor session twice. Later runs ran in a systemd unit with `MemoryMax=5G`, `MemorySwapMax=1G`, `Nice=10`. The first paddleocr row (wrong start, online OOM-killed) was written by hand from its logs (`note` field).
+- **Toolchain gaps not fixed:** no `g++` on the host, so ollama's cgo packages do not build; installing it after seeing results would change the host.
+- `measure-suite.sh`'s `timeout` does not kill grandchildren: memos reports 1240 s for a 600 s limit (offline run killed late, result unchanged).
+
 
 The rules were rewritten and frozen by task 07-07 (PROTOCOL amendment 2): one recorded GitHub Search pool (`search/`, 2026-11-01), the scenario is the first other eligible change with 150–1500 product lines, the task window is 100 first-parent commits, the reference is the start tree plus the task commit's own diff (applied with `git merge-tree`), regression runs on the restored start tests. Task 07-14 runs them once from scratch, without rule changes. This file has no review of the new pool yet: the review of §3.4 happens after that run, and its objections go to the report as limitations (§12), not into the rules.
 

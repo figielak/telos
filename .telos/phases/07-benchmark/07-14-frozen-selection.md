@@ -2,7 +2,7 @@
 id: 07-14
 title: "Measured selection, B files and model check"
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: blocked     # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [07-07]
@@ -51,3 +51,8 @@ Run the rules frozen in 07-07 once, from scratch: measure the suites of the qual
 ## Result
 <!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
      last line always: "Deviations: none" or "Deviations: path — why" -->
+BLOCKED (D-04): the frozen rules leave the python slot empty — `select.mjs` stops with "no repository qualifies for slot python". Needs a user decision (amendment: larger pool or host toolchain); no selection.json, B files or model check yet.
+Built: suite recipes for the 17 candidates that pass static + history rules, 31 measure-suite.sh runs in suites.jsonl (go would be lazygit 21 s, web anything-llm 2 s), `--check-b` now also requires positive b-effort.json minutes per selected start; README row updated.
+Tests: 42 in test/bench-select.test.mjs (2 new, 2 updated), npm test 719/719 green.
+Surprises: first pass measured 10 candidates at the wrong start; four recipes and two host failures (tmp quota, OOM) needed reruns — all disclosed in bench/corpus/REVIEW.md as deviations from D-04.
+Deviations: none
