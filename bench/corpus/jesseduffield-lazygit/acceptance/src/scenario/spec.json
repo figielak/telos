@@ -1,0 +1,8 @@
+{
+  "start": "1e1fba4ce6dcc54e9a24bccb300b5b5965f4ffbc",
+  "testPatterns": ["_test\\.go$", "^pkg/integration/tests/"],
+  "regression": "GOPROXY=off go test ./... -short -count=1",
+  "pre": "GOPROXY=off go generate ./pkg/integration/tests/",
+  "behavioural": "GOPROXY=off go test ./pkg/integration/clients/ -run 'TestIntegration/file/acceptance_collapse_' -count=1 -v",
+  "env": {}
+}

@@ -1,0 +1,44 @@
+diff --git a/pkg/commands/git_commands/sync.go b/pkg/commands/git_commands/sync.go
+index 360d40fe..1219b7e2 100644
+--- a/pkg/commands/git_commands/sync.go
++++ b/pkg/commands/git_commands/sync.go
+@@ -88,6 +88,7 @@ type PullOptions struct {
+ 	BranchName      string
+ 	FastForwardOnly bool
+ 	WorktreeGitDir  string
++	WorktreePath    string
+ }
+ 
+ func (self *SyncCommands) Pull(task gocui.Task, opts PullOptions) error {
+@@ -97,6 +98,7 @@ func (self *SyncCommands) Pull(task gocui.Task, opts PullOptions) error {
+ 		ArgIf(opts.RemoteName != "", opts.RemoteName).
+ 		ArgIf(opts.BranchName != "", "refs/heads/"+opts.BranchName).
+ 		GitDirIf(opts.WorktreeGitDir != "", opts.WorktreeGitDir).
++		DirIf(opts.WorktreePath != "", opts.WorktreePath).
+ 		ToArgv()
+ 
+ 	// setting GIT_SEQUENCE_EDITOR to ':' as a way of skipping it, in case the user
+diff --git a/pkg/gui/controllers/branches_controller.go b/pkg/gui/controllers/branches_controller.go
+index a364811d..9a153097 100644
+--- a/pkg/gui/controllers/branches_controller.go
++++ b/pkg/gui/controllers/branches_controller.go
+@@ -629,9 +629,11 @@ func (self *BranchesController) fastForward(branch *models.Branch) error {
+ 			self.c.LogAction(action)
+ 
+ 			worktreeGitDir := ""
++			worktreePath := ""
+ 			// if it is the current worktree path, no need to specify the path
+ 			if !worktree.IsCurrent {
+ 				worktreeGitDir = worktree.GitDir
++				worktreePath = worktree.Path
+ 			}
+ 
+ 			err := self.c.Git().Sync.Pull(
+@@ -641,6 +643,7 @@ func (self *BranchesController) fastForward(branch *models.Branch) error {
+ 					BranchName:      branch.UpstreamBranch,
+ 					FastForwardOnly: true,
+ 					WorktreeGitDir:  worktreeGitDir,
++					WorktreePath:    worktreePath,
+ 				},
+ 			)
+ 			_ = self.c.Refresh(types.RefreshOptions{Mode: types.ASYNC})

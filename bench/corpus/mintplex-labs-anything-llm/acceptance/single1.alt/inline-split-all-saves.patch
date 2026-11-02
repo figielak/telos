@@ -1,0 +1,138 @@
+diff --git a/server/endpoints/api/openai/index.js b/server/endpoints/api/openai/index.js
+index e3c70171..6a57e796 100644
+--- a/server/endpoints/api/openai/index.js
++++ b/server/endpoints/api/openai/index.js
+@@ -14,6 +14,20 @@ const {
+ } = require("../../../utils/chats/openaiCompatible");
+ const { getModelTag } = require("../../utils");
+ 
++/** Split an OpenAI message content (string or parts array) into the prompt text and image attachments. */
++function splitContent(content) {
++  if (!Array.isArray(content)) return { prompt: content, attachments: [] };
++  const prompt = content.filter((p) => p?.type === "text").map((p) => p.text).join("\n");
++  const attachments = content
++    .filter((p) => p?.type === "image_url")
++    .map((p, n) => {
++      const url = p.image_url?.url ?? "";
++      const mime = /^data:([^;,]+);base64,/i.exec(url)?.[1]?.toLowerCase() ?? "image/png";
++      return { name: `uploaded_image_${n}`, mime, contentString: url };
++    });
++  return { prompt, attachments };
++}
++
+ function apiOpenAICompatibleEndpoints(app) {
+   if (!app) return;
+ 
+@@ -136,6 +150,7 @@ function apiOpenAICompatibleEndpoints(app) {
+           });
+         }
+ 
++        const { prompt, attachments } = splitContent(userMessage.content);
+         const systemPrompt =
+           messages.find((chat) => chat.role === "system")?.content ?? null;
+         const history = messages.filter((chat) => chat.role !== "system") ?? [];
+@@ -145,7 +160,8 @@ function apiOpenAICompatibleEndpoints(app) {
+             workspace,
+             systemPrompt,
+             history,
+-            prompt: userMessage.content,
++            prompt,
++            attachments,
+             temperature: Number(temperature),
+           });
+ 
+@@ -173,7 +189,8 @@ function apiOpenAICompatibleEndpoints(app) {
+           workspace,
+           systemPrompt,
+           history,
+-          prompt: userMessage.content,
++          prompt,
++          attachments,
+           temperature: Number(temperature),
+           response,
+         });
+diff --git a/server/utils/chats/openaiCompatible.js b/server/utils/chats/openaiCompatible.js
+index 97825b2e..f4a24cce 100644
+--- a/server/utils/chats/openaiCompatible.js
++++ b/server/utils/chats/openaiCompatible.js
+@@ -12,6 +12,7 @@ async function chatSync({
+   systemPrompt = null,
+   history = [],
+   prompt = null,
++  attachments = [],
+   temperature = null,
+ }) {
+   const uuid = uuidv4();
+@@ -38,6 +39,7 @@ async function chatSync({
+         text: textResponse,
+         sources: [],
+         type: chatMode,
++        attachments,
+       },
+       include: false,
+     });
+@@ -130,6 +132,7 @@ async function chatSync({
+         text: textResponse,
+         sources: [],
+         type: chatMode,
++        attachments,
+       },
+       include: false,
+     });
+@@ -154,6 +157,7 @@ async function chatSync({
+     userPrompt: prompt,
+     contextTexts,
+     chatHistory: history,
++    attachments,
+   });
+ 
+   // Send the text completion.
+@@ -182,7 +186,7 @@ async function chatSync({
+   const { chat } = await WorkspaceChats.new({
+     workspaceId: workspace.id,
+     prompt: prompt,
+-    response: { text: textResponse, sources, type: chatMode, metrics },
++    response: { text: textResponse, sources, type: chatMode, metrics, attachments },
+   });
+ 
+   return formatJSON(
+@@ -205,6 +209,7 @@ async function streamChat({
+   systemPrompt = null,
+   history = [],
+   prompt = null,
++  attachments = [],
+   temperature = null,
+ }) {
+   const uuid = uuidv4();
+@@ -250,6 +255,7 @@ async function streamChat({
+         text: textResponse,
+         sources: [],
+         type: chatMode,
++        attachments,
+       },
+       include: false,
+     });
+@@ -350,6 +356,7 @@ async function streamChat({
+         text: textResponse,
+         sources: [],
+         type: chatMode,
++        attachments,
+       },
+       include: false,
+     });
+@@ -378,6 +385,7 @@ async function streamChat({
+     userPrompt: prompt,
+     contextTexts,
+     chatHistory: history,
++    attachments,
+   });
+ 
+   if (!LLMConnector.streamingEnabled()) {
+@@ -424,6 +432,7 @@ async function streamChat({
+         sources,
+         type: chatMode,
+         metrics: stream.metrics,
++        attachments,
+       },
+     });
+ 

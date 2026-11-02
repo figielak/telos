@@ -1,0 +1,112 @@
+{
+  "repetitions": 5,
+  "repos": [
+    {
+      "id": "jesseduffield-lazygit",
+      "url": "https://github.com/jesseduffield/lazygit.git"
+    },
+    {
+      "id": "mintplex-labs-anything-llm",
+      "url": "https://github.com/Mintplex-Labs/anything-llm.git"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "lazygit-single1",
+      "repo": "jesseduffield-lazygit",
+      "type": "single",
+      "start": "1e1fba4ce6dcc54e9a24bccb300b5b5965f4ffbc",
+      "reference": "1b0d3829f8e9cc7bdbeecf4b1232a38138c78585",
+      "prompt": "Lazygit can open a pull request in the browser for Azure DevOps in the cloud, but not for a self-hosted Azure DevOps Server. Make it work for HTTPS remotes of the form https://<host>/<collection>/<project>/_git/<repo> (with or without a .git suffix) when <host> is configured as an Azure DevOps service domain in the `services` config (value `azuredevops:<host>`): the pull request URL must be https://<host>/<collection>/<project>/_git/<repo>/pullrequestcreate?sourceRef=<branch>, plus &targetRef=<target> when a target branch is given. Cloud Azure DevOps and the other hosting services must keep working. Add tests.",
+      "expectedPaths": [
+        "pkg/commands/hosting_service/"
+      ],
+      "acceptance": "jesseduffield-lazygit/acceptance/single1.mjs",
+      "b": "jesseduffield-lazygit/1e1fba4ce6dcc54e9a24bccb300b5b5965f4ffbc/CLAUDE.md"
+    },
+    {
+      "id": "lazygit-single2",
+      "repo": "jesseduffield-lazygit",
+      "type": "single",
+      "start": "1e1fba4ce6dcc54e9a24bccb300b5b5965f4ffbc",
+      "reference": "5e9ba82d7bcdfdc873015f24a0817378e2fa4788",
+      "prompt": "In lazygit, fast-forwarding a local branch that is checked out in another (linked) worktree, from the Branches view with the fast-forward key, leaves the current worktree with unwanted file changes. Fix it: after such a fast-forward the branch is updated and the Files view of the current worktree shows no changes. Fast-forwarding a branch of the current worktree, or one that is not checked out anywhere, must keep working. Add an integration test for the fixed case.",
+      "expectedPaths": [
+        "pkg/commands/git_commands/",
+        "pkg/gui/controllers/",
+        "pkg/integration/tests/"
+      ],
+      "acceptance": "jesseduffield-lazygit/acceptance/single2.mjs",
+      "b": "jesseduffield-lazygit/1e1fba4ce6dcc54e9a24bccb300b5b5965f4ffbc/CLAUDE.md"
+    },
+    {
+      "id": "lazygit-scenario",
+      "repo": "jesseduffield-lazygit",
+      "type": "multi",
+      "start": "1e1fba4ce6dcc54e9a24bccb300b5b5965f4ffbc",
+      "reference": "43106b6c7fbe8c69cebb02f8fc80cb060faddeee",
+      "steps": [
+        "Add \"collapse all\" and \"expand all\" to the file tree of the Files panel in lazygit. Pressing - collapses every directory in the tree and pressing = expands every directory again. When collapsing, the selection moves to the top-level directory that contains the previously selected item (an item that is already top-level stays selected). When expanding, the selection stays on the same item.",
+        "Make the same two keys work in the file tree of a commit, the one that opens from the Commits panel. Both actions are only available when the file tree is shown; with the file tree turned off (flat view) pressing either key does nothing and shows the message \"Not available in flat view\".",
+        "Make the two keys configurable in the user config as keybinding.files.collapseAll (default -) and keybinding.files.expandAll (default =). List the actions with the descriptions \"Collapse all files\" and \"Expand all files\" in the keybindings menu, and bring the generated documentation (go generate ./...) and docs/Config.md up to date. Add integration tests for the behaviour."
+      ],
+      "expectedPaths": [
+        "pkg/gui/",
+        "pkg/config/",
+        "pkg/i18n/",
+        "pkg/integration/tests/",
+        "docs/",
+        "schema/"
+      ],
+      "acceptance": "jesseduffield-lazygit/acceptance/scenario.mjs",
+      "b": "jesseduffield-lazygit/1e1fba4ce6dcc54e9a24bccb300b5b5965f4ffbc/CLAUDE.md"
+    },
+    {
+      "id": "anything-llm-single2",
+      "repo": "mintplex-labs-anything-llm",
+      "type": "single",
+      "start": "89320588f3b15e8b500d2929ca4b396414512347",
+      "reference": "a0af24624d1aa2f1b80e873f716f78fecc0a72fa",
+      "prompt": "In the AnythingLLM agent code, `UnTooled.validFuncCall(functionCall, functions)` (server/utils/agents/aibitat/providers/helpers/untooled.js) decides whether a function call produced by a model without native tool calling is acceptable, and today it rejects any call that does not supply every property in the function schema, even optional ones. Change it so a call is valid when it names a defined function, supplies every property listed under the schema's `required`, and supplies no argument that is not a property in the schema; optional properties may be left out, and a function without a parameter schema accepts an empty call. Calls without a name or arguments, calls to unknown functions, calls missing a required argument and calls with an unknown argument stay invalid with a reason string; a valid result has `reason` null. Add unit tests.",
+      "expectedPaths": [
+        "server/utils/agents/",
+        "server/__tests__/"
+      ],
+      "acceptance": "mintplex-labs-anything-llm/acceptance/single2.mjs",
+      "b": "mintplex-labs-anything-llm/89320588f3b15e8b500d2929ca4b396414512347/CLAUDE.md"
+    },
+    {
+      "id": "anything-llm-scenario",
+      "repo": "mintplex-labs-anything-llm",
+      "type": "multi",
+      "start": "89320588f3b15e8b500d2929ca4b396414512347",
+      "reference": "d0978fa363a255f88627d7dfedd67b0b436a85bb",
+      "steps": [
+        "Fix the YouTube transcript loader of the AnythingLLM collector (collector/utils/extensions/YoutubeTranscript/YoutubeLoader/youtube-transcript.js), which no longer works because it scrapes the watch page. `YoutubeTranscript.fetchTranscript(videoIdOrUrl, { lang })` must instead ask YouTube's transcript endpoint: a POST to https://www.youtube.com/youtubei/v1/get_transcript with the headers Content-Type: application/json and the same User-Agent as before, and a JSON body with `context.client` { clientName: \"WEB\", clientVersion: \"2.20240826.01.00\" } and a `params` string. `params` is the base64 of a protobuf message with two string fields: field 1 is the video id and field 2 is the base64 of an inner protobuf message whose field 1 is the string \"asr\" and whose field 2 is the language code (default \"en\"). Video URLs and bare 11-character ids are accepted as before, and an input that holds no video id is rejected before any request.",
+        "Read the transcript from the endpoint's JSON response: the segments are at actions[0].updateEngagementPanelAction.content.transcriptRenderer.content.transcriptSearchPanelRenderer.body.transcriptSegmentListRenderer.initialSegments, each segment's text being the concatenation of the `text` of snippet.runs of its transcriptSegmentRenderer. Skip empty segments, join the segments with a single space, collapse runs of whitespace and trim. A response that is not ok, or that has no transcript data, must make `fetchTranscript` reject with a `[YoutubeTranscript]` error whose message says why (the HTTP status in the first case).",
+        "Remove what the page scraping needed and nothing else needs any more, keep the module's exports and `retrieveVideoId` behaviour unchanged, and add unit tests that replace `fetch` with a fake, so they run without network."
+      ],
+      "expectedPaths": [
+        "collector/utils/extensions/YoutubeTranscript/",
+        "collector/__tests__/"
+      ],
+      "acceptance": "mintplex-labs-anything-llm/acceptance/scenario.mjs",
+      "b": "mintplex-labs-anything-llm/89320588f3b15e8b500d2929ca4b396414512347/CLAUDE.md"
+    },
+    {
+      "id": "anything-llm-single1",
+      "repo": "mintplex-labs-anything-llm",
+      "type": "single",
+      "start": "89320588f3b15e8b500d2929ca4b396414512347",
+      "reference": "31a8ead8235551d767252f31e7d0df92660ec0f4",
+      "prompt": "The OpenAI-compatible chat endpoint of AnythingLLM (POST /v1/openai/chat/completions) does not handle multimodal user messages, where the last user message's `content` is an array of parts ({ type: \"text\", text } and { type: \"image_url\", image_url: { url } }) instead of a string: the array ends up as the prompt. Make such messages work, for streaming and non-streaming requests. The prompt is the `text` of the text parts joined with a newline. Every image part becomes an attachment in the app's existing attachment format ({ name, mime, contentString }): name is uploaded_image_<n> with n counting the image parts from 0, contentString is the image URL, and mime is the type of a `data:<mime>;base64,` URL (image/png when the URL has none). The attachments go to the workspace's LLM together with the prompt, the same way attachments sent from the AnythingLLM chat UI do, and are stored with every chat record the request saves, including the record saved when a query-mode workspace refuses to answer. Plain string messages must keep working. Add unit tests.",
+      "expectedPaths": [
+        "server/endpoints/api/openai/",
+        "server/utils/chats/",
+        "server/__tests__/"
+      ],
+      "acceptance": "mintplex-labs-anything-llm/acceptance/single1.mjs",
+      "b": "mintplex-labs-anything-llm/89320588f3b15e8b500d2929ca4b396414512347/CLAUDE.md"
+    }
+  ]
+}

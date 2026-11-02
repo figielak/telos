@@ -1,0 +1,27 @@
+diff --git a/server/utils/agents/aibitat/providers/helpers/untooled.js b/server/utils/agents/aibitat/providers/helpers/untooled.js
+index 774bb691..b3233fca 100644
+--- a/server/utils/agents/aibitat/providers/helpers/untooled.js
++++ b/server/utils/agents/aibitat/providers/helpers/untooled.js
+@@ -96,11 +96,17 @@ ${JSON.stringify(def.parameters.properties, null, 4)}\n`;
+       return { valid: false, reason: "Function name does not exist." };
+     }
+ 
+-    const props = Object.keys(foundFunc.parameters.properties);
+-    const fProps = Object.keys(functionCall.arguments);
+-    if (!this.compareArrays(props, fProps)) {
+-      return { valid: false, reason: "Invalid argument schema match." };
+-    }
++    const schema = foundFunc.parameters?.properties || {};
++    const required = foundFunc.parameters?.required || [];
++    const given = functionCall.arguments || {};
++    const missing = required.find((key) => !(key in given));
++    if (missing !== undefined)
++      return { valid: false, reason: `Missing required argument: ${missing}` };
++    const extra = Object.keys(given).find(
++      (key) => !Object.prototype.hasOwnProperty.call(schema, key)
++    );
++    if (extra !== undefined)
++      return { valid: false, reason: `Unknown argument: ${extra}` };
+ 
+     return { valid: true, reason: null };
+   }

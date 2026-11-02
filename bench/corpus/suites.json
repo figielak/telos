@@ -1,5 +1,8 @@
 {
-  "_doc": "Suite recipes for measure-suite.sh (PROTOCOL §3.2). setup runs with network; test runs without (unshare -rn, loopback up). The test command is the repository's own unit-test target at the start commit.",
+  "_doc": "Suite recipes for measure-suite.sh (PROTOCOL \u00a73.2). setup runs with network; test runs without (unshare -rn, loopback up). The test command is the repository's own unit-test target at the start commit. _pathPrepend: toolchain directories (go) that bench/calibrate.mjs puts in front of PATH for setup and acceptance; measure-suite.sh ignores it.",
+  "_pathPrepend": [
+    "~/bench-work/goroot/go/bin"
+  ],
   "_host": {
     "measured": "2026-11-01",
     "kernel": "Linux 7.2.13-200.fc44.x86_64",

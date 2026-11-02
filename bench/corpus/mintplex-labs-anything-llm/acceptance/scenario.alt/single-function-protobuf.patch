@@ -1,0 +1,169 @@
+diff --git a/collector/utils/extensions/YoutubeTranscript/YoutubeLoader/youtube-transcript.js b/collector/utils/extensions/YoutubeTranscript/YoutubeLoader/youtube-transcript.js
+index f868875b..5f923dc2 100644
+--- a/collector/utils/extensions/YoutubeTranscript/YoutubeLoader/youtube-transcript.js
++++ b/collector/utils/extensions/YoutubeTranscript/YoutubeLoader/youtube-transcript.js
+@@ -1,8 +1,8 @@
+-const { parse } = require("node-html-parser");
+-const RE_YOUTUBE =
+-  /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
++const ENDPOINT = "https://www.youtube.com/youtubei/v1/get_transcript";
+ const USER_AGENT =
+   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36,gzip(gfe)";
++const ID_PATTERN =
++  /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+ 
+ class YoutubeTranscriptError extends Error {
+   constructor(message) {
+@@ -10,108 +10,60 @@ class YoutubeTranscriptError extends Error {
+   }
+ }
+ 
+-/**
+- * Class to retrieve transcript if exist
+- */
+-class YoutubeTranscript {
+-  /**
+-   * Fetch transcript from YTB Video
+-   * @param videoId Video url or video identifier
+-   * @param config Object with lang param (eg: en, es, hk, uk) format.
+-   * Will just the grab first caption if it can find one, so no special lang caption support.
+-   */
+-  static async fetchTranscript(videoId, config = {}) {
+-    const identifier = this.retrieveVideoId(videoId);
+-    const lang = config?.lang ?? "en";
+-    try {
+-      const transcriptUrl = await fetch(
+-        `https://www.youtube.com/watch?v=${identifier}`,
+-        {
+-          headers: {
+-            "User-Agent": USER_AGENT,
+-          },
+-        }
+-      )
+-        .then((res) => res.text())
+-        .then((html) => parse(html))
+-        .then((html) => this.#parseTranscriptEndpoint(html, lang));
+-
+-      if (!transcriptUrl)
+-        throw new Error("Failed to locate a transcript for this video!");
+-
+-      // Result is hopefully some XML.
+-      const transcriptXML = await fetch(transcriptUrl)
+-        .then((res) => res.text())
+-        .then((xml) => parse(xml));
+-
+-      let transcript = "";
+-      const chunks = transcriptXML.getElementsByTagName("text");
+-      for (const chunk of chunks) {
+-        // Add space after each text chunk
+-        transcript += chunk.textContent + " ";
+-      }
+-
+-      // Trim extra whitespace
+-      return transcript.trim().replace(/\s+/g, " ");
+-    } catch (e) {
+-      throw new YoutubeTranscriptError(e);
+-    }
++// protobuf: one length-delimited (wire type 2) field, field numbers below 16 only
++function field(number, text) {
++  const payload = Buffer.from(text, "utf8");
++  const size = [];
++  for (let n = payload.length; ; n >>>= 7) {
++    size.push(n > 0x7f ? (n & 0x7f) | 0x80 : n);
++    if (n <= 0x7f) break;
+   }
++  return Buffer.concat([Buffer.from([(number << 3) | 2, ...size]), payload]);
++}
+ 
+-  static #parseTranscriptEndpoint(document, langCode = null) {
+-    try {
+-      // Get all script tags on document page
+-      const scripts = document.getElementsByTagName("script");
+-
+-      // find the player data script.
+-      const playerScript = scripts.find((script) =>
+-        script.textContent.includes("var ytInitialPlayerResponse = {")
+-      );
+-
+-      const dataString =
+-        playerScript.textContent
+-          ?.split("var ytInitialPlayerResponse = ")?.[1] //get the start of the object {....
+-          ?.split("};")?.[0] + // chunk off any code after object closure.
+-        "}"; // add back that curly brace we just cut.
++const message = (first, second) =>
++  Buffer.concat([field(1, first), field(2, second)]).toString("base64");
+ 
+-      const data = JSON.parse(dataString.trim()); // Attempt a JSON parse
+-      const availableCaptions =
+-        data?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
++class YoutubeTranscript {
++  static async fetchTranscript(videoId, config = {}) {
++    try {
++      const id = this.retrieveVideoId(videoId);
++      const language = config?.lang ?? "en";
++      const res = await fetch(ENDPOINT, {
++        method: "POST",
++        headers: { "Content-Type": "application/json", "User-Agent": USER_AGENT },
++        body: JSON.stringify({
++          context: { client: { clientName: "WEB", clientVersion: "2.20240826.01.00" } },
++          params: message(id, message("asr", language)),
++        }),
++      });
++      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+ 
+-      // If languageCode was specified then search for it's code, otherwise get the first.
+-      let captionTrack = availableCaptions?.[0];
+-      if (langCode)
+-        captionTrack =
+-          availableCaptions.find((track) =>
+-            track.languageCode.includes(langCode)
+-          ) ?? availableCaptions?.[0];
++      const data = await res.json();
++      const segments =
++        data?.actions?.[0]?.updateEngagementPanelAction?.content?.transcriptRenderer
++          ?.content?.transcriptSearchPanelRenderer?.body?.transcriptSegmentListRenderer
++          ?.initialSegments;
++      if (!Array.isArray(segments)) throw new Error("No transcript data found in response");
+ 
+-      return captionTrack?.baseUrl;
++      return segments
++        .map((s) => (s?.transcriptSegmentRenderer?.snippet?.runs ?? []).map((r) => r.text).join(""))
++        .filter(Boolean)
++        .join(" ")
++        .replace(/\s+/g, " ")
++        .trim();
+     } catch (e) {
+-      console.error(`YoutubeTranscript.#parseTranscriptEndpoint ${e.message}`);
+-      return null;
++      if (e instanceof YoutubeTranscriptError) throw e;
++      throw new YoutubeTranscriptError(e?.message ?? e);
+     }
+   }
+ 
+-  /**
+-   * Retrieve video id from url or string
+-   * @param videoId video url or video id
+-   */
+   static retrieveVideoId(videoId) {
+-    if (videoId.length === 11) {
+-      return videoId;
+-    }
+-    const matchId = videoId.match(RE_YOUTUBE);
+-    if (matchId && matchId.length) {
+-      return matchId[1];
+-    }
+-    throw new YoutubeTranscriptError(
+-      "Impossible to retrieve Youtube video ID."
+-    );
++    if (videoId.length === 11) return videoId;
++    const match = videoId.match(ID_PATTERN);
++    if (match?.[1]) return match[1];
++    throw new YoutubeTranscriptError("Impossible to retrieve Youtube video ID.");
+   }
+ }
+ 
+-module.exports = {
+-  YoutubeTranscript,
+-  YoutubeTranscriptError,
+-};
++module.exports = { YoutubeTranscript, YoutubeTranscriptError };

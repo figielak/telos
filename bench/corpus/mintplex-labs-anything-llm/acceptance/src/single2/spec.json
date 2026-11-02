@@ -1,0 +1,7 @@
+{
+  "start": "89320588f3b15e8b500d2929ca4b396414512347",
+  "testPatterns": ["(^|/)__tests__/", "\\.(test|spec)\\.[cm]?js$"],
+  "regression": "npx jest --ci",
+  "behavioural": "npx jest --ci --testPathPattern acceptance-untooled",
+  "env": {}
+}

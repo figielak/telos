@@ -2,7 +2,7 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 07-benchmark
-Task: 07-13
+Task: 07-08
 Next: /telos:do
 Blockers: none
 Awaiting user: 07:D-05, 07:D-06, 07:D-07, 07:D-08, 07:D-09, 07:D-11, 07:D-12
@@ -15,6 +15,6 @@ Awaiting user: 07:D-05, 07:D-06, 07:D-07, 07:D-08, 07:D-09, 07:D-11, 07:D-12
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 07-13 done: 6 tasks with hidden behavioural acceptance, calibrated 6/6 OK, Codex model check fixed
 - 07-14 done: selection lazygit+anything-llm (python unfilled), B files, Codex model check no blocking
 - 07-15 done: amendment 3, empty slot stays empty (python unfilled), recipe rule recorded
-- 07-06 done: report aggregation, H1-H5 verdicts, break-even, CSV and Markdown tables

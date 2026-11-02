@@ -1,0 +1,448 @@
+diff --git a/docs/Config.md b/docs/Config.md
+index c64e56d2..31058291 100644
+--- a/docs/Config.md
++++ b/docs/Config.md
+@@ -571,6 +571,8 @@ keybinding:
+     openMergeTool: M
+     openStatusFilter: <c-b>
+     copyFileInfoToClipboard: "y"
++    collapseAll: '-'
++    expandAll: =
+   branches:
+     createPullRequest: o
+     viewPullRequestOptions: O
+diff --git a/docs/keybindings/Keybindings_en.md b/docs/keybindings/Keybindings_en.md
+index 214b7359..2f451d34 100644
+--- a/docs/keybindings/Keybindings_en.md
++++ b/docs/keybindings/Keybindings_en.md
+@@ -64,6 +64,8 @@ _Legend: `<c-b>` means ctrl+b, `<a-b>` means alt+b, `B` means shift+b_
+ | `` <space> `` | Toggle file included in patch | Toggle whether the file is included in the custom patch. See https://github.com/jesseduffield/lazygit#rebase-magic-custom-patches. |
+ | `` a `` | Toggle all files | Add/remove all commit's files to custom patch. See https://github.com/jesseduffield/lazygit#rebase-magic-custom-patches. |
+ | `` <enter> `` | Enter file / Toggle directory collapsed | If a file is selected, enter the file so that you can add/remove individual lines to the custom patch. If a directory is selected, toggle the directory. |
++| `` - `` | Collapse all files | Collapse all directories in the file tree. |
++| `` = `` | Expand all files | Expand all directories in the file tree. |
+ | `` ` `` | Toggle file tree view | Toggle file view between flat and tree layout. Flat layout shows all file paths in a single list, tree layout groups files by directory. |
+ | `` / `` | Search the current view by text |  |
+ 
+@@ -143,6 +145,8 @@ If you would instead like to start an interactive rebase from the selected commi
+ | `` d `` | Discard | View options for discarding changes to the selected file. |
+ | `` g `` | View upstream reset options |  |
+ | `` D `` | Reset | View reset options for working tree (e.g. nuking the working tree). |
++| `` - `` | Collapse all files | Collapse all directories in the file tree. |
++| `` = `` | Expand all files | Expand all directories in the file tree. |
+ | `` ` `` | Toggle file tree view | Toggle file view between flat and tree layout. Flat layout shows all file paths in a single list, tree layout groups files by directory. |
+ | `` <c-t> `` | Open external diff tool (git difftool) |  |
+ | `` M `` | Open external merge tool | Run `git mergetool`. |
+diff --git a/docs/keybindings/Keybindings_ja.md b/docs/keybindings/Keybindings_ja.md
+index a433e97b..38a2afe7 100644
+--- a/docs/keybindings/Keybindings_ja.md
++++ b/docs/keybindings/Keybindings_ja.md
+@@ -142,6 +142,8 @@ If you would instead like to start an interactive rebase from the selected commi
+ | `` <space> `` | Toggle file included in patch | Toggle whether the file is included in the custom patch. See https://github.com/jesseduffield/lazygit#rebase-magic-custom-patches. |
+ | `` a `` | Toggle all files | Add/remove all commit's files to custom patch. See https://github.com/jesseduffield/lazygit#rebase-magic-custom-patches. |
+ | `` <enter> `` | Enter file / Toggle directory collapsed | If a file is selected, enter the file so that you can add/remove individual lines to the custom patch. If a directory is selected, toggle the directory. |
++| `` - `` | Collapse all files | Collapse all directories in the file tree. |
++| `` = `` | Expand all files | Expand all directories in the file tree. |
+ | `` ` `` | ファイルツリーの表示を切り替え | Toggle file view between flat and tree layout. Flat layout shows all file paths in a single list, tree layout groups files by directory. |
+ | `` / `` | 検索を開始 |  |
+ 
+@@ -214,6 +216,8 @@ If you would instead like to start an interactive rebase from the selected commi
+ | `` d `` | Discard | View options for discarding changes to the selected file. |
+ | `` g `` | View upstream reset options |  |
+ | `` D `` | Reset | View reset options for working tree (e.g. nuking the working tree). |
++| `` - `` | Collapse all files | Collapse all directories in the file tree. |
++| `` = `` | Expand all files | Expand all directories in the file tree. |
+ | `` ` `` | ファイルツリーの表示を切り替え | Toggle file view between flat and tree layout. Flat layout shows all file paths in a single list, tree layout groups files by directory. |
+ | `` <c-t> `` | Open external diff tool (git difftool) |  |
+ | `` M `` | Git mergetoolを開く | Run `git mergetool`. |
+diff --git a/docs/keybindings/Keybindings_ko.md b/docs/keybindings/Keybindings_ko.md
+index cbafa947..79db35f2 100644
+--- a/docs/keybindings/Keybindings_ko.md
++++ b/docs/keybindings/Keybindings_ko.md
+@@ -307,6 +307,8 @@ If you would instead like to start an interactive rebase from the selected commi
+ | `` <space> `` | Toggle file included in patch | Toggle whether the file is included in the custom patch. See https://github.com/jesseduffield/lazygit#rebase-magic-custom-patches. |
+ | `` a `` | Toggle all files included in patch | Add/remove all commit's files to custom patch. See https://github.com/jesseduffield/lazygit#rebase-magic-custom-patches. |
+ | `` <enter> `` | Enter file to add selected lines to the patch (or toggle directory collapsed) | If a file is selected, enter the file so that you can add/remove individual lines to the custom patch. If a directory is selected, toggle the directory. |
++| `` - `` | Collapse all files | Collapse all directories in the file tree. |
++| `` = `` | Expand all files | Expand all directories in the file tree. |
+ | `` ` `` | 파일 트리뷰로 전환 | Toggle file view between flat and tree layout. Flat layout shows all file paths in a single list, tree layout groups files by directory. |
+ | `` / `` | 검색 시작 |  |
+ 
+@@ -355,6 +357,8 @@ If you would instead like to start an interactive rebase from the selected commi
+ | `` d `` | View 'discard changes' options | View options for discarding changes to the selected file. |
+ | `` g `` | View upstream reset options |  |
+ | `` D `` | Reset | View reset options for working tree (e.g. nuking the working tree). |
++| `` - `` | Collapse all files | Collapse all directories in the file tree. |
++| `` = `` | Expand all files | Expand all directories in the file tree. |
+ | `` ` `` | 파일 트리뷰로 전환 | Toggle file view between flat and tree layout. Flat layout shows all file paths in a single list, tree layout groups files by directory. |
+ | `` <c-t> `` | Open external diff tool (git difftool) |  |
+ | `` M `` | Git mergetool를 열기 | Run `git mergetool`. |
+diff --git a/docs/keybindings/Keybindings_nl.md b/docs/keybindings/Keybindings_nl.md
+index f63dc026..85c5eb02 100644
+--- a/docs/keybindings/Keybindings_nl.md
++++ b/docs/keybindings/Keybindings_nl.md
+@@ -75,6 +75,8 @@ _Legend: `<c-b>` means ctrl+b, `<a-b>` means alt+b, `B` means shift+b_
+ | `` d `` | Bekijk 'veranderingen ongedaan maken' opties | View options for discarding changes to the selected file. |
+ | `` g `` | Bekijk upstream reset opties |  |
+ | `` D `` | Reset | View reset options for working tree (e.g. nuking the working tree). |
++| `` - `` | Collapse all files | Collapse all directories in the file tree. |
++| `` = `` | Expand all files | Expand all directories in the file tree. |
+ | `` ` `` | Toggle bestandsboom weergave | Toggle file view between flat and tree layout. Flat layout shows all file paths in a single list, tree layout groups files by directory. |
+ | `` <c-t> `` | Open external diff tool (git difftool) |  |
+ | `` M `` | Open external merge tool | Run `git mergetool`. |
+@@ -135,6 +137,8 @@ _Legend: `<c-b>` means ctrl+b, `<a-b>` means alt+b, `B` means shift+b_
+ | `` <space> `` | Toggle bestand inbegrepen in patch | Toggle whether the file is included in the custom patch. See https://github.com/jesseduffield/lazygit#rebase-magic-custom-patches. |
+ | `` a `` | Toggle all files | Add/remove all commit's files to custom patch. See https://github.com/jesseduffield/lazygit#rebase-magic-custom-patches. |
+ | `` <enter> `` | Enter bestand om geselecteerde regels toe te voegen aan de patch | If a file is selected, enter the file so that you can add/remove individual lines to the custom patch. If a directory is selected, toggle the directory. |
++| `` - `` | Collapse all files | Collapse all directories in the file tree. |
++| `` = `` | Expand all files | Expand all directories in the file tree. |
+ | `` ` `` | Toggle bestandsboom weergave | Toggle file view between flat and tree layout. Flat layout shows all file paths in a single list, tree layout groups files by directory. |
+ | `` / `` | Start met zoeken |  |
+ 
+diff --git a/docs/keybindings/Keybindings_pl.md b/docs/keybindings/Keybindings_pl.md
+index 952cd083..c28ccb06 100644
+--- a/docs/keybindings/Keybindings_pl.md
++++ b/docs/keybindings/Keybindings_pl.md
+@@ -225,6 +225,8 @@ Jeśli chcesz zamiast tego rozpocząć interaktywny rebase od wybranego commita,
+ | `` d `` | Odrzuć | Wyświetl opcje odrzucania zmian w wybranym pliku. |
+ | `` g `` | Pokaż opcje resetowania do upstream |  |
+ | `` D `` | Reset | Wyświetl opcje resetu dla drzewa roboczego (np. zniszczenie drzewa roboczego). |
++| `` - `` | Collapse all files | Collapse all directories in the file tree. |
++| `` = `` | Expand all files | Expand all directories in the file tree. |
+ | `` ` `` | Przełącz widok drzewa plików | Przełącz widok plików między płaskim a drzewem. Płaski układ pokazuje wszystkie ścieżki plików na jednej liście, układ drzewa grupuje pliki według katalogów. |
+ | `` <c-t> `` | Otwórz zewnętrzne narzędzie różnic (git difftool) |  |
+ | `` M `` | Otwórz zewnętrzne narzędzie scalania | Uruchom `git mergetool`. |
+@@ -244,6 +246,8 @@ Jeśli chcesz zamiast tego rozpocząć interaktywny rebase od wybranego commita,
+ | `` <space> `` | Przełącz plik włączony w łatkę | Przełącz, czy plik jest włączony w niestandardową łatkę. Zobacz https://github.com/jesseduffield/lazygit#rebase-magic-custom-patches. |
+ | `` a `` | Przełącz wszystkie pliki | Dodaj/usuń wszystkie pliki commita do niestandardowej łatki. Zobacz https://github.com/jesseduffield/lazygit#rebase-magic-custom-patches. |
+ | `` <enter> `` | Wejdź do pliku / Przełącz zwiń katalog | Jeśli plik jest wybrany, wejdź do pliku, aby móc dodawać/usuwać poszczególne linie do niestandardowej łatki. Jeśli wybrany jest katalog, przełącz katalog. |
++| `` - `` | Collapse all files | Collapse all directories in the file tree. |
++| `` = `` | Expand all files | Expand all directories in the file tree. |
+ | `` ` `` | Przełącz widok drzewa plików | Przełącz widok plików między płaskim a drzewem. Płaski układ pokazuje wszystkie ścieżki plików na jednej liście, układ drzewa grupuje pliki według katalogów. |
+ | `` / `` | Szukaj w bieżącym widoku po tekście |  |
+ 
+diff --git a/docs/keybindings/Keybindings_ru.md b/docs/keybindings/Keybindings_ru.md
+index 2fa0a5d2..a1f60b76 100644
+--- a/docs/keybindings/Keybindings_ru.md
++++ b/docs/keybindings/Keybindings_ru.md
+@@ -269,6 +269,8 @@ If you would instead like to start an interactive rebase from the selected commi
+ | `` <space> `` | Переключить файлы включённые в патч | Toggle whether the file is included in the custom patch. See https://github.com/jesseduffield/lazygit#rebase-magic-custom-patches. |
+ | `` a `` | Переключить все файлы, включённые в патч | Add/remove all commit's files to custom patch. See https://github.com/jesseduffield/lazygit#rebase-magic-custom-patches. |
+ | `` <enter> `` | Введите файл, чтобы добавить выбранные строки в патч (или свернуть каталог переключения) | If a file is selected, enter the file so that you can add/remove individual lines to the custom patch. If a directory is selected, toggle the directory. |
++| `` - `` | Collapse all files | Collapse all directories in the file tree. |
++| `` = `` | Expand all files | Expand all directories in the file tree. |
+ | `` ` `` | Переключить вид дерева файлов | Toggle file view between flat and tree layout. Flat layout shows all file paths in a single list, tree layout groups files by directory. |
+ | `` / `` | Найти |  |
+ 
+@@ -349,6 +351,8 @@ If you would instead like to start an interactive rebase from the selected commi
+ | `` d `` | Просмотреть параметры «отмены изменении» | View options for discarding changes to the selected file. |
+ | `` g `` | Просмотреть параметры сброса upstream-ветки |  |
+ | `` D `` | Reset | View reset options for working tree (e.g. nuking the working tree). |
++| `` - `` | Collapse all files | Collapse all directories in the file tree. |
++| `` = `` | Expand all files | Expand all directories in the file tree. |
+ | `` ` `` | Переключить вид дерева файлов | Toggle file view between flat and tree layout. Flat layout shows all file paths in a single list, tree layout groups files by directory. |
+ | `` <c-t> `` | Open external diff tool (git difftool) |  |
+ | `` M `` | Открыть внешний инструмент слияния (git mergetool) | Run `git mergetool`. |
+diff --git a/docs/keybindings/Keybindings_zh-CN.md b/docs/keybindings/Keybindings_zh-CN.md
+index dd115890..ab7517ca 100644
+--- a/docs/keybindings/Keybindings_zh-CN.md
++++ b/docs/keybindings/Keybindings_zh-CN.md
+@@ -194,6 +194,8 @@ _图例：`<c-b>` 意味着ctrl+b, `<a-b>意味着Alt+b, `B` 意味着shift+b_
+ | `` <space> `` | 补丁中包含的切换文件 | 切换文件是否包含在自定义补丁中。请参阅 https://github.com/jesseduffield/lazygit#rebase-magic-custom-patches。 |
+ | `` a `` | 操作所有文件 | 添加或删除所有提交中的文件到自定义的补丁中。请参阅 https://github.com/jesseduffield/lazygit#rebase-magic-custom-patches。 |
+ | `` <enter> `` | 输入文件以将所选行添加到补丁中(或切换目录折叠) | 如果已选择一个文件，则Enter进入该文件，以便您可以向自定义补丁添加/删除单独的行。如果选择了目录，则切换目录。 |
++| `` - `` | Collapse all files | Collapse all directories in the file tree. |
++| `` = `` | Expand all files | Expand all directories in the file tree. |
+ | `` ` `` | 切换文件树视图 | 在平铺部署与树布局之间切换文件视图。平铺布局在一个列表中展示所有文件路径，树布局则根据目录分组展示。 |
+ | `` / `` | 开始搜索 |  |
+ 
+@@ -221,6 +223,8 @@ _图例：`<c-b>` 意味着ctrl+b, `<a-b>意味着Alt+b, `B` 意味着shift+b_
+ | `` d `` | 查看'放弃变更'选项 | 查看选中文件的放弃变更选项 |
+ | `` g `` | 查看上游重置选项 |  |
+ | `` D `` | 重置 | 查看工作树的重置选项（例如：清除工作树）。 |
++| `` - `` | Collapse all files | Collapse all directories in the file tree. |
++| `` = `` | Expand all files | Expand all directories in the file tree. |
+ | `` ` `` | 切换文件树视图 | 在平铺部署与树布局之间切换文件视图。平铺布局在一个列表中展示所有文件路径，树布局则根据目录分组展示。 |
+ | `` <c-t> `` | 使用外部差异比较工具(git difftool) |  |
+ | `` M `` | 打开外部合并工具(git mergetool) | 执行 `git mergetool`. |
+diff --git a/docs/keybindings/Keybindings_zh-TW.md b/docs/keybindings/Keybindings_zh-TW.md
+index 9ffc983d..d65412ca 100644
+--- a/docs/keybindings/Keybindings_zh-TW.md
++++ b/docs/keybindings/Keybindings_zh-TW.md
+@@ -218,6 +218,8 @@ If you would instead like to start an interactive rebase from the selected commi
+ | `` <space> `` | 切換檔案是否包含在補丁中 | Toggle whether the file is included in the custom patch. See https://github.com/jesseduffield/lazygit#rebase-magic-custom-patches. |
+ | `` a `` | 切換所有檔案是否包含在補丁中 | Add/remove all commit's files to custom patch. See https://github.com/jesseduffield/lazygit#rebase-magic-custom-patches. |
+ | `` <enter> `` | 輸入檔案以將選定的行添加至補丁（或切換目錄折疊） | If a file is selected, enter the file so that you can add/remove individual lines to the custom patch. If a directory is selected, toggle the directory. |
++| `` - `` | Collapse all files | Collapse all directories in the file tree. |
++| `` = `` | Expand all files | Expand all directories in the file tree. |
+ | `` ` `` | 顯示檔案樹狀視圖 | Toggle file view between flat and tree layout. Flat layout shows all file paths in a single list, tree layout groups files by directory. |
+ | `` / `` | 搜尋 |  |
+ 
+@@ -316,6 +318,8 @@ If you would instead like to start an interactive rebase from the selected commi
+ | `` d `` | 捨棄 | 檢視選中變動進行捨棄復原 |
+ | `` g `` | 檢視遠端重設選項 |  |
+ | `` D `` | 重設 | View reset options for working tree (e.g. nuking the working tree). |
++| `` - `` | Collapse all files | Collapse all directories in the file tree. |
++| `` = `` | Expand all files | Expand all directories in the file tree. |
+ | `` ` `` | 顯示檔案樹狀視圖 | Toggle file view between flat and tree layout. Flat layout shows all file paths in a single list, tree layout groups files by directory. |
+ | `` <c-t> `` | 開啟外部差異工具 (git difftool) |  |
+ | `` M `` | 開啟外部合併工具 | 執行 `git mergetool`。 |
+diff --git a/pkg/config/user_config.go b/pkg/config/user_config.go
+index 36dc02a6..3a3fed02 100644
+--- a/pkg/config/user_config.go
++++ b/pkg/config/user_config.go
+@@ -453,6 +453,8 @@ type KeybindingFilesConfig struct {
+ 	OpenMergeTool            string `yaml:"openMergeTool"`
+ 	OpenStatusFilter         string `yaml:"openStatusFilter"`
+ 	CopyFileInfoToClipboard  string `yaml:"copyFileInfoToClipboard"`
++	CollapseAll              string `yaml:"collapseAll"`
++	ExpandAll                string `yaml:"expandAll"`
+ }
+ 
+ type KeybindingBranchesConfig struct {
+@@ -895,6 +897,8 @@ func GetDefaultConfig() *UserConfig {
+ 				OpenStatusFilter:         "<c-b>",
+ 				ConfirmDiscard:           "x",
+ 				CopyFileInfoToClipboard:  "y",
++				CollapseAll:              "-",
++				ExpandAll:                "=",
+ 			},
+ 			Branches: KeybindingBranchesConfig{
+ 				CopyPullRequestURL:     "<c-y>",
+diff --git a/pkg/gui/controllers/commits_files_controller.go b/pkg/gui/controllers/commits_files_controller.go
+index 462b9c3e..7bea146e 100644
+--- a/pkg/gui/controllers/commits_files_controller.go
++++ b/pkg/gui/controllers/commits_files_controller.go
+@@ -103,6 +103,20 @@ func (self *CommitFilesController) GetKeybindings(opts types.KeybindingsOpts) []
+ 			Description:       self.c.Tr.EnterCommitFile,
+ 			Tooltip:           self.c.Tr.EnterCommitFileTooltip,
+ 		},
++		{
++			Key:               opts.GetKey(opts.Config.Files.CollapseAll),
++			Handler:           self.collapseAll,
++			Description:       self.c.Tr.CollapseAll,
++			Tooltip:           self.c.Tr.CollapseAllTooltip,
++			GetDisabledReason: self.require(self.treeShown),
++		},
++		{
++			Key:               opts.GetKey(opts.Config.Files.ExpandAll),
++			Handler:           self.expandAll,
++			Description:       self.c.Tr.ExpandAll,
++			Tooltip:           self.c.Tr.ExpandAllTooltip,
++			GetDisabledReason: self.require(self.treeShown),
++		},
+ 		{
+ 			Key:         opts.GetKey(opts.Config.Files.ToggleTreeView),
+ 			Handler:     self.toggleTreeView,
+@@ -394,6 +408,25 @@ func (self *CommitFilesController) handleToggleCommitFileDirCollapsed(node *file
+ }
+ 
+ // NOTE: this is very similar to handleToggleFileTreeView, could be DRY'd with generics
++func (self *CommitFilesController) treeShown() *types.DisabledReason {
++	if self.context().CommitFileTreeViewModel.InTreeMode() {
++		return nil
++	}
++	return &types.DisabledReason{Text: self.c.Tr.DisabledInFlatView}
++}
++
++func (self *CommitFilesController) collapseAll() error {
++	self.context().CommitFileTreeViewModel.CollapseAll()
++	self.c.PostRefreshUpdate(self.context())
++	return nil
++}
++
++func (self *CommitFilesController) expandAll() error {
++	self.context().CommitFileTreeViewModel.ExpandAll()
++	self.c.PostRefreshUpdate(self.context())
++	return nil
++}
++
+ func (self *CommitFilesController) toggleTreeView() error {
+ 	self.context().CommitFileTreeViewModel.ToggleShowTree()
+ 
+diff --git a/pkg/gui/controllers/files_controller.go b/pkg/gui/controllers/files_controller.go
+index 1ea20eeb..eaaf3ec6 100644
+--- a/pkg/gui/controllers/files_controller.go
++++ b/pkg/gui/controllers/files_controller.go
+@@ -162,6 +162,20 @@ func (self *FilesController) GetKeybindings(opts types.KeybindingsOpts) []*types
+ 			OpensMenu:       true,
+ 			DisplayOnScreen: true,
+ 		},
++		{
++			Key:               opts.GetKey(opts.Config.Files.CollapseAll),
++			Handler:           self.collapseAll,
++			Description:       self.c.Tr.CollapseAll,
++			Tooltip:           self.c.Tr.CollapseAllTooltip,
++			GetDisabledReason: self.require(self.treeShown),
++		},
++		{
++			Key:               opts.GetKey(opts.Config.Files.ExpandAll),
++			Handler:           self.expandAll,
++			Description:       self.c.Tr.ExpandAll,
++			Tooltip:           self.c.Tr.ExpandAllTooltip,
++			GetDisabledReason: self.require(self.treeShown),
++		},
+ 		{
+ 			Key:         opts.GetKey(opts.Config.Files.ToggleTreeView),
+ 			Handler:     self.toggleTreeView,
+@@ -960,6 +974,25 @@ func (self *FilesController) handleToggleDirCollapsed() error {
+ 	return nil
+ }
+ 
++func (self *FilesController) treeShown() *types.DisabledReason {
++	if self.context().FileTreeViewModel.InTreeMode() {
++		return nil
++	}
++	return &types.DisabledReason{Text: self.c.Tr.DisabledInFlatView}
++}
++
++func (self *FilesController) collapseAll() error {
++	self.context().FileTreeViewModel.CollapseAll()
++	self.c.PostRefreshUpdate(self.context())
++	return nil
++}
++
++func (self *FilesController) expandAll() error {
++	self.context().FileTreeViewModel.ExpandAll()
++	self.c.PostRefreshUpdate(self.context())
++	return nil
++}
++
+ func (self *FilesController) toggleTreeView() error {
+ 	self.context().FileTreeViewModel.ToggleShowTree()
+ 
+diff --git a/pkg/gui/filetree/collapse_all.go b/pkg/gui/filetree/collapse_all.go
+new file mode 100644
+index 00000000..2eb80fc1
+--- /dev/null
++++ b/pkg/gui/filetree/collapse_all.go
+@@ -0,0 +1,24 @@
++package filetree
++
++import "strings"
++
++type pathNode interface {
++	IsFile() bool
++	GetPath() string
++}
++
++// setAllDirsCollapsed brings every directory among `nodes` into the given state and reports whether it changed any.
++func setAllDirsCollapsed[N pathNode](nodes []N, paths *CollapsedPaths, collapsed bool) bool {
++	changed := false
++	for _, node := range nodes {
++		if !node.IsFile() && paths.IsCollapsed(node.GetPath()) != collapsed {
++			paths.ToggleCollapsed(node.GetPath())
++			changed = true
++		}
++	}
++	return changed
++}
++
++func topLevelDir(path string) string {
++	return strings.Split(path, "/")[0]
++}
+diff --git a/pkg/gui/filetree/commit_file_tree_view_model.go b/pkg/gui/filetree/commit_file_tree_view_model.go
+index cbbb2fbc..91de166b 100644
+--- a/pkg/gui/filetree/commit_file_tree_view_model.go
++++ b/pkg/gui/filetree/commit_file_tree_view_model.go
+@@ -160,3 +160,24 @@ func (self *CommitFileTreeViewModel) ToggleShowTree() {
+ 		self.SetSelection(index)
+ 	}
+ }
++
++func (self *CommitFileTreeViewModel) CollapseAll() { self.setAllCollapsed(true) }
++
++func (self *CommitFileTreeViewModel) ExpandAll() { self.setAllCollapsed(false) }
++
++func (self *CommitFileTreeViewModel) setAllCollapsed(collapsed bool) {
++	selected := self.GetSelected()
++	// expanding reveals directories that were hidden inside collapsed ones, so repeat until nothing changes
++	for setAllDirsCollapsed(self.GetAllItems(), self.CollapsedPaths(), collapsed) && !collapsed {
++	}
++	if selected == nil {
++		return
++	}
++	path := selected.GetPath()
++	if collapsed {
++		path = topLevelDir(path)
++	}
++	if index, found := self.GetIndexForPath(path); found {
++		self.SetSelectedLineIdx(index)
++	}
++}
+diff --git a/pkg/gui/filetree/file_tree_view_model.go b/pkg/gui/filetree/file_tree_view_model.go
+index 25b3d0ed..fa91ba49 100644
+--- a/pkg/gui/filetree/file_tree_view_model.go
++++ b/pkg/gui/filetree/file_tree_view_model.go
+@@ -190,3 +190,24 @@ func (self *FileTreeViewModel) ToggleShowTree() {
+ 		self.SetSelectedLineIdx(index)
+ 	}
+ }
++
++func (self *FileTreeViewModel) CollapseAll() { self.setAllCollapsed(true) }
++
++func (self *FileTreeViewModel) ExpandAll() { self.setAllCollapsed(false) }
++
++func (self *FileTreeViewModel) setAllCollapsed(collapsed bool) {
++	selected := self.GetSelected()
++	// expanding reveals directories that were hidden inside collapsed ones, so repeat until nothing changes
++	for setAllDirsCollapsed(self.GetAllItems(), self.CollapsedPaths(), collapsed) && !collapsed {
++	}
++	if selected == nil {
++		return
++	}
++	path := selected.GetPath()
++	if collapsed {
++		path = topLevelDir(path)
++	}
++	if index, found := self.GetIndexForPath(path); found {
++		self.SetSelectedLineIdx(index)
++	}
++}
+diff --git a/pkg/i18n/english.go b/pkg/i18n/english.go
+index 8c8ce995..9a652977 100644
+--- a/pkg/i18n/english.go
++++ b/pkg/i18n/english.go
+@@ -256,6 +256,11 @@ type TranslationSet struct {
+ 	NoBranchOnRemote                      string
+ 	Fetch                                 string
+ 	FetchTooltip                          string
++	CollapseAll                           string
++	CollapseAllTooltip                    string
++	ExpandAll                             string
++	ExpandAllTooltip                      string
++	DisabledInFlatView                    string
+ 	FileEnter                             string
+ 	FileEnterTooltip                      string
+ 	FileStagingRequirements               string
+@@ -1253,6 +1258,11 @@ func EnglishTranslationSet() *TranslationSet {
+ 		NoBranchOnRemote:                     `This branch doesn't exist on remote. You need to push it to remote first.`,
+ 		Fetch:                                `Fetch`,
+ 		FetchTooltip:                         "Fetch changes from remote.",
++		CollapseAll:                          `Collapse all files`,
++		CollapseAllTooltip:                   `Collapse all directories in the file tree.`,
++		ExpandAll:                            `Expand all files`,
++		ExpandAllTooltip:                     `Expand all directories in the file tree.`,
++		DisabledInFlatView:                   `Not available in flat view`,
+ 		FileEnter:                            `Stage lines / Collapse directory`,
+ 		FileEnterTooltip:                     "If the selected item is a file, focus the staging view so you can stage individual hunks/lines. If the selected item is a directory, collapse/expand it.",
+ 		FileStagingRequirements:              `Can only stage individual lines for tracked files`,
+diff --git a/schema/config.json b/schema/config.json
+index ee6f37ca..69a7a504 100644
+--- a/schema/config.json
++++ b/schema/config.json
+@@ -1456,6 +1456,14 @@
+             "copyFileInfoToClipboard": {
+               "type": "string",
+               "default": "y"
++            },
++            "collapseAll": {
++              "type": "string",
++              "default": "-"
++            },
++            "expandAll": {
++              "type": "string",
++              "default": "="
+             }
+           },
+           "additionalProperties": false,

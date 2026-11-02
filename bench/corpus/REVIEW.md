@@ -103,6 +103,69 @@ The rounds below reviewed an earlier convenience sample under the earlier rules.
 5. Fast, sparse suites and host-conditioned sampling — reported as limitations (§12); not changed (it would change the frozen rule).
 6. H1 inconclusive with two scenarios and the stale §12 sample-size sentence — the verdict rule stays; the explanatory text is corrected with the preregistration amendment (07-08), outside this task's scope.
 
+## Model check of the task texts and hidden acceptance (07-13, D-06)
+
+**Reviewer:** Codex CLI 0.164.0, model `gpt-6-astra` (OpenAI), fresh context, read-only sandbox, no network. **Kind: model check** (§3.4, §12). **Session:** `01a19dc2-6e81-70d1-b564-d7b647b3f5b2` (2026-11-02), one round, no re-review.
+**Material:** PROTOCOL.md, `manifest.json` (task texts and `steps[]`), every acceptance source (`spec.json`, hidden tests), the built scripts, the alternative implementations, the reference commits with full diffs and the start views; `calibrate.mjs` and `build-acceptance.mjs`.
+
+### Findings (verbatim)
+
+> Verdict: blocking findings
+>
+> Read-only, offline review. All six generated scripts match their source specs and hidden tests. Full calibration was not rerun. Hidden-test basenames cited below are unique under `acceptance/`.
+>
+> | Task | Coupling | Sufficiency | One-line reason |
+> |---|---|---|---|
+> | lazygit-single1 | ok | ok | Exercises public URL generation; additional expectations follow existing behavior. |
+> | lazygit-single2 | ok | ok | Covers the reported failure, but leaves required fast-forward preservation cases untested. |
+> | lazygit-scenario | ok | ok | Tested details are stated; nested collapse state, configuration loading and documentation remain weakly checked. |
+> | anything-llm-single1 | coupled | gap | Assumes normalization occurs in the final route handler; accepts incomplete attachment persistence. |
+> | anything-llm-single2 | ok | ok | Tests the stated validation contract, but only one required property. |
+> | anything-llm-scenario | coupled | gap | Constrains raw `fetch` invocation details; misses explicit request requirements. |
+>
+> 1. **Blocking — unstated implementation constraints reject correct solutions.**  
+>    `acceptance-openai-endpoint.test.js:21` registers only `rest.at(-1)` and invokes it directly. A correct endpoint that normalizes content in preceding Express middleware fails this harness. `acceptance-youtube-transcript.test.js:65` assumes `fetch(url, options)`; a correct `fetch(new Request(url, options))` fails. Lines 82–86 additionally require exactly one call, literal uppercase `"POST"` and directly accessible JSON request options. The prompt specifies HTTP behavior, not these invocation details. These are the additional tested constraints not derivable from the requirements and start trees. **Fix:** execute the complete route middleware chain; normalize intercepted requests through `Request`, inspect their HTTP semantics, and remove the unstated call-count restriction.
+>
+> 2. **Blocking — implementation hints are embedded in task requirements.**  
+>    `manifest.json:102` prescribes the new `helpers.js`, helper names, call expressions and internal propagation route, closely reproducing `tasks/mintplex-labs-anything-llm-single1.txt:415` and `:471`. This supplies substantial solution structure beyond behavioral requirements. Likewise, `manifest.json:51` supplies new Go field names copied from `tasks/jesseduffield-lazygit-scenario.txt:195`; the configured-key test uses those fields directly. Stating these details prevents a sufficiency gap but does not eliminate leakage. **Fix:** retain observable content conversion, persistence and YAML configuration requirements; remove new internal names/layout prescriptions and test through the endpoint/configuration interfaces.
+>
+> 3. **Blocking — multimodal acceptance admits incomplete persistence.**  
+>    `acceptance-openai-multimodal.test.js:55` and `:74` exercise only ordinary chat mode. The passing `acceptance/mintplex-labs-anything-llm/single1.alt/final-saves-only.patch:86` adds attachments only to final successful saves. Existing query-refusal saves remain without attachments (`views/mintplex-labs-anything-llm/server/utils/chats/openaiCompatible.js:34`, `:126`, `:246`), contradicting `manifest.json:102`. In-memory execution confirmed this omission for both chat methods. Endpoint tests also assert collaborator calls without checking successful HTTP responses. **Fix:** cover both query-refusal branches in both methods, including default empty attachments, and assert endpoint response success.
+>
+> 4. **Blocking — YouTube acceptance admits an explicitly noncompliant alternative.**  
+>    `manifest.json:85` requires the previous User-Agent and exact client version. The passing `acceptance/mintplex-labs-anything-llm/scenario.alt/single-function-protobuf.patch:103` omits User-Agent entirely; in-memory inspection confirmed it. `acceptance-youtube-transcript.test.js:85` checks only Content-Type, and `:88` accepts any string version. At `:129`, an error containing only `[YoutubeTranscript]` passes despite the requirement to explain why transcript data is missing. **Fix:** assert User-Agent, exact version and a meaningful missing-transcript reason; repair and recalibrate the alternative.
+>
+> 5. **Should-fix — tree tests permit partial implementations.**  
+>    `acceptance_collapse_expand_files.go:37` and `acceptance_collapse_expand_commit_files.go:40` collapse, then immediately expand everything. Collapsing only root directories can pass without collapsing descendants. `acceptance_collapse_configured_keys.go:13` bypasses YAML loading; `acceptance_collapse_in_flat_view.go:21` covers only Files, not CommitFiles. Required documentation is unchecked: `acceptance/jesseduffield-lazygit/src/scenario/spec.json:5` generates only the integration-test list. **Fix:** reopen a root after collapse and inspect descendants; test mixed initial states, YAML-configured keys and flat CommitFiles; verify required documentation separately.
+>
+> 6. **Should-fix — function validation has avoidable coverage holes.**  
+>    `acceptance-untooled.test.js:6` defines only one required property. An implementation checking only the first required property passes. There is also no nonempty, entirely optional schema, and reason/null assertions are inconsistent across outcomes. **Fix:** add multiple required properties with each independently missing, optional-only schemas, present falsy values, and reason assertions for every result category.
+>
+> 7. **Should-fix — restored regression tests do not cover required fast-forward preservation.**  
+>    All lazygit specs use `go test ./... -short` (`acceptance/jesseduffield-lazygit/src/single2/spec.json:4`). This deliberately skips integration tests (`views/jesseduffield-lazygit/pkg/integration/clients/go_test.go:24`), including the existing current-worktree fast-forward case (`views/jesseduffield-lazygit/pkg/integration/tests/worktree/fast_forward_worktree_branch.go:40`). The hidden test exercises only the linked branch. **Fix:** explicitly test current-worktree and unchecked-out branches; describe regression coverage as the repository’s unit suite, not its complete suite.
+>
+> 8. **Should-fix — test restoration has a renamed-file loophole, and test-authoring requirements are unchecked.**  
+>    `build-acceptance.mjs:31` removes additions classified `A` and untracked files. A tracked test rename classified `R` survives while the original is restored, so an agent-added test path can still run. Separately, removing new tests means “add tests” is not verified. The YouTube reference adds a live-network test (`tasks/mintplex-labs-anything-llm-scenario.txt:21`), contrary to the fake-fetch requirement in `manifest.json:87`. **Fix:** remove every discovered test path absent from the start inventory; audit required test additions separately without treating their execution as acceptance evidence.
+>
+> 9. **Note — equal requirements hold structurally; offline timing remains unverified.**  
+>    Both scenarios’ full requirements are their joined `steps[]` (`manifest.json:48`, `:84`), so subsequent step texts are verbatim portions as required by `PROTOCOL.md:193`. No additional leakage was found in the other task texts. The supplied material contains no suite timing measurements or network-isolation evidence. `calibrate.mjs:19` allows ten minutes and `:33` does not establish network isolation; `GOPROXY=off` alone does not isolate test networking. The two-minute criterion concerns repository-suite selection (`PROTOCOL.md:79`), so the ten-minute grading timeout is not itself a violation. **Fix:** attach the frozen suite recipe and cold-cache, offline timing evidence; calibration exit codes alone do not establish this criterion.
+
+### Author responses
+
+Every finding was acted on in 07-13 before the calibration recorded in `README.md`; there was no second review round, so the fixes themselves are unreviewed.
+
+1. Coupling to call shapes — fixed: the endpoint test runs the route's whole middleware chain and the real chat code (only models, LLM, vector DB and telemetry are replaced); the YouTube fake `fetch` normalises every call through `Request` and no longer counts calls.
+2. Hints in task texts — fixed for anything-llm-single1: the text now states observable behaviour only (prompt, attachment format of the app, what reaches the LLM and is stored); the helper module and function names are gone and the test goes through the endpoint. lazygit-scenario no longer names Go fields; the configured-keys test sets the YAML keys (`keybinding.files.collapseAll` / `expandAll`) through the YAML decoder. The attachment format and `uploaded_image_<n>` naming, and the YouTube endpoint contract, stay in the texts: they are external or stored contracts a correct solution cannot guess.
+3. Incomplete persistence — fixed: the test covers the query-mode refusal saves of both chat functions and checks the HTTP response; the earlier alternative (final saves only) now fails and was replaced by one that stores attachments in every save.
+4. Non-compliant YouTube alternative — fixed: the test checks the exact User-Agent, the exact client version and that the missing-transcript error says why; the alternative was corrected to send the User-Agent.
+5. Partial tree implementations — fixed in part: after collapse-all a root is reopened to show that its subdirectories are collapsed too (Files and commit files), flat view is checked in the commit files view as well, and the configured keys go through YAML. Generated documentation is not checked: reported as a limitation.
+6. Function validation coverage — fixed: several required properties each missing, falsy values, an optional-only schema, and reason checks for every rejection kind.
+7. Fast-forward preservation — fixed: the hidden test also fast-forwards a branch checked out nowhere and the current branch, and the behavioural run includes the repository's existing integration test `worktree/fast_forward_worktree_branch`. The regression part is the repository's unit suite (`go test ./... -short`), as frozen in `suites.json`; integration tests are not part of it.
+8. Renamed tests — fixed: the built scripts now remove every test path that is not in the start commit (added, renamed, copied, untracked or ignored) before restoring the start's tests; test in `test/bench-calibrate.test.mjs`. That a run "adds tests" is not graded: limitation.
+9. Offline / timing — the suites' offline timing is the 07-14 measurement (`suites.jsonl`, both under 2 minutes); calibration does not isolate the network and allows 10 minutes per grading run. Reported as a limitation; network isolation of grading belongs to the harness (§5, 07-08 pilot).
+
+Further limitations from calibration: the lazygit unit suite was flaky once under load (a full calibration run failed lazygit-single1's alternative; the same copy passed when rerun by hand and in a rerun of that task), and anything-llm's original suite is one test file, so its regression check is weak (07-14 model check, finding 5).
+
 ## Disclosures (earlier sample)
 
 - Discovery is a convenience sample. Round 1 lists repositories the author knew per stack. Round 2 (web) was added after the round-1 fixes emptied the web slot.
