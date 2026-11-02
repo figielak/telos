@@ -1,0 +1,45 @@
+{
+  "repetitions": 1,
+  "repos": [
+    {
+      "id": "jesseduffield-lazygit",
+      "url": "https://github.com/jesseduffield/lazygit.git"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "lazygit-pilot-single",
+      "repo": "jesseduffield-lazygit",
+      "type": "single",
+      "start": "1e1fba4ce6dcc54e9a24bccb300b5b5965f4ffbc",
+      "reference": "ab7b5f6d84a156ecdb157cf3b28f60ab6b340951",
+      "prompt": "In lazygit, undoing a commit (the undo key, z, right after making a commit) performs a hard reset, which also throws away the commit's changes. Make undoing a commit a soft reset instead: the commit disappears and its changes stay in the working tree as staged changes, while other unstaged changes are kept as they were. The confirmation of that undo has the title \"Undo\" and asks \"Are you sure you want to soft reset to '<hash>'?\". Undoing a rebase stays a hard reset. When an undo or redo needs to auto-stash local changes for a hard reset or a checkout, do it without asking an extra question: the hard reset confirmation keeps the text \"Are you sure you want to hard reset to '<hash>'? An auto-stash will be performed if necessary.\" and the checkout confirmation becomes \"Are you sure you want to checkout '<ref>'? An auto-stash will be performed if necessary.\" Redo after an undone commit must restore the commit. Add an integration test.",
+      "expectedPaths": [
+        "pkg/gui/controllers/",
+        "pkg/i18n/",
+        "pkg/integration/tests/"
+      ],
+      "acceptance": "jesseduffield-lazygit/acceptance/pilot-single.mjs",
+      "b": "jesseduffield-lazygit/1e1fba4ce6dcc54e9a24bccb300b5b5965f4ffbc/CLAUDE.md"
+    },
+    {
+      "id": "lazygit-pilot-scenario",
+      "repo": "jesseduffield-lazygit",
+      "type": "multi",
+      "start": "1e1fba4ce6dcc54e9a24bccb300b5b5965f4ffbc",
+      "reference": "16f5348790223cdf6cdd44589bd5fad7b3484bb2",
+      "steps": [
+        "Make lazygit reject invalid keys in the keybinding section of the user config. `UserConfig.Validate()` must return an error for every keybinding whose key is neither empty, `<disabled>`, a single character, nor one of the special key names lazygit understands (the names listed in docs/keybindings/Custom_Keybindings.md, such as `<c-c>` or `<f5>`, matched case-insensitively). The error reads `Unrecognized key '<key>' for keybinding '<path>'. For permitted values see <link to Custom_Keybindings.md>`, where <path> is the Go field path of the setting, for example `Universal.Quit` or `Files.CommitChanges`, and entries of list settings are indexed, for example `Universal.JumpToBlock[4]`.",
+        "Also reject a keybinding.universal.jumpToBlock list that does not have exactly 5 entries, with the error `keybinding.universal.jumpToBlock must have 5 elements; found <n>.`, and check the key of every custom command the same way, with the error `Unrecognized key '<key>' for custom command. For permitted values see <link to Custom_Keybindings.md>`.",
+        "The special key names must come from a single table shared by the keybinding code and the validation, and docs/keybindings/Custom_Keybindings.md must list every one of them (it currently misses `<s-up>`, `<s-down>`, `<backtab>` and `<a-enter>`). Add unit tests."
+      ],
+      "expectedPaths": [
+        "pkg/config/",
+        "pkg/gui/keybindings/",
+        "docs/keybindings/"
+      ],
+      "acceptance": "jesseduffield-lazygit/acceptance/pilot-scenario.mjs",
+      "b": "jesseduffield-lazygit/1e1fba4ce6dcc54e9a24bccb300b5b5965f4ffbc/CLAUDE.md"
+    }
+  ]
+}
