@@ -2,7 +2,7 @@
 id: 07-14
 title: "Measured selection, B files and model check"
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [07-07, 07-15]
@@ -43,16 +43,16 @@ Run the rules frozen in 07-07 once, from scratch: measure the suites of the qual
 - Run `npm test`.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `node bench/select.mjs --manifest bench/corpus --check-b` → exit 0
-- [ ] bench/corpus/REVIEW.md names the reviewer, its kind and its findings
-- [ ] `npm test` → exit 0
+- [x] all listed tests pass
+- [x] `node bench/select.mjs --manifest bench/corpus --check-b` → exit 0
+- [x] bench/corpus/REVIEW.md names the reviewer, its kind and its findings
+- [x] `npm test` → exit 0
 
 ## Result
 <!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
      last line always: "Deviations: none" or "Deviations: path — why" -->
-BLOCKED (D-04): the frozen rules leave the python slot empty — `select.mjs` stops with "no repository qualifies for slot python". Needs a user decision (amendment: larger pool or host toolchain); no selection.json, B files or model check yet.
-Built: suite recipes for the 17 candidates that pass static + history rules, 31 measure-suite.sh runs in suites.jsonl (go would be lazygit 21 s, web anything-llm 2 s), `--check-b` now also requires positive b-effort.json minutes per selected start; README row updated.
-Tests: 42 in test/bench-select.test.mjs (2 new, 2 updated), npm test 719/719 green.
-Surprises: first pass measured 10 candidates at the wrong start; four recipes and two host failures (tmp quota, OOM) needed reruns — all disclosed in bench/corpus/REVIEW.md as deviations from D-04.
+Built: 17 candidates measured (31 runs in suites.jsonl); after amendment 3 (07-15) selection.json picks lazygit (go, 21 s) and anything-llm (web, 2 s), python unfilled, both pilotStart null. B files by fresh subagents from history-stripped views: 378 / 361 words, 0.75 / 0.44 min in b-effort.json. `--check-b` also requires B minutes.
+Model check: Codex gpt-6-astra, session 01a19d5d-6b63-7a61-9215-a63296bac79a, verdict no blocking findings, 6/6 tasks ok; 3 should-fix + 3 notes answered in REVIEW.md (B not edited per D-10; pilot, acceptance and H1 wording forwarded to 07-08/07-13).
+Tests: 45 in test/bench-select.test.mjs; npm test 722/722.
+Surprises: first blocked on an empty python slot (resolved by 07-15); 10 candidates first measured at the wrong start, four recipes corrected, two host failures (tmp quota, OOM) — disclosed in REVIEW.md.
 Deviations: none

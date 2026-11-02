@@ -1,0 +1,633 @@
+{
+  "rule": "bench/PROTOCOL.md §3.2–§3.5",
+  "repos": [
+    {
+      "slot": "go",
+      "id": "jesseduffield-lazygit",
+      "url": "https://github.com/jesseduffield/lazygit.git",
+      "stack": "go",
+      "start": "1e1fba4ce6dcc54e9a24bccb300b5b5965f4ffbc",
+      "pilotStart": null,
+      "singles": [
+        "1b0d3829f8e9cc7bdbeecf4b1232a38138c78585",
+        "5e9ba82d7bcdfdc873015f24a0817378e2fa4788"
+      ],
+      "scenario": "43106b6c7fbe8c69cebb02f8fc80cb060faddeee"
+    },
+    {
+      "slot": "web",
+      "id": "mintplex-labs-anything-llm",
+      "url": "https://github.com/Mintplex-Labs/anything-llm.git",
+      "stack": "javascript",
+      "start": "89320588f3b15e8b500d2929ca4b396414512347",
+      "pilotStart": null,
+      "singles": [
+        "31a8ead8235551d767252f31e7d0df92660ec0f4",
+        "a0af24624d1aa2f1b80e873f716f78fecc0a72fa"
+      ],
+      "scenario": "d0978fa363a255f88627d7dfedd67b0b436a85bb"
+    }
+  ],
+  "unfilled": [
+    {
+      "slot": "python",
+      "reason": "no repository qualifies (PROTOCOL §3.2)"
+    }
+  ],
+  "excluded": [
+    {
+      "kind": "commit",
+      "id": "jesseduffield-lazygit@2d193cb296319cad22a8f1ac50d13f87008654ce",
+      "reason": "other: does not apply",
+      "detail": ""
+    },
+    {
+      "kind": "commit",
+      "id": "jesseduffield-lazygit@44395319062ef821c2800a8c98bcbe9e383aa380",
+      "reason": "other: task quota not derivable from the following commits",
+      "detail": ""
+    },
+    {
+      "kind": "commit",
+      "id": "jesseduffield-lazygit@9e455f427c2c5d56b4337f7538ffa6eda1ee33c8",
+      "reason": "other: task quota not derivable from the following commits",
+      "detail": ""
+    },
+    {
+      "kind": "commit",
+      "id": "jesseduffield-lazygit@cb2b5c37387b5dc44a802ad92ab7473d8d7e5374",
+      "reason": "other: task quota not derivable from the following commits",
+      "detail": ""
+    },
+    {
+      "kind": "commit",
+      "id": "jesseduffield-lazygit@cd2286276c7154bd125b64ee0df4c8a83aca82cc",
+      "reason": "other: task quota not derivable from the following commits",
+      "detail": ""
+    },
+    {
+      "kind": "commit",
+      "id": "mintplex-labs-anything-llm@2c19dd09ed9fb07718d255ea04e07d7b9523342a",
+      "reason": "other: does not apply",
+      "detail": ""
+    },
+    {
+      "kind": "commit",
+      "id": "mintplex-labs-anything-llm@4300639087d38c50f377fc34a2d74857e6c7f7c3",
+      "reason": "other: task quota not derivable from the following commits",
+      "detail": ""
+    },
+    {
+      "kind": "commit",
+      "id": "mintplex-labs-anything-llm@962c96a7b4a08b15195e27d383ed93e83809a969",
+      "reason": "other: task quota not derivable from the following commits",
+      "detail": ""
+    },
+    {
+      "kind": "commit",
+      "id": "mintplex-labs-anything-llm@cd34063111ba2096fefb433422f2561cbe232d8e",
+      "reason": "other: task quota not derivable from the following commits",
+      "detail": ""
+    },
+    {
+      "kind": "commit",
+      "id": "mintplex-labs-anything-llm@d52249aff830b382812f6f4cb803e51b309f9c60",
+      "reason": "other: task quota not derivable from the following commits",
+      "detail": ""
+    },
+    {
+      "kind": "commit",
+      "id": "mintplex-labs-anything-llm@fe1dfb1fdea97fe1abbd29d97691266d84512095",
+      "reason": "other: does not apply",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "3b1b-manim",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "adam-p-markdown-here",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "addyosmani-agent-skills",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "affaan-m-ecc",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "airbnb-javascript",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "alibaba-open-code-review",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "anuraghazra-github-readme-stats",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "avelino-awesome-go",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "axios-axios",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "browser-use-browser-use",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "bytedance-deer-flow",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "caddyserver-caddy",
+      "reason": "other: suite not green at the earliest usable start",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "career-ops-hq-career-ops",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "chartjs-chart-js",
+      "reason": "other: no start candidate yields the §3.5 task quota",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "cli-cli",
+      "reason": "network tests",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "d4vinci-scrapling",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "deepseek-ai-deepseek-v3",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "dietrichgebert-ponytail",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "django-django",
+      "reason": "too large",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "etcd-io-etcd",
+      "reason": "other: not selected, slower suite than jesseduffield-lazygit",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "expressjs-express",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "fastapi-fastapi",
+      "reason": "other: no start candidate yields the §3.5 task quota",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "fatedier-frp",
+      "reason": "other: suite not green at the earliest usable start",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "gin-gonic-gin",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "github-spec-kit",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "go-gitea-gitea",
+      "reason": "too large",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "gogs-gogs",
+      "reason": "other: no start candidate yields the §3.5 task quota",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "gohugoio-hugo",
+      "reason": "other: suite not green at the earliest usable start",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "golang-go",
+      "reason": "too large",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "graphify-labs-graphify",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "gsd-build-get-shit-done",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "hakimel-reveal-js",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "harry0703-moneyprinterturbo",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "home-assistant-core",
+      "reason": "too large",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "huggingface-transformers",
+      "reason": "too large",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "infiniflow-ragflow",
+      "reason": "other: no start candidate yields the §3.5 task quota",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "jesseduffield-lazydocker",
+      "reason": "other: no start candidate yields the §3.5 task quota",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "jquery-jquery",
+      "reason": "other: no start candidate yields the §3.5 task quota",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "juliangarnier-anime",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "juliusbrussee-caveman",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "junegunn-fzf",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "kubernetes-kubernetes",
+      "reason": "too large",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "langchain-ai-langchain",
+      "reason": "too large",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "langflow-ai-langflow",
+      "reason": "other: suite not green at the earliest usable start",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "leonardomso-33-js-concepts",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "leonxlnx-taste-skill",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "louislam-uptime-kuma",
+      "reason": "other: suite not green at the earliest usable start",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "microsoft-markitdown",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "microsoft-typescript",
+      "reason": "too large",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "microsoft-web-dev-for-beginners",
+      "reason": "other: no start candidate yields the §3.5 task quota",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "moby-moby",
+      "reason": "too large",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "mrdoob-three-js",
+      "reason": "too large",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "mudler-localai",
+      "reason": "other: no start candidate yields the §3.5 task quota",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "mui-material-ui",
+      "reason": "too large",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "nektos-act",
+      "reason": "other: suite not green at the earliest usable start",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "nextlevelbuilder-ui-ux-pro-max-skill",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "nousresearch-hermes-agent",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "ollama-ollama",
+      "reason": "other: suite not green at the earliest usable start",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "openai-whisper",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "paddlepaddle-paddleocr",
+      "reason": "other: suite not green at the earliest usable start",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "panniantong-agent-reach",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "pocketbase-pocketbase",
+      "reason": "other: no start candidate yields the §3.5 task quota",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "practical-tutorials-project-based-learning",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "prometheus-prometheus",
+      "reason": "suite too slow",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "public-apis-public-apis",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "rclone-rclone",
+      "reason": "other: suite not green at the earliest usable start",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "react-create-react-app",
+      "reason": "other: no start candidate yields the §3.5 task quota",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "react-react",
+      "reason": "too large",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "router-for-me-cliproxyapi",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "sherlock-project-sherlock",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "shubhamsaboo-awesome-llm-apps",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "snailclimb-javaguide",
+      "reason": "other: no start candidate yields the §3.5 task quota",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "sveltejs-svelte",
+      "reason": "too large",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "tauricresearch-tradingagents",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "thealgorithms-python",
+      "reason": "other: no start candidate yields the §3.5 task quota",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "traefik-traefik",
+      "reason": "other: no start candidate yields the §3.5 task quota",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "trekhleb-javascript-algorithms",
+      "reason": "other: no start candidate yields the §3.5 task quota",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "tt-a1i-archify",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "typicode-json-server",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "unclecode-crawl4ai",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "usememos-memos",
+      "reason": "network tests",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "v2ray-v2ray-core",
+      "reason": "other: no start candidate yields the §3.5 task quota",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "vercel-next-js",
+      "reason": "too large",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "vllm-project-vllm",
+      "reason": "other: suite not green at the earliest usable start",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "wagoodman-dive",
+      "reason": "too small",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "webpack-webpack",
+      "reason": "too large",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "yt-dlp-yt-dlp",
+      "reason": "other: suite not green at the earliest usable start",
+      "detail": ""
+    },
+    {
+      "kind": "repo",
+      "id": "ytdl-org-youtube-dl",
+      "reason": "other: no start candidate yields the §3.5 task quota",
+      "detail": ""
+    }
+  ]
+}

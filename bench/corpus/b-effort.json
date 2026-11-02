@@ -1,0 +1,7 @@
+{
+  "_doc": "PROTOCOL §4.3, D-10. Wall-clock minutes of the fresh Claude subagent that wrote each B file (Agent tool duration), keyed <repo>/<start>. Author: Claude (claude-opus-5-5 session, general-purpose subagent), given only a history-stripped checkout of the start (prepareCopy layout) and the B rules; no task subjects, no human edits. Written 2026-11-02.",
+  "minutes": {
+    "jesseduffield-lazygit/1e1fba4ce6dcc54e9a24bccb300b5b5965f4ffbc": 0.75,
+    "mintplex-labs-anything-llm/89320588f3b15e8b500d2929ca4b396414512347": 0.44
+  }
+}

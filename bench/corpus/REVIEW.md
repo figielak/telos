@@ -6,7 +6,7 @@
 
 ## Status: Python slot empty, amendment 3
 
-Task 07-14 ran the frozen rules once on 2026-11-02. `node bench/select.mjs --manifest bench/corpus` stopped with `no repository qualifies for slot python (PROTOCOL §3.2)`. By D-04 this was not patched in 07-14. The user then chose PROTOCOL amendment 3 (task 07-15) over a larger pool: an empty slot stays empty and is reported (§12), and the benchmark runs on the filled slots, Go and web. The same measurements now select lazygit (Go) and anything-llm (web), with Python listed under `unfilled`. B files and the model check of this pool follow in 07-14.
+Task 07-14 ran the frozen rules once on 2026-11-02. `node bench/select.mjs --manifest bench/corpus` stopped with `no repository qualifies for slot python (PROTOCOL §3.2)`. By D-04 this was not patched in 07-14. The user then chose PROTOCOL amendment 3 (task 07-15) over a larger pool: an empty slot stays empty and is reported (§12), and the benchmark runs on the filled slots, Go and web. The same measurements now select lazygit (Go) and anything-llm (web), with Python listed under `unfilled`. Selection, B files and the model check of this pool were recorded by 07-14 (below).
 
 ### 07-14 measurements
 
@@ -47,6 +47,61 @@ Would-be winners: go = lazygit (21 s), web = anything-llm (2 s). Python: langflo
 The rules were rewritten and frozen by task 07-07 (PROTOCOL amendment 2): one recorded GitHub Search pool (`search/`, 2026-11-01), the scenario is the first other eligible change with 150–1500 product lines, the task window is 100 first-parent commits, the reference is the start tree plus the task commit's own diff (applied with `git merge-tree`), regression runs on the restored start tests. Task 07-14 runs them once from scratch, without rule changes. This file has no review of the new pool yet: the review of §3.4 happens after that run, and its objections go to the report as limitations (§12), not into the rules.
 
 The rounds below reviewed an earlier convenience sample under the earlier rules. They are kept as disclosure only; nothing of that sample (its `selection.json`, B files, B effort, measurements) is committed or reused.
+
+### Superseded recipes (verbatim, for audit)
+
+- yt-dlp test: `.venv/bin/python devscripts/run_tests.py core` (run_tests.py calls `pytest` from PATH; log: "pytest needs to be installed to run core tests").
+- anything-llm setup: `npm install -g -s --prefix "$HOME/yarn" yarn@1 && cd server && "$HOME/yarn/bin/yarn" install --frozen-lockfile --silent`; test: `cd server && "$HOME/yarn/bin/yarn" test` (log: `error Command "test" not found`).
+- paddleocr setup: `uv venv -q -p 3.12 .venv && VIRTUAL_ENV=$PWD/.venv uv pip install -q -e . paddlepaddle pytest`; test: `.venv/bin/pytest tests -q` (log: `ModuleNotFoundError: No module named 'skimage'` at collection).
+- vllm setup: `uv venv -q -p 3.12 .venv && VIRTUAL_ENV=$PWD/.venv VLLM_TARGET_DEVICE=empty uv pip install -q -r requirements-test.txt -e .` (log: `File not found: requirements-test.txt`).
+- Invocation settings: runs 1–14 (`suites.jsonl` rows 1–14) inside the editor session with `/tmp` as TMPDIR, no memory cap; the paddleocr row with `note` and every later row in a systemd user unit with `MemoryMax=5G`, `MemorySwapMax=1G`, `Nice=10` (`OOMPolicy=continue` from the anything-llm/vllm runs on); the prometheus/rclone reruns and all later runs with `TMPDIR=~/bench-work/tmp`. Logs stay on the benchmark host (`~/bench-work/measure*/<repo>-<commit>/{setup,offline,online}.log`), not in the repository.
+
+## Model check of the 07-14 pool (amendment 3)
+
+**Reviewer:** Codex CLI 0.164.0, model `gpt-6-astra` (OpenAI), fresh context, read-only sandbox, no network, `codex exec -s read-only`. **Kind: model check**, not a human review (§3.4, §12). **Session:** `01a19d5d-6b63-7a61-9215-a63296bac79a` (2026-11-02), one round.
+**Material:** PROTOCOL.md, `select.mjs`, the corpus files incl. `search/`, `suites.jsonl`, `selection.json`, `b-effort.json`, both B files and this REVIEW.md, history-stripped views of both starts, and the six derived task commits with full diffs.
+
+### Findings (verbatim)
+
+> Verdict: no blocking findings
+>
+> Selection replays byte-for-byte; the pool check and `--check-b` pass. All six diffs pass read-only application checks against their starts, and recounted eligibility facts match the manifest. B counts: **Lazygit 378**, **AnythingLLM 361** words. No task-derived steering or demonstrated hand-picking found. Regression suites were not executed; this verdict covers selection and B, not final acceptance or preregistration.
+>
+> | Repo | Task | Verdict | One-line reason |
+> |---|---|---|---|
+> | lazygit | single1 `1b0d3829` | ok | On-premises Azure pull-request URLs are observable outputs; existing cases plausibly remain valid. |
+> | lazygit | single2 `5e9ba82d` | ok | Fast-forwarding another worktree can be checked for correct updates and an unchanged current worktree. |
+> | lazygit | scenario `43106b6c` | ok | Collapse/expand actions, displayed files and selection preservation are behaviourally testable. |
+> | anything-llm | single1 `31a8ead8` | ok | Multimodal API requests can be checked through provider inputs and saved chat behaviour. |
+> | anything-llm | single2 `a0af2462` | ok | Tool calls omitting optional arguments should succeed while missing required or unknown arguments fail. |
+> | anything-llm | scenario `d0978fa3` | ok | Transcript retrieval is observable using offline service fixtures; no original-test conflict identified. |
+>
+> 1. **Should-fix — Lazygit B overstates the vendor restriction.**  
+>    `corpus/jesseduffield-lazygit/1e1fba4ce6dcc54e9a24bccb300b5b5965f4ffbc/CLAUDE.md:33` prohibits hand edits, but `views/jesseduffield-lazygit/CONTRIBUTING.md:171` and `:186` explicitly prescribe local vendor edits when developing gocui/lazycore changes. **Fix:** distinguish permitted development edits from the upstream-and-bump procedure for final changes. No rule change needed.
+>
+> 2. **Should-fix — Measurement corrections are plausible but incompletely auditable.**  
+>    Wrong-start rows remain recorded, and the selector uses measurements at the earliest history-eligible start (`select.mjs:81–93`). AnythingLLM’s correction is supported by its root Jest target and absent server test target (`views/mintplex-labs-anything-llm/package.json:13`; `server/package.json:12–17`). However, logs are unavailable, superseded command text is absent, and per-run memory/TMPDIR settings are unrecorded (`corpus/suites.json:15`; `corpus/REVIEW.md:39–44`; `corpus/measure-suite.sh:32`). Consequently, the “suite never executed” justification cannot be independently checked for every correction. **Fix:** preserve available original logs, superseded recipes and invocation settings; otherwise report this audit limitation. Do not rerun candidates merely to improve rankings.
+>
+> 3. **Note — No selected repository supplies the mandatory pilot material.**  
+>    Both `pilotStart` values are null (`corpus/selection.json:10,23`), whereas `PROTOCOL.md:120–121,313` requires a separate eligible pilot start. **Disposition:** record the frozen-rule limitation; do not substitute measured tasks or silently select different winners. This does not invalidate the present selection/B freeze, but the required pilot and final preregistration remain unresolved.
+>
+> 4. **Should-fix — Upstream tests must not become acceptance unchanged.**  
+>    The YouTube test calls a live service (`tasks/mintplex-labs-anything-llm-scenario.txt:24–37`); multimodal tests import newly introduced helpers and assert internal calls (`tasks/mintplex-labs-anything-llm-single1.txt:31–39,226–243`). **Fix during acceptance preparation:** use offline external-service fixtures and observable behaviour, then demonstrate start failure, reference success, restored-suite success and an alternative implementation as required by `PROTOCOL.md:134–137`. No task exclusion is presently established.
+>
+> 5. **Note — Frozen selection favours fast, potentially sparse suites.**  
+>    The shortest-suite rule (`PROTOCOL.md:89`) selects AnythingLLM’s two-second suite (`corpus/suites.jsonl:29`), whose sole existing test file exercises a path-access helper (`views/mintplex-labs-anything-llm/server/__tests__/utils/agentFlows/executor.test.js:3`). Host restrictions also affect eligibility (`corpus/REVIEW.md:42–43`). **Disposition:** report limited regression coverage and host-conditioned sampling; stronger suite requirements or toolchain repairs would change the frozen procedure.
+>
+> 6. **Note — H1 necessarily remains inconclusive.**  
+>    Amendment 3 leaves two scenarios, below the three-unit minimum (`PROTOCOL.md:57,63,102`). The statement that every scenario comparison rests on three units is stale (`PROTOCOL.md:282`). **Fix:** correct the explanatory reporting and retain the existing verdict rule.
+
+### Author responses
+
+1. B vendor wording — not edited: D-10 forbids human edits and re-generating B until a reviewer accepts it would itself steer B. The overstatement (vendor edits are allowed while developing gocui/lazycore) is listed as a B limitation in the report.
+2. Auditability — partly fixed: the superseded recipes and the invocation settings per run are now listed above (§Superseded recipes). Logs stay on the benchmark host; the report lists the incomplete audit trail as a limitation. No candidate is rerun.
+3. No pilot start — accepted as a limitation of the frozen rules. Every later start of both selected repositories yields no §3.5 task quota (`selection.json` excluded: "task quota not derivable"); the pilot material is resolved in 07-08 by amendment before preregistration, without changing the measured selection.
+4. Upstream tests as acceptance — forwarded to 07-13 (acceptance preparation): offline fixtures for external services, observable behaviour, and the §4.2 validation per task.
+5. Fast, sparse suites and host-conditioned sampling — reported as limitations (§12); not changed (it would change the frozen rule).
+6. H1 inconclusive with two scenarios and the stale §12 sample-size sentence — the verdict rule stays; the explanatory text is corrected with the preregistration amendment (07-08), outside this task's scope.
 
 ## Disclosures (earlier sample)
 
