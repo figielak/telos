@@ -46,11 +46,10 @@ function capturePatch(dir, start) {
 }
 
 /**
- * Copy the grading script into a fresh dir under `outDir/grading`, run it with `graderArgv` (the benchmark user's
+ * Copy the grading script into a fresh dir under `root` (default `outDir/grading`), run it with `graderArgv` (the benchmark user's
  * launcher + node in a real run, so agent code never runs as the host user) and cwd = copy, then delete the dir (D-06).
  */
-function grade(script, cwd, outDir, id, graderArgv) {
-  const root = join(outDir, 'grading');
+function grade(script, cwd, root, id, graderArgv) {
   mkdirSync(root, { recursive: true });
   const dir = mkdtempSync(join(root, `${id}-`));
   const started = Date.now();
@@ -75,10 +74,11 @@ function exposed(script, ws) {
  * `reservation`: USD per cell, or `(cell) => USD`; a `(task, rep)` block starts only if spend + its reservation ≤
  * `capUsd`, and then runs to its end. `deps`: `prepare(cell, manifest)` → `{ dir, start, env, readable, setupUsd }`
  * (may be async), `runTrajectory(cell, ctx)` → `{ status, reason?, sessions, spentUsd }`, `versions()`, and an optional
- * `beforeRecord(cell)` hook. `graderArgv` runs the acceptance script (default: this node). Records go to
- * `<outDir>/records/<cell>.json`, spend to `<outDir>/spend.jsonl`.
+ * `beforeRecord(cell)` hook and `release(cell, ws)`, called once a prepared cell is graded or refused. `graderArgv`
+ * runs the acceptance script (default: this node) from a fresh dir under `gradeRoot` (default `<outDir>/grading`).
+ * Records go to `<outDir>/records/<cell>.json`, spend to `<outDir>/spend.jsonl`.
  */
-export async function runMatrix(cells, manifest, { outDir, capUsd, reservation, deps, graderArgv = [process.execPath], now = Date.now } = {}) {
+export async function runMatrix(cells, manifest, { outDir, gradeRoot, capUsd, reservation, deps, graderArgv = [process.execPath], now = Date.now } = {}) {
   if (!(capUsd > 0)) throw new UsageError('runMatrix: capUsd must be > 0');
   const reserve = typeof reservation === 'function' ? reservation : () => reservation;
   if (!outDir) throw new UsageError('runMatrix: outDir is required');
@@ -148,6 +148,11 @@ export async function runMatrix(cells, manifest, { outDir, capUsd, reservation, 
       stopped = `refused: ${cell.id}`;
       return finish(cell, base, { status: 'refused', reason: err.message, accepted: false, acceptance: null, sessions: [], spentUsd: 0 });
     }
+    try { return await useWorkspace(cell, ws, { task, script, base, attempt, priorUsd, reservedUsd }); } finally { deps.release?.(cell, ws); }
+  }
+
+  /** Everything after prepare: exposure check, sessions, patch, grading, record (released by the caller). */
+  async function useWorkspace(cell, ws, { task, script, base, attempt, priorUsd, reservedUsd }) {
     const setupUsd = ws.setupUsd ?? 0;
     if (setupUsd > 0) charge({ cell: cell.id, attempt, kind: 'setup', usd: setupUsd });
     const seen = exposed(script, ws);
@@ -167,7 +172,7 @@ export async function runMatrix(cells, manifest, { outDir, capUsd, reservation, 
     charge({ cell: cell.id, attempt, kind: 'trajectory', usd: unverified ? cellBudgetUsd : traj.spentUsd, unverified });
     // the sessions have all exited: only now does the acceptance material leave its directory (D-06)
     const { patch, changedPaths } = capturePatch(ws.dir, ws.start);
-    const acceptance = traj.status === 'completed' ? grade(script, ws.dir, outDir, cell.id, graderArgv) : null;
+    const acceptance = traj.status === 'completed' ? grade(script, ws.dir, gradeRoot ?? join(outDir, 'grading'), cell.id, graderArgv) : null;
     return finish(cell, base, { status: traj.status, ...(traj.reason ? { reason: traj.reason } : {}), accepted: acceptance?.exit === 0,
       acceptance, patch, changedPaths, sessions: traj.sessions, spentUsd: unverified ? null : traj.spentUsd, spendUnverified: unverified,
       priorAttemptsUsd: priorUsd, setupUsd, versions: deps.versions?.() ?? null });

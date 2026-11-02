@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { setupKey } from '../bench/lib/matrix.mjs';
-import { exportPlugin, sessionEnv } from '../bench/lib/sandbox.mjs';
+import { exportPlugin, grantSession, revokeSession, sessionEnv } from '../bench/lib/sandbox.mjs';
 import { ensureSnapshot, prepareCopy } from '../bench/lib/workspace.mjs';
 import { UsageError } from '../lib/errors.mjs';
 
@@ -279,6 +279,25 @@ test('per-run config dir is fresh, holds only settings and credentials, and disa
   }
   const bare = sessionEnv(cell('t1', 'A', w.start1), { configTemplate: {}, workDir: w.workDir });
   assert.deepEqual(readdirSync(bare.env.CLAUDE_CONFIG_DIR), ['settings.json']);
+});
+
+test('session access: only the running cell is group-writable, its parents are traverse-only, revoke closes it', (t) => {
+  const w = world(t);
+  const mode = (p) => statSync(p).mode & 0o7777;
+  const a = prepareCopy(cell('t1', 'A', w.start1), w.manifest, { workDir: w.workDir }).dir;
+  const other = prepareCopy(cell('t2', 'A', w.start2), w.manifest, { workDir: w.workDir }).dir;
+  const env = sessionEnv(cell('t1', 'A', w.start1), { configTemplate: {}, workDir: w.workDir });
+  const config = env.env.CLAUDE_CONFIG_DIR;
+  grantSession([a, config], { workDir: w.workDir });
+  for (const dir of [a, config, join(a, '.git')]) assert.equal(mode(dir) & 0o070, 0o070, `${dir} group rwx`);
+  for (const file of [join(a, 'src', 'a.txt'), join(config, 'settings.json')]) assert.equal(mode(file) & 0o060, 0o060, `${file} group rw`);
+  for (const dir of [w.workDir, join(w.workDir, 'copies'), join(w.workDir, 'config')]) {
+    assert.equal(mode(dir) & 0o077, 0o010, `${dir} traverse-only for the group, closed to others`);
+  }
+  assert.equal(mode(other) & 0o077, 0, 'another cell stays closed');
+  revokeSession([a, config]);
+  for (const dir of [a, config]) assert.equal(mode(dir) & 0o077, 0, `${dir} closed after the cell`);
+  assert.throws(() => grantSession([join(w.base, 'elsewhere')], { workDir: w.workDir }), UsageError);
 });
 
 test('a work dir inside this repository or a source repository is a usage error (exit 2)', (t) => {

@@ -8,7 +8,7 @@ import { UsageError } from '../lib/errors.mjs';
 import { loadManifest } from './lib/manifest.mjs';
 import { expandMatrix } from './lib/matrix.mjs';
 import { runMatrix } from './lib/orchestrate.mjs';
-import { exportPlugin, sessionEnv } from './lib/sandbox.mjs';
+import { exportPlugin, grantSession, revokeSession, sessionEnv } from './lib/sandbox.mjs';
 import { baseArgv, runSession } from './lib/session.mjs';
 import { runTrajectory } from './lib/transitions.mjs';
 import { canonical, ensureSnapshot, prepareCopy, TELOS_ROOT, within } from './lib/workspace.mjs';
@@ -91,10 +91,15 @@ function realDeps(manifest, config) {
     const cell = { id: `setup.${key}`, task: task.id, variant: 'A' };
     const copy = prepareCopy(cell, manifest, { workDir }).dir;
     const { env } = sessionEnv({ id: cell.id, variant: 'C' }, { configTemplate: config.configTemplate, workDir });
-    const init = spawnSync(telosArgv[0], [...telosArgv.slice(1), 'init', '--profile', profile], { cwd: copy, env, encoding: 'utf8' });
-    if (init.status !== 0) throw new Error(`setup ${key}: telos init exit ${init.status}: ${init.stderr}`);
-    const map = await runSession({ prompt: '/telos:map', env, cwd: copy, argvBase: argvBase('C'), budgetUsd: config.setupUsd,
-      timeoutMs: config.sessionTimeoutMs, killGraceMs: config.killGraceMs });
+    const session = [copy, env.CLAUDE_CONFIG_DIR];
+    grantSession(session, { workDir });
+    let map;
+    try {
+      const init = spawnSync(telosArgv[0], [...telosArgv.slice(1), 'init', '--profile', profile], { cwd: copy, env, encoding: 'utf8' });
+      if (init.status !== 0) throw new Error(`setup ${key}: telos init exit ${init.status}: ${init.stderr}`);
+      map = await runSession({ prompt: '/telos:map', env, cwd: copy, argvBase: argvBase('C'), budgetUsd: config.setupUsd,
+        timeoutMs: config.sessionTimeoutMs, killGraceMs: config.killGraceMs });
+    } finally { revokeSession(session); }
     if (map.exit !== 0) throw new Error(`setup ${key}: /telos:map exit ${map.exit}`);
     // the overlay is what init + map added: untracked files only (placeSnapshot refuses tracked paths)
     const added = execFileSync('git', ['-C', copy, 'ls-files', '--others', '--exclude-standard', '-z'], { encoding: 'utf8' }).split('\0').filter(Boolean);
@@ -117,8 +122,11 @@ function realDeps(manifest, config) {
       }
       const copy = prepareCopy(cell, manifest, { workDir, snapshot });
       const { env, readable } = sessionEnv(cell, { configTemplate: config.configTemplate, workDir });
-      return { dir: copy.dir, start: copy.start, env, readable, setupUsd };
+      const session = [copy.dir, env.CLAUDE_CONFIG_DIR];
+      grantSession(session, { workDir });
+      return { dir: copy.dir, start: copy.start, env, readable, setupUsd, session };
     },
+    release(cell, ws) { revokeSession(ws.session); },
     runTrajectory(cell, ctx) {
       return runTrajectory({ id: cell.id, variant: cell.variant, task: ctx.task }, { cwd: ctx.cwd, env: ctx.env, argvBase: argvBase(cell.variant),
         telos: telosArgv, cellBudgetUsd: ctx.cellBudgetUsd, sessionTimeoutMs: config.sessionTimeoutMs, runTimeoutMs: config.runTimeoutMs,
@@ -147,7 +155,7 @@ export async function main(argv, { out = (s) => process.stdout.write(s), err = (
   const snapshots = join(config.workDir, 'snapshots');
   // a block reserves the setup estimate for every snapshot it still needs (§7.3)
   const reservation = (cell) => o.cellUsd + (cell.setup && !deps.built.has(cell.setup) && !existsSync(join(snapshots, `${cell.setup}.json`)) ? config.setupUsd : 0);
-  const res = await runMatrix(plan.cells, manifest, { outDir: o.out, capUsd: o.capUsd, reservation, deps,
+  const res = await runMatrix(plan.cells, manifest, { outDir: o.out, gradeRoot: join(config.workDir, 'grading'), capUsd: o.capUsd, reservation, deps,
     graderArgv: [...config.launcher, config.node ?? 'node'] });
   out(`${JSON.stringify({ records: res.records.length, accepted: res.records.filter((r) => r.accepted).length, skipped: res.skipped,
     spentUsd: res.spentUsd, stopped: res.stopped ?? null }, null, 2)}\n`);

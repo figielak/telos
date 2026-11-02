@@ -297,6 +297,23 @@ test('patch capture never runs the copy\'s own git config, hooks or filters', as
   assert.deepEqual(res.records[0].changedPaths, ['.gitattributes', 'out.txt', 'src.txt']);
 });
 
+test('grading uses gradeRoot when given; release runs after grading on every prepared cell, refused ones included', async (t) => {
+  const root = tmp(t);
+  const deps = fakeDeps(join(root, 'work'));
+  const released = [];
+  deps.release = (cell, ws) => released.push({ id: cell.id, graded: existsSync(join(ws.dir, 'graded.json')) });
+  const prepare = deps.prepare;
+  deps.prepare = (cell) => (cell.task === 't-two' ? { ...prepare(cell), readable: [FIX] } : prepare(cell));
+  const gradeRoot = join(root, 'work', 'grading');
+  for (const id of ['t-one', 't-two']) {
+    const m = manifest([id]);
+    await runMatrix(cellsOf(m, { variant: 'A' }), m, { outDir: join(root, `out-${id}`), gradeRoot, capUsd: 5, reservation: 1, deps });
+  }
+  const graded = JSON.parse(readFileSync(join(root, 'work', 'copies', 't-one.A.1', 'graded.json'), 'utf8'));
+  assert.ok(graded.dir.startsWith(gradeRoot), graded.dir);
+  assert.deepEqual(released.sort((a, b) => a.id.localeCompare(b.id)), [{ id: 't-one.A.1', graded: true }, { id: 't-two.A.1', graded: false }]);
+});
+
 test('grading runs through the given grader argv (the launcher), never directly when one is set', async (t) => {
   const root = tmp(t);
   const m = manifest(['t-one']);

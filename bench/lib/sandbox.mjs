@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { chmodSync, copyFileSync, lstatSync, mkdirSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, lstatSync, mkdirSync, readdirSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 
 import { UsageError } from '../../lib/errors.mjs';
@@ -97,4 +97,35 @@ export function sessionEnv(cell, { configTemplate = {}, workDir } = {}) {
   const telos = cell.variant === 'C' || cell.variant === 'D';
   const readable = [join(root, 'copies', cell.id), ...(telos ? [join(root, 'plugin')] : []), dir];
   return { env, settingsPath, readable };
+}
+
+/**
+ * Open `paths` (the running cell's copy and config dir) to the work dir's group, which the benchmark OS user
+ * belongs to (PROTOCOL §5.1 item 1): their trees become group-writable, every ancestor up to `workDir` group
+ * traverse-only, so other cells' dirs can be neither listed nor entered. Symlinks are left as they are.
+ */
+export function grantSession(paths, { workDir } = {}) {
+  const root = guardWorkDir(workDir);
+  const open = (p) => {
+    const st = lstatSync(p);
+    if (st.isSymbolicLink()) return;
+    if (st.isDirectory()) {
+      chmodSync(p, (st.mode & 0o7700) | 0o2070);
+      for (const name of readdirSync(p)) open(join(p, name));
+    } else chmodSync(p, (st.mode & 0o7700) | ((st.mode & 0o100) ? 0o070 : 0o060));
+  };
+  for (const path of paths) {
+    const p = canonical(path);
+    if (!within(p, root) || p === root) throw new UsageError(`session path ${path} is not inside the work dir ${workDir}`);
+    for (let up = dirname(p); within(up, root); up = dirname(up)) {
+      chmodSync(up, (lstatSync(up).mode & 0o7700) | 0o010);
+      if (up === root) break;
+    }
+    open(p);
+  }
+}
+
+/** Close `paths` to everyone but the host user once the cell is graded. */
+export function revokeSession(paths) {
+  for (const p of paths) chmodSync(p, lstatSync(p).mode & 0o7700);
 }
