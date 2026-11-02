@@ -2,7 +2,7 @@
 id: 07-05
 title: Run metrics from host JSON and transcripts
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [07-12]    # task IDs, e.g. [01-01]
@@ -49,10 +49,11 @@ Turn one raw run record (host JSON per session plus transcripts, including subag
 - Run `npm test`.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `node --test test/bench-metrics.test.mjs` → exit 0
-- [ ] `npm test` → exit 0
+- [x] all listed tests pass
+- [x] `node --test test/bench-metrics.test.mjs` → exit 0
+- [x] `npm test` → exit 0
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+Built `bench/lib/metrics.mjs` (`rowFromRecord`, `readTranscript`, `classifyBash`) and `bench/lib/sanitize.mjs` (`sanitize`, `sanitizeJsonl`). The row takes tokens, cost, turns and wall time from host usage over all attempts (null stays null, `fresh` = input + cache_creation), per-model cost/turns, tool counts and denials from transcripts, and the exploration proxy per session before its first product edit (subagents merged by timestamp; Telos/instruction-file edits do not end the window). 15 tests in `bench-metrics` (698 total), all green.
+Transcript shape (assistant `message.usage`/`tool_use`, user `tool_result`, `cost-state.modelUsage`, `<session>/subagents/agent-*.jsonl`) was checked against a real session file; the classifier and denial detection still need the pilot audit (07-08). The record carries no `expectedPaths`, so callers pass them from the manifest.
+Deviations: none

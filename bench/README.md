@@ -88,6 +88,28 @@ C/D checks, all from `telos` output in the copy (no model judgement):
 - **Resume.** Rerun the same command with the same `--out` and `--seed`: cells with a record are never rerun. A cell with a marker but no record is rerun once (attempt 2); if its first attempt left no trajectory charge, its reservation is charged as `abandoned` (unverified) once, at the start of the resumed run and before any cap check, so spend is never undercounted. A cell abandoned twice gets a `failed: abandoned` record without a third attempt.
 - A missing acceptance script writes `failed: no-acceptance` for that cell before any session and stops the run.
 
+## Metrics and redaction (PROTOCOL §8, §10; D-06, D-09)
+
+`rowFromRecord(record, { transcriptsDir, expectedPaths })` · `readTranscript(path)` · `classifyBash(command)` (`bench/lib/metrics.mjs`) · `sanitize(text, { home, user, workDir })` · `sanitizeJsonl(text, ctx)` (`bench/lib/sanitize.mjs`)
+
+`record` is a run record of `runMatrix`; `transcriptsDir` holds `<sessionId>.jsonl` and `<sessionId>/subagents/*.jsonl` of its attempts; `expectedPaths` comes from the manifest task (a trailing `/` matches a directory prefix).
+
+| Field | Meaning |
+|---|---|
+| `cost_usd` | host cost of every attempt of every session, retries and timeouts included; `setup_usd` is separate (attributed per §6.1) |
+| `input`, `cache_creation`, `output`, `cache_read` | host usage summed over all attempts; `cache_read` is never added to anything |
+| `fresh` | `input + cache_creation`; always called *fresh*, never "total" |
+| `turns`, `wall_ms`, `sessions`, `attempts` | host turns, host wall time, session count, attempt count |
+| `per_model` | `{ model: { cost_usd, turns } }`: cost from the transcript's last `cost-state` (D-09), turns from assistant messages (one per message id, so a message split over several lines counts once; subagents included) |
+| `tools`, `denied` | tool_use counts per name; tool results that are errors and either carry `permissionDecision.decision: "deny"` or read like a denial |
+| `explore_calls`, `explore_bytes`, `explore_unclassified` | the exploration proxy of §8.4 (narrow, labelled so): Read/Grep/Glob and read-like Bash calls, and the bytes of their `tool_result`, counted per session before its first product-code mutation, subagent transcripts merged by timestamp; Bash the classifier cannot place is counted apart |
+| `out_of_scope_paths` | changed paths not under `expectedPaths` (`null` without them) |
+| `status`, `accepted`, `unverified` | record status, acceptance, and `true` when any host value or transcript was missing |
+
+- **Mutations.** Edit/Write/MultiEdit/NotebookEdit and Bash writes (`>`, `>>`, `tee`, `sed -i`) end the window, except for `.telos/`, `.claude/`, `CLAUDE.md`, `CLAUDE.local.md`, `AGENTS.md`, `GEMINI.md`. `classifyBash`: `explore` if any simple command of a `&&`/`;`/`|` chain is read-like (`cat head tail sed -n grep rg find ls tree wc`, `git show|log|diff|blame|grep|ls-files|ls-tree|cat-file`), `other` if all are known non-reading commands (`npm`, `pytest`, `go`, `git commit`, `telos`, …), else `unclassified`. A leading `cd` is ignored.
+- **Missing data is `null`.** No usage or cost → that field and the sums are `null`; a missing or unparsable transcript → `per_model`, `tools`, `denied` and all `explore_*` are `null`, `unverified: true`. An attempt that failed before any turn needs no transcript. Fixtures are hand-made; the classifier is audited on pilot transcripts in 07-08.
+- **Redaction (`sanitize`).** Placeholders replace, in this order: `workDir` → `<WORKDIR>`, `home` → `<HOME>`, any other `/home/<name>` or `/Users/<name>` → `<USER>`, e-mail addresses → `<EMAIL>`, key-like strings (`sk-ant-…`, `sk-…`, `ghp_…`, `github_pat_…`, `AKIA…`, `xox…`, `Bearer …`) → `<SECRET>`, then the bare user name (at least 3 characters, whole word) → `<USER>`. The result is `{ text, hits }` with hits per rule (`workdir`, `home`, `home_other`, `email`, `secret`, `user`). Digits and JSON structure are untouched; `sanitizeJsonl` works per line and throws if a line that parsed would no longer parse. The reviewer's spot check of a sample before publication is a manual step (§10).
+
 ## Corpus selection (PROTOCOL §3, §4.3)
 
 `node bench/select.mjs --manifest bench/corpus [--write | --check-b]` · `--manifest <dir> --pool <search-dir> [--check]` · `--gather <clone> --repo <id> [--manifest <dir>]` · `bench/corpus/measure-suite.sh <work-dir> <repo> <commit>`
