@@ -16,6 +16,8 @@
      kinds: decision | phase | revert | remove | quick | profile | init
      ref: NN, NN-MM, ADR NNN, quick, telos
      Archive is installed first; after an interrupted write it may duplicate live Log rows. -->
+- 2026-11-03 phase 08: closed 08-website: website tests pass after a clean install, DESIGN.md exists, root tests pass with root package.json unchanged, no horizontal scroll at 390, 768 and 1440 px; retro: the layout changed twice mid-phase, so tests encoding layout were rewritten, and the root suite outgrew the telos check output limit
+- 2026-11-03 decision ADR 001: 08:D-04: website/ is a standalone npm package; the plugin keeps its no-dependency rule
 - 2026-11-01 phase 06: closed 06-measure: targets in SPEC §12 met or documented (3 missed, 2 unverified, 2 met by estimate; scorecard in 06-RESULTS.md); retro: live runs surfaced real defects (Astro refresh refused, review diff permission, frozen check text in plans) that offline fixtures never showed
 - 2026-10-29 profile telos: standard → deep
 - 2026-10-29 phase 05: closed 05-deep: deep phase incl. doc-sync works
