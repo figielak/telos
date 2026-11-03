@@ -327,9 +327,9 @@ Pilot runs are excluded from results, published as the pilot, and their spend co
 
 After the pilot, PROTOCOL.md and the corpus are committed together as the **final preregistration**:
 
-Final preregistration: _hash recorded by the commit that follows it_
+Final preregistration: `688860c2f98cec7a1c5706ccc45e22d1c8907d29` (2026-11-03)
 
-- Commit hash: _recorded by the commit that follows it_
+- Commit hash: `688860c2f98cec7a1c5706ccc45e22d1c8907d29`
 - Date: 2026-11-03
 - Claude Code version / model ID: 2.1.316 / `claude-sonnet-5-5`
 - Telos commit: the commit that records this hash; it changes only this section, `bench/PILOT.md` and `.telos/`, so the plugin runtime is the preregistered one
