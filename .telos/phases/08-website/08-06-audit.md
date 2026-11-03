@@ -2,7 +2,7 @@
 id: 08-06
 title: "Responsive, accessibility and performance audit"
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [08-10]         # task IDs, e.g. [01-01]
@@ -48,17 +48,21 @@ Verify the finished page for responsiveness, accessibility, performance and trut
 - Update `DESIGN.md` to match the final components, and record measured sizes in Result.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm --prefix website ci && npm --prefix website test` → exit 0
-- [ ] `npm test` → exit 0
-- [ ] `git diff --quiet telos/08-start -- package.json` → exit 0
-- [ ] No horizontal scroll at 390, 768 and 1440 px
-- [ ] Keyboard, reduced-motion and JavaScript-off checks pass
-- [ ] Measured distance between sections is 120 to 144 px at 1440 px and 64 to 80 px at 390 px
-- [ ] Hero communicates the product alone, and the terminal is the central element of the first screen
-- [ ] Section layouts vary, gold accents stay sparing, and text widths are comfortable
-- [ ] Workflow reads clearly on a phone, and every CTA leads to a real resource
+- [x] all listed tests pass
+- [x] `npm --prefix website ci && npm --prefix website test` → exit 0
+- [x] `npm test` → exit 0
+- [x] `git diff --quiet telos/08-start -- package.json` → exit 0
+- [x] No horizontal scroll at 390, 768 and 1440 px
+- [x] Keyboard, reduced-motion and JavaScript-off checks pass
+- [x] Measured distance between sections is 120 to 144 px at 1440 px and 64 to 80 px at 390 px
+- [x] Hero communicates the product alone, and the terminal is the central element of the first screen
+- [x] Section layouts vary, gold accents stay sparing, and text widths are comfortable
+- [x] Workflow reads clearly on a phone, and every CTA leads to a real resource
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+Audited the final page, including the 08-11 commit (first-visit copy, disclosures, mobile menu) that a separate session landed while this phase ran; audit covers that state. `audit.test.mjs` adds 18 tests (structure, landmarks, section order, accessible names, budgets, hosts, links, truthfulness); 93 in the site suite, all pass. No src fix was needed.
+Measured: JS 1351 B in two inline scripts (copy buttons 694, mobile menu 657; budget 2048); CSS 21.3 KB (40); fonts 113.5 KB (250); HTML 35.8 KB; no images, no external host, console clean. Sections are 137 px apart at 768 and 1440 px (136 padding + 1 px rule) and 81 px at 390 (80 + rule); no horizontal scroll at 390, 768 or 1440 px.
+Browser: skip link first and visible, tab order equals visual order (27 stops); JavaScript off keeps the headline, all three commands, native menu and the full terminal; reduced motion shows the final state; copy buttons are hidden without JS.
+Copy check: every claim traces to README or SPEC (all 24 skills have a README row) except two from the user's 08-11 audit: "Recommended start / Start with Standard" (only the install example `/telos:init standard`, README:15, SPEC:572) and the profile audience lines ("small projects…"). Left unchanged as the user's decision; D-03 would drop them.
+Not run: Lighthouse, the real system clipboard, a physical phone. RED: none; the audit tests passed on first run because earlier tasks already met them.
+Deviations: none

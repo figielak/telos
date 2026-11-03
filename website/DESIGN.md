@@ -81,7 +81,8 @@ CSS Grid, not percentage math.
 - Each section has its own composition; the sections that follow the hero vary (horizontal
   process, 2 x 2 grid, text beside a tree, a single row of three profile cards).
 - A frame (border or surface) wraps a real group of information only, not every element.
-- Below `md` every layout is a single column with no horizontal page scroll at 390, 768 or 1440 px.
+- Below `md` every layout is a single column with no horizontal page scroll at 390, 768 or 1440 px;
+  the multi-column compositions (workflow, features, memory, profiles) start at `lg`.
 - Wide content (terminal lines, trees) scrolls inside its own container, never the page.
 
 ## Components
@@ -118,7 +119,14 @@ All content is visible with JavaScript off.
 
 - One `h1`, headings never skip a level; landmarks `header`, `nav`, `main`, `footer`.
 - Decorative SVG is `aria-hidden`; controls have accessible names.
-- Budget: client JavaScript at most 2 KB, CSS at most 40 KB, fonts at most 250 KB.
+- Budget: client JavaScript at most 2 KB in total (two small inline scripts: copy buttons and the
+  mobile menu), CSS at most 40 KB, fonts at most 250 KB, no images and no external host.
+  `test/audit.test.mjs` checks these budgets, the landmarks, accessible names and every external link.
+- Scroll regions (terminal, tree) are focusable (`tabindex="0"`) and labelled. Native `details`
+  elements carry every disclosure, so they work without JavaScript.
+- Claims on the page must trace to the README or SPEC. The one product recommendation, Standard as
+  the starting profile, rests on the install example (`/telos:init standard`) and the user's
+  first-visit audit; it is the only profile that is highlighted.
 
 ## Run
 
