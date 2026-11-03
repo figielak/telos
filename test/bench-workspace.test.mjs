@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { setupKey } from '../bench/lib/matrix.mjs';
-import { exportPlugin, grantSession, handBack, revokeSession, sessionEnv } from '../bench/lib/sandbox.mjs';
+import { exportPlugin, grantSession, handBack, reclaim, revokeSession, sessionEnv } from '../bench/lib/sandbox.mjs';
 import { ensureSnapshot, prepareCopy, WorkspaceError } from '../bench/lib/workspace.mjs';
 import { UsageError } from '../lib/errors.mjs';
 
@@ -350,6 +350,18 @@ test('instruction files above a session path are refused, never loaded (canary, 
     assert.throws(() => grantSession([a], { workDir: w.workDir }), (err) => err instanceof WorkspaceError
       && /REFUSED:.*instruction/.test(err.message) && err.message.includes(join(w.workDir, planted.split('/')[0] === 'copies' ? planted : planted.split('/')[0])), planted);
   }
+});
+
+test('reclaim reopens what an interrupted cell left closed, so it can be removed and rebuilt (resume)', (t) => {
+  const w = world(t);
+  const mode = (p) => statSync(p).mode & 0o7777;
+  const a = prepareCopy(cell('t1', 'A', w.start1), w.manifest, { workDir: w.workDir }).dir;
+  put(a, 'projects/s/t.jsonl', '{}\n');
+  chmodSync(join(a, 'projects/s'), 0o700);
+  chmodSync(a, 0o700);
+  reclaim([a, join(w.workDir, 'config', 'missing')], ['env']);
+  assert.equal(mode(a) & 0o070, 0o070, 'top reopened to the group');
+  assert.equal(mode(join(a, 'projects/s')) & 0o070, 0o070, 'private dir inside handed back');
 });
 
 test('handBack opens what the session user wrote with private modes to the group, symlink targets untouched', (t) => {

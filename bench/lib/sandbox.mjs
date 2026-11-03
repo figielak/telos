@@ -176,3 +176,13 @@ export function handBack(paths, launcher) {
 export function revokeSession(paths) {
   for (const p of paths) chmodSync(p, lstatSync(p).mode & 0o7700);
 }
+
+/**
+ * Reopen dirs an interrupted cell left behind (no `release` ran) and `handBack` their contents, so the host can
+ * remove and rebuild them on resume (PROTOCOL §7.4). Missing paths are skipped.
+ */
+export function reclaim(paths, launcher) {
+  const left = paths.filter((p) => existsSync(p));
+  for (const p of left) chmodSync(p, (lstatSync(p).mode & 0o7700) | 0o2070);
+  if (left.length) handBack(left, launcher);
+}

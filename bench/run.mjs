@@ -8,7 +8,7 @@ import { UsageError } from '../lib/errors.mjs';
 import { loadManifest } from './lib/manifest.mjs';
 import { expandMatrix } from './lib/matrix.mjs';
 import { runMatrix } from './lib/orchestrate.mjs';
-import { exportPlugin, grantSession, handBack, revokeSession, sessionEnv } from './lib/sandbox.mjs';
+import { exportPlugin, grantSession, handBack, reclaim, revokeSession, sessionEnv } from './lib/sandbox.mjs';
 import { baseArgv, runSession } from './lib/session.mjs';
 import { runTrajectory } from './lib/transitions.mjs';
 import { canonical, ensureSnapshot, prepareCopy, TELOS_ROOT, within } from './lib/workspace.mjs';
@@ -89,6 +89,7 @@ function realDeps(manifest, config) {
   async function build({ key, repo, start, profile, dir }) {
     const task = manifest.tasks.find((t) => t.repo === repo && t.start === start);
     const cell = { id: `setup.${key}`, task: task.id, variant: 'A' };
+    reclaim([join(workDir, 'copies', cell.id), join(workDir, 'config', cell.id)], config.launcher);
     const copy = prepareCopy(cell, manifest, { workDir }).dir;
     const { env } = sessionEnv({ id: cell.id, variant: 'C' }, { configTemplate: config.configTemplate, workDir });
     const session = [copy, env.CLAUDE_CONFIG_DIR];
@@ -123,6 +124,7 @@ function realDeps(manifest, config) {
         built.add(cell.setup);
         snapshot = snap.dir;
       }
+      reclaim([join(workDir, 'copies', cell.id), join(workDir, 'config', cell.id)], config.launcher); // left by an interrupted attempt
       const copy = prepareCopy(cell, manifest, { workDir, snapshot });
       const { env, readable } = sessionEnv(cell, { configTemplate: config.configTemplate, workDir });
       const session = [copy.dir, env.CLAUDE_CONFIG_DIR];
