@@ -2,7 +2,7 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 08-website
-Task: 08-04
+Task: 08-05
 Next: /telos:do
 Blockers: 07-08: subscription 5-hour limit until 21:10; then canaries, final pilot, F6 live check
 Awaiting user: 07:D-05, 07:D-06, 07:D-07, 07:D-08, 07:D-09, 07:D-11, 07:D-12
@@ -15,6 +15,6 @@ Awaiting user: 07:D-05, 07:D-06, 07:D-07, 07:D-08, 07:D-09, 07:D-11, 07:D-12
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 08-04 done: Profiles table and Project memory tree; 40 site tests
 - 08-03 done: Workflow and Features sections; 29 site tests
 - 08-02 done: hero, nav, illustrative terminal; 21 site tests
-- 08-01 done: website foundation, tokens, fonts, DESIGN.md; 10 tests

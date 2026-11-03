@@ -2,7 +2,7 @@
 id: 08-04
 title: Profiles and Project Memory sections
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [08-03]         # task IDs, e.g. [01-01]
@@ -52,10 +52,13 @@ Add the Profiles section comparing minimal, standard and deep, and the Project M
 - Mount both and check them at 390 and 1440 px.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm --prefix website test` → exit 0
-- [ ] The profile table reads correctly with its stacked layout at 390 px
+- [x] all listed tests pass
+- [x] `npm --prefix website test` → exit 0
+- [x] The profile table reads correctly with its stacked layout at 390 px
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+Profiles: a real `<table>` with three column headers and six row headers from `src/data/profiles.mjs` (SPEC §3 rows, hook row checked against README; the cost-target row is left out). Explicit ARIA roles keep table semantics when it stacks below `md`, where each cell gets a profile label. States the superset rule and `/telos:profile`. Memory: the `.telos/` tree in a labelled scroll region with each file's real limit and the profile that adds it, plus a who-owns-which-fact list from SPEC §4.1, and a plain-files-in-your-repository statement.
+Tests: 11 in `website/test/profiles-memory.test.mjs`; 40 in the site suite, all pass. Browser check at 1440 and 390 px: no page overflow, stacked table reads correctly. CSS 19 KB, no client JavaScript.
+RED: node --test website/test/profiles-memory.test.mjs → exit 1: Cannot find module src/data/profiles.mjs (the feature did not exist yet).
+Surprises: Astro dropped the space after an inline `</code>` at a line end (fixed with `{' '}`); the tree's limit column was clipped at 1440 px, so descriptions were shortened. Test regex also flagged a source comment quoting the omitted row.
+Deviations: none
