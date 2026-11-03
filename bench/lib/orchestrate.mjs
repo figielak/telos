@@ -171,6 +171,16 @@ export async function runMatrix(cells, manifest, { outDir, gradeRoot, capUsd, re
     const traj = await deps.runTrajectory(cell, { cwd: ws.dir, env: ws.env, readable: ws.readable, cellBudgetUsd, task });
     const unverified = traj.spentUsd == null;
     charge({ cell: cell.id, attempt, kind: 'trajectory', usd: unverified ? cellBudgetUsd : traj.spentUsd, unverified });
+    if (traj.usageLimit) {
+      // the account ran out, the agent did not fail: the cost stays on the cell, which runs again from scratch on resume
+      stopped = `usage-limit: ${cell.id}`;
+      mkdirSync(join(outDir, 'interrupted'), { recursive: true });
+      writeAtomic(join(outDir, 'interrupted', `${cell.id}-${now()}.json`), { ...base, status: traj.status, reason: traj.reason,
+        sessions: traj.sessions, spentUsd: traj.spentUsd, endedAt: new Date(now()).toISOString() });
+      rmSync(markerPath(cell.id), { force: true });
+      result.skipped.push(cell.id);
+      return null;
+    }
     // the sessions have all exited: only now does the acceptance material leave its directory (D-06)
     const { patch, changedPaths } = capturePatch(ws.dir, ws.start);
     const acceptance = traj.status === 'completed' ? grade(script, ws.dir, gradeRoot ?? join(outDir, 'grading'), cell.id, graderArgv) : null;

@@ -7,8 +7,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { setupKey } from '../bench/lib/matrix.mjs';
-import { exportPlugin, grantSession, handBack, reclaim, revokeSession, sessionEnv } from '../bench/lib/sandbox.mjs';
-import { ensureSnapshot, prepareCopy, WorkspaceError } from '../bench/lib/workspace.mjs';
+import { clearUserFiles, exportPlugin, grantSession, handBack, reclaim, revokeSession, sessionEnv } from '../bench/lib/sandbox.mjs';
+import { ensureSnapshot, lockWorkDir, prepareCopy, WorkspaceError } from '../bench/lib/workspace.mjs';
 import { UsageError } from '../lib/errors.mjs';
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
@@ -350,6 +350,31 @@ test('instruction files above a session path are refused, never loaded (canary, 
     assert.throws(() => grantSession([a], { workDir: w.workDir }), (err) => err instanceof WorkspaceError
       && /REFUSED:.*instruction/.test(err.message) && err.message.includes(join(w.workDir, planted.split('/')[0] === 'copies' ? planted : planted.split('/')[0])), planted);
   }
+});
+
+test('clearUserFiles removes what the benchmark user left in the shared temp roots, nothing else', (t) => {
+  const w = world(t);
+  const root = join(w.base, 'shared-tmp');
+  put(root, 'claude-967/other-cell/solution.go', 'x');
+  put(root, 'lazygit/test_lazygit', 'x');
+  put(w.base, 'keep/file.txt', 'x');
+  symlinkSync(join(w.base, 'keep'), join(root, 'link-out'));
+  assert.equal(clearUserFiles(['env'], [root, join(w.base, 'missing-root')]), 0);
+  assert.deepEqual(readdirSync(root), [], 'every entry owned by the user is gone');
+  assert.ok(existsSync(join(w.base, 'keep/file.txt')), 'a symlink target is not followed');
+});
+
+test('a second runner on the same work dir is refused until the first ends; a dead owner does not block', (t) => {
+  const w = world(t);
+  mkdirSync(w.workDir, { recursive: true });
+  const release = lockWorkDir(w.workDir);
+  assert.throws(() => lockWorkDir(w.workDir), (err) => err instanceof UsageError && /another runner/.test(err.message));
+  release();
+  const again = lockWorkDir(w.workDir);
+  again();
+  writeFileSync(join(w.workDir, '.run.lock'), '2147483646\n');
+  lockWorkDir(w.workDir)();
+  assert.equal(existsSync(join(w.workDir, '.run.lock')), false);
 });
 
 test('reclaim reopens what an interrupted cell left closed, so it can be removed and rebuilt (resume)', (t) => {

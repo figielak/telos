@@ -314,6 +314,30 @@ test('grading uses gradeRoot when given; release runs after grading on every pre
   assert.deepEqual(released.sort((a, b) => a.id.localeCompare(b.id)), [{ id: 't-one.A.1', graded: true }, { id: 't-two.A.1', graded: false }]);
 });
 
+test('a usage limit stops the run, is costed, leaves no record and the cell runs again on resume', async (t) => {
+  const root = tmp(t);
+  const m = manifest(['t-one', 't-two']);
+  const cells = cellsOf(m, { variant: 'A' });
+  const deps = fakeDeps(join(root, 'work'));
+  const real = deps.runTrajectory;
+  deps.runTrajectory = async () => ({ status: 'infra-failed', reason: 'task: usage limit: reset 9pm', usageLimit: true, sessions: [{ step: 'task' }], spentUsd: 0.25 });
+  const outDir = join(root, 'out');
+  const first = await runMatrix(cells, m, { outDir, capUsd: 5, reservation: 1, deps });
+  assert.match(first.stopped, /^usage-limit: /);
+  assert.equal(first.records.length, 0);
+  assert.deepEqual(first.skipped.sort(), cells.map((c) => c.id).sort(), 'the interrupted cell and every later one are listed');
+  assert.deepEqual(readdirSync(join(outDir, 'records')), [], 'no record and no marker: nothing counts as a run or an abandoned attempt');
+  assert.equal(first.spentUsd, 0.25);
+  assert.equal(JSON.parse(readFileSync(join(outDir, 'interrupted', readdirSync(join(outDir, 'interrupted'))[0]), 'utf8')).reason, 'task: usage limit: reset 9pm');
+  deps.runTrajectory = real;
+  rmSync(join(root, 'work', 'copies'), { recursive: true, force: true }); // the real prepare rebuilds the copy
+  const second = await runMatrix(cells, m, { outDir, capUsd: 5, reservation: 1, deps });
+  assert.equal(second.stopped, undefined);
+  assert.equal(second.records.length, 2);
+  assert.ok(second.records.every((r) => r.status === 'completed'));
+  assert.equal(second.records.reduce((s, r) => s + r.priorAttemptsUsd, 0), 0.25, 'the lost attempt stays on the cell it hit');
+});
+
 test('grading runs through the given grader argv (the launcher), never directly when one is set', async (t) => {
   const root = tmp(t);
   const m = manifest(['t-one']);

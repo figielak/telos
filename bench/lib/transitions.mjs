@@ -35,7 +35,7 @@ function readTasks(ctx) {
 
 /**
  * Run every session of `cell` (`{ id, variant, task: { type: 'single', prompt } | { type: 'multi', steps[] } }`) in the
- * copy `ctx.cwd` → `{ status: completed|failed|timeout|infra-failed, reason?, sessions[], spentUsd }`.
+ * copy `ctx.cwd` → `{ status: completed|failed|timeout|infra-failed, reason?, usageLimit?, sessions[], spentUsd }`.
  * ctx: `env`, `argvBase` (from `baseArgv`), `telos` (argv prefix of the CLI, launcher included), `cellBudgetUsd`
  * (the cell reservation; each session gets what its predecessors left, §7.3), `sessionTimeoutMs`, `runTimeoutMs`,
  * optional `killGraceMs` and `spawn`.
@@ -66,6 +66,7 @@ export async function runTrajectory(cell, ctx) {
       else spent = round(spent + a.costUsd);
     }
     if (s.timedOut) return end('timeout', `${step}: time limit`);
+    if (s.json?.api_error_status === 429) return { ...end('infra-failed', `${step}: usage limit: ${s.json.result ?? 'HTTP 429'}`), usageLimit: true };
     if (s.hostError) return end('infra-failed', `${step}: host error before the first turn, ${s.attempts.length} attempts`);
     if (s.exit !== 0 || s.json?.is_error) return end('failed', `${step}: exit ${s.exit}${s.json?.subtype ? ` (${s.json.subtype})` : ''}`);
     const refused = telos && /REFUSED:.*/.exec(s.json?.result ?? '');

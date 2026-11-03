@@ -8,10 +8,10 @@ import { UsageError } from '../lib/errors.mjs';
 import { loadManifest } from './lib/manifest.mjs';
 import { expandMatrix } from './lib/matrix.mjs';
 import { runMatrix } from './lib/orchestrate.mjs';
-import { exportPlugin, grantSession, handBack, reclaim, revokeSession, sessionEnv } from './lib/sandbox.mjs';
+import { clearUserFiles, exportPlugin, grantSession, handBack, reclaim, revokeSession, sessionEnv } from './lib/sandbox.mjs';
 import { baseArgv, runSession } from './lib/session.mjs';
 import { runTrajectory } from './lib/transitions.mjs';
-import { canonical, ensureSnapshot, prepareCopy, TELOS_ROOT, within } from './lib/workspace.mjs';
+import { canonical, ensureSnapshot, lockWorkDir, prepareCopy, TELOS_ROOT, within } from './lib/workspace.mjs';
 
 // Benchmark runner CLI (bench/README.md "Running the matrix"). Exit 0 = every cell ran, 1 = a cell was skipped or
 // refused or the run stopped, 2 = usage error.
@@ -90,6 +90,7 @@ function realDeps(manifest, config) {
     const task = manifest.tasks.find((t) => t.repo === repo && t.start === start);
     const cell = { id: `setup.${key}`, task: task.id, variant: 'A' };
     reclaim([join(workDir, 'copies', cell.id), join(workDir, 'config', cell.id)], config.launcher);
+    clearUserFiles(config.launcher);
     const copy = prepareCopy(cell, manifest, { workDir }).dir;
     const { env } = sessionEnv({ id: cell.id, variant: 'C' }, { configTemplate: config.configTemplate, workDir });
     const session = [copy, env.CLAUDE_CONFIG_DIR];
@@ -127,6 +128,7 @@ function realDeps(manifest, config) {
         snapshot = snap.dir;
       }
       reclaim([join(workDir, 'copies', cell.id), join(workDir, 'config', cell.id)], config.launcher); // left by an interrupted attempt
+      clearUserFiles(config.launcher);
       const copy = prepareCopy(cell, manifest, { workDir, snapshot });
       const { env, readable } = sessionEnv(cell, { configTemplate: config.configTemplate, workDir });
       const session = [copy.dir, env.CLAUDE_CONFIG_DIR];
@@ -164,6 +166,9 @@ export async function main(argv, { out = (s) => process.stdout.write(s), err = (
     variant: o.variant.length ? o.variant : undefined, done });
   if (o.dryRun) { out(dryRun(plan, manifest, config)); return 0; }
 
+  mkdirSync(config.workDir, { recursive: true });
+  const unlock = lockWorkDir(config.workDir);
+  process.once('exit', unlock);
   const deps = realDeps(manifest, config);
   const snapshots = join(config.workDir, 'snapshots');
   // a block reserves the setup estimate for every snapshot it still needs (§7.3)

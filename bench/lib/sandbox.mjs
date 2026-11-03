@@ -186,3 +186,17 @@ export function reclaim(paths, launcher) {
   for (const p of left) chmodSync(p, (lstatSync(p).mode & 0o7700) | 0o2070);
   if (left.length) handBack(left, launcher);
 }
+
+/** Roots every process of the benchmark user can write to outside its cell, the sandbox's `$TMPDIR` included. */
+const SHARED_TMP = Object.freeze(['/tmp', '/var/tmp', '/dev/shm']);
+
+/**
+ * Remove what the benchmark user left in the shared temp roots, so a session cannot read a previous cell's scripts,
+ * build output or grading files: all cells run as one user (PROTOCOL §5.1 item 1). Runs through `launcher`, between
+ * cells only; `rm` never follows a symlink. → exit code.
+ */
+export function clearUserFiles(launcher, roots = SHARED_TMP) {
+  const r = spawnSync(launcher[0], [...launcher.slice(1), 'sh', '-c', 'for r in "$@"; do [ -d "$r" ] && find "$r" -mindepth 1 -maxdepth 1 -uid "$(id -u)" -exec rm -rf {} +; done; exit 0', 'sh', ...roots],
+    { cwd: '/', stdio: 'ignore', env: { PATH: process.env.PATH ?? '/usr/bin:/bin' } });
+  return r.status;
+}

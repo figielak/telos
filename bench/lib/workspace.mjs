@@ -216,3 +216,20 @@ export function ensureSnapshot(key, { workDir, telosDir, build } = {}) {
   if (result && typeof result.then === 'function') return result.then((r) => { try { return finish(r); } catch (err) { return discard(err); } }, discard);
   try { return finish(result); } catch (err) { return discard(err); }
 }
+
+/**
+ * One runner per work dir: a second one would re-export the plugin and rebuild dirs under the first one's sessions.
+ * A lock whose owner is dead is taken over. → release function. Throws `UsageError` while the owner lives.
+ */
+export function lockWorkDir(workDir) {
+  const lock = join(guardWorkDir(workDir), '.run.lock');
+  if (existsSync(lock)) {
+    const pid = Number(readFileSync(lock, 'utf8').trim());
+    let alive = false;
+    try { process.kill(pid, 0); alive = true; } catch (err) { alive = err.code === 'EPERM'; }
+    if (alive) throw new UsageError(`another runner (pid ${pid}) holds work dir ${workDir}`);
+    rmSync(lock, { force: true });
+  }
+  writeFileSync(lock, `${process.pid}\n`, { flag: 'wx' });
+  return () => rmSync(lock, { force: true });
+}

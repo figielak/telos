@@ -164,6 +164,19 @@ test('host error before the first turn: ≤ 2 retries, every attempt kept; error
   assert.equal(run.status, 'infra-failed');
 });
 
+test('a usage limit (HTTP 429) is infrastructure, not the agent failing: infra-failed, flagged, no further sessions', async (t) => {
+  const limit = { match: 'Add a', exit: 1, json: { is_error: true, subtype: 'success', api_error_status: 429, num_turns: 19, total_cost_usd: 0.25, result: "You've hit your 5-hour limit" } };
+  const run = await runTrajectory(single('C'), ctx(copy(t, [{ ...limit, match: '/telos:quick' }]), 'C'));
+  assert.equal(run.status, 'infra-failed');
+  assert.equal(run.usageLimit, true);
+  assert.match(run.reason, /usage limit/);
+  assert.equal(run.sessions.length, 1);
+  assert.equal(run.spentUsd, 0.25);
+  const other = await runTrajectory(single('A'), ctx(copy(t, [{ match: 'Add a', exit: 1, json: { is_error: true, subtype: 'success', api_error_status: 500, num_turns: 3, total_cost_usd: 0.1 } }]), 'A'));
+  assert.equal(other.status, 'failed');
+  assert.equal(other.usageLimit, undefined);
+});
+
 test('timeout kills the whole process group, child processes included', async (t) => {
   const c = copy(t, [{ match: 'slow', sleepMs: 20_000, child: true }]);
   const run = await runSession({ prompt: 'slow', env: c.env, cwd: c.dir, argvBase: base('A'), budgetUsd: 1, timeoutMs: 1500, killGraceMs: 200 });
