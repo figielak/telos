@@ -2,7 +2,7 @@
 id: 08-01
 title: "Astro and Tailwind foundation, tokens, fonts, DESIGN.md"
 type: code          # code | doc | audit
-status: draft       # draft | approved | in-progress | done | blocked | reverted
+status: approved    # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: []         # task IDs, e.g. [01-01]
@@ -35,7 +35,7 @@ Create the standalone Astro and Tailwind package in `website/` with design token
 ## Constraints
 - D-01: Astro and Tailwind CSS in `website/`; dependencies are exactly `astro`, `tailwindcss`, `@tailwindcss/vite`, pinned (checked 2026-11-03: 7.4.5, 4.3.4, 4.3.4). No React, Framer Motion, icon or font packages.
 - D-02: tokens `#101114` background, `#1A1C20` surface, `#C8A96B` accent, `#F1EEE6` text, `#A5A29A` muted; fonts Manrope (display), Inter (body), JetBrains Mono (code and labels). The brief overrides the taste skill's Inter ban and its React/Framer default.
-- D-04 [proposed]: `website/` is a standalone npm package, not a workspace; the PROJECT no-dependency rule keeps applying to the plugin; `website/package.json` declares Node >=22.23.4 (Astro 7's requirement) while the plugin stays >=20.10.
+- D-04: `website/` is a standalone npm package, not a workspace; the PROJECT no-dependency rule keeps applying to the plugin; `website/package.json` declares Node >=22.23.4 (Astro 7's requirement) while the plugin stays >=20.10.
 - Tests use `node:test` only and live in `website/test/`, outside the root `test/*.test.mjs` glob; `npm test` in `website/` runs `astro build` and then those tests against `dist/`.
 - Fonts: variable woff2 files, fetched once from the families' official or Fontsource releases (never added as a dependency), committed under `public/fonts/` with their OFL notices, `font-display: swap`, latin subset; no request to any font CDN.
 - `.gitignore` in `website/` covers `dist/`, `.astro/`, `node_modules/`.

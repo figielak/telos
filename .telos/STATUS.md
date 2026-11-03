@@ -2,10 +2,10 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 08-website
-Task: none
-Next: confirm 08:D-04 with /telos:revise, then /telos:approve (08-01 and 08-06 stay draft)
+Task: 08-01
+Next: /telos:do
 Blockers: 07-08: subscription 5-hour limit until 21:10; then canaries, final pilot, F6 live check
-Awaiting user: 07:D-05, 07:D-06, 07:D-07, 07:D-08, 07:D-09, 07:D-11, 07:D-12, 08:D-04
+Awaiting user: 07:D-05, 07:D-06, 07:D-07, 07:D-08, 07:D-09, 07:D-11, 07:D-12
 <!-- Blockers: "NN-MM: reason". Awaiting user: IDs only, e.g. "02:Q-01, 02:D-03" -->
 
 ## Carry-over

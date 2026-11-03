@@ -2,7 +2,7 @@
 id: 08-06
 title: "Responsive, accessibility and performance audit"
 type: code          # code | doc | audit
-status: draft       # draft | approved | in-progress | done | blocked | reverted
+status: approved    # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [08-05]         # task IDs, e.g. [01-01]
@@ -27,7 +27,7 @@ Verify the finished page for responsiveness, accessibility, performance and trut
 - Content rule (D-03): state only what README, SPEC or the code says; no benchmark, token-saving or cost figures, no comparisons with other tools.
 - Direction (D-02): tokens from `website/DESIGN.md`; no emoji, no pure black, no glows, no gradient text, no glassmorphism, no equal 3-column card row; concrete verbs, no filler copy.
 - Below `md` every layout collapses to one column with no horizontal page scroll.
-- D-04 [proposed]: a clean install must work from the lockfile, and root `package.json` stays unchanged.
+- D-04: a clean install must work from the lockfile, and root `package.json` stays unchanged.
 - Browser checks use the available Playwright tools or local Chrome, and add no dependency. Lighthouse, if used, runs one-off through `npx` and is not added to `package.json`.
 - Budgets: JavaScript sent to the client ≤ 2 KB, CSS ≤ 40 KB, the three fonts ≤ 250 KB together, no images in the critical path. Report real measured values, and do not loosen a budget to pass.
 - Every copy fix found here stays within D-03; a claim that cannot be traced is removed, not reworded.
