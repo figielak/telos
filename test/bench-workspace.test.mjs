@@ -358,7 +358,15 @@ test('handBack opens what the session user wrote with private modes to the group
   writeFileSync(outside, 'x');
   chmodSync(outside, 0o600);
   symlinkSync(outside, join(a, 'link'));
-  assert.equal(handBack([a], ['env']), 0);
+  // the runner's cwd is closed to the benchmark user; find must not depend on it
+  const closed = join(w.base, 'closed-cwd');
+  mkdirSync(closed);
+  const cwd = process.cwd();
+  process.chdir(closed);
+  chmodSync(closed, 0);
+  let status;
+  try { status = handBack([a], ['env']); } finally { chmodSync(closed, 0o700); process.chdir(cwd); }
+  assert.equal(status, 0);
   assert.equal(mode(join(a, 'projects/s')) & 0o070, 0o070, 'private dir group rwx');
   assert.equal(mode(join(a, 'projects/s/t.jsonl')) & 0o070, 0o060, 'private file group rw');
   assert.equal(mode(outside), 0o600, 'a symlink target outside is never changed');

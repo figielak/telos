@@ -154,7 +154,7 @@ export function grantSession(paths, { workDir, readOnly = [] } = {}) {
  */
 export function handBack(paths, launcher) {
   const r = spawnSync(launcher[0], [...launcher.slice(1), 'sh', '-c', 'find "$@" -uid "$(id -u)" ! -type l -exec chmod g+rwX {} +', 'sh', ...paths],
-    { stdio: 'ignore', env: { PATH: process.env.PATH ?? '/usr/bin:/bin' } });
+    { cwd: '/', stdio: 'ignore', env: { PATH: process.env.PATH ?? '/usr/bin:/bin' } }); // the host's cwd may be closed to that user
   return r.status;
 }
 
