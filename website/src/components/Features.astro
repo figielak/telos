@@ -1,0 +1,52 @@
+---
+const features = [
+  {
+    title: 'Task files with scope',
+    body: 'Each task is a plain Markdown file with its files, a path scope and acceptance items. telos lint-plan rejects files outside the scope and acceptance with no command to run.',
+  },
+  {
+    title: 'Machine-checked acceptance',
+    body: 'telos accept runs every command item and compares each changed file with the task’s scope or its recorded deviations.',
+  },
+  {
+    title: 'Git guard',
+    body: 'A hook blocks git push, --no-verify, git add -A and git add ., git reset --hard, and amending a commit already on a remote branch.',
+  },
+  {
+    title: 'Scope guard',
+    body: 'In the standard and deep profiles an edit outside the running task’s scope adds a warning. With strict_scope: true it is blocked.',
+  },
+  {
+    title: 'Confirmed undo',
+    body: '/telos:undo lists the exact commits and dependent tasks, asks once, then reverts newest first with git revert. Standard and deep profiles.',
+  },
+  {
+    title: 'Capped context',
+    body: 'Each skill reads one context bundle of at most 6000 characters, and the SessionStart status stays within 1200 characters.',
+  },
+  {
+    title: 'User-invoked skills',
+    body: 'Skills run only when you call them, and the hooks are plain Node scripts that make no model calls.',
+  },
+];
+---
+
+<section id="features" class="border-t border-line">
+  <div class="mx-auto grid max-w-6xl gap-12 px-4 py-24 sm:px-6 md:grid-cols-[0.7fr_1.3fr] md:gap-16 md:py-32">
+    <div class="flex flex-col items-start gap-6 md:sticky md:top-28 md:self-start">
+      <p class="font-mono text-xs tracking-widest text-accent uppercase">Features</p>
+      <h2 class="text-3xl font-semibold md:text-5xl">Guardrails you can read.</h2>
+      <p class="max-w-[40ch] text-muted">
+        Each item below is shipped behavior, described in the README and checked by the plugin’s tests.
+      </p>
+    </div>
+    <ul class="m-0 list-none p-0">
+      {features.map((f) => (
+        <li class="grid gap-2 border-t border-line py-6 first:border-t-0 first:pt-0 md:grid-cols-[11rem_1fr] md:gap-8">
+          <h3 class="text-lg font-semibold">{f.title}</h3>
+          <p class="max-w-[60ch] text-muted">{f.body}</p>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>

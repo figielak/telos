@@ -2,7 +2,7 @@
 id: 08-03
 title: Workflow and Features sections
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [08-02]         # task IDs, e.g. [01-01]
@@ -49,10 +49,12 @@ Add the Workflow section showing the real path from plan to commit, and the Feat
 - Mount both after the hero and check them at 390 and 1440 px.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm --prefix website test` → exit 0
-- [ ] Each feature claim was checked against its README or SPEC line
+- [x] all listed tests pass
+- [x] `npm --prefix website test` → exit 0
+- [x] Each feature claim was checked against its README or SPEC line
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+Workflow section: sticky heading column and an `<ol>` of five steps in the real order (`/telos:plan`, `/telos:approve`, `/telos:do` tests first, `telos accept`, commit), stating the `git.auto_commit` condition and that Telos does not push. Features section: seven rows split by rules in an asymmetric grid (task files with scope, machine-checked acceptance, git guard, scope guard, confirmed undo, capped context, user-invoked skills). Each claim was checked against the README hook, command and CLI rows.
+Tests: 8 in `website/test/workflow-features.test.mjs` plus the reusable `shared-content.mjs` content check (unknown commands, emoji, figures, banned wording); 29 in the site suite, all pass. Checked in a browser at 1440 and 390 px: no page overflow, single column below `md`. CSS 17 KB, no client JavaScript.
+RED: node --test website/test/workflow-features.test.mjs → exit 1: no #workflow or #features section in the built page (4 of 8 failed on those assertions).
+Deviations: website/src/components/Meander.astro — added a `uid` prop so two instances do not share one SVG pattern id (file belongs to 08-01, inside scope)

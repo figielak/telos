@@ -2,13 +2,15 @@
 // Greek key (meander) band. Decorative, drawn with currentColor so the parent sets the color.
 interface Props {
   class?: string;
+  /** Unique pattern id; pass a different one for each instance on a page. */
+  uid?: string;
 }
-const { class: className = '' } = Astro.props;
+const { class: className = '', uid = 'meander' } = Astro.props;
 ---
 
 <svg class={className} width="100%" height="12" aria-hidden="true" focusable="false">
   <defs>
-    <pattern id="meander" width="24" height="12" patternUnits="userSpaceOnUse">
+    <pattern id={uid} width="24" height="12" patternUnits="userSpaceOnUse">
       <path
         d="M0 11.5H8.5V3.5H3.5V8H6.5M12 11.5H20.5V3.5H15.5V8H18.5"
         fill="none"
@@ -19,5 +21,5 @@ const { class: className = '' } = Astro.props;
       ></path>
     </pattern>
   </defs>
-  <rect width="100%" height="12" fill="url(#meander)"></rect>
+  <rect width="100%" height="12" fill={`url(#${uid})`}></rect>
 </svg>

@@ -1,0 +1,57 @@
+---
+import Meander from './Meander.astro';
+
+const steps = [
+  {
+    cmd: '/telos:plan',
+    title: 'Plan the phase',
+    body: 'Telos writes draft task files, each with a scope and acceptance items, and fixes them until telos lint-plan passes. You get a short summary.',
+  },
+  {
+    cmd: '/telos:approve',
+    title: 'Approve the plan',
+    body: 'Approval refuses a plan with lint problems and keeps tasks with unconfirmed decisions in draft. The rest become approved, the plan is committed and a local tag marks the start.',
+  },
+  {
+    cmd: '/telos:do',
+    title: 'Implement one task',
+    body: 'Telos writes the tests first, then the implementation. After two failed fix attempts the task is marked blocked instead of guessing further.',
+  },
+  {
+    cmd: 'telos accept',
+    title: 'Verify against acceptance',
+    body: 'Runs the task’s command items and checks that every changed file is inside its scope or listed as a deviation. Any failure is reported as FAIL.',
+  },
+  {
+    cmd: 'git commit',
+    title: 'Commit',
+    body: 'One commit per task, typed and scoped by task id, with explicit paths. This happens when git.auto_commit is true; otherwise Telos lists the paths and the subject.',
+  },
+];
+---
+
+<section id="workflow" class="border-t border-line">
+  <div class="mx-auto grid max-w-6xl gap-12 px-4 py-24 sm:px-6 md:grid-cols-[0.85fr_1.15fr] md:gap-16 md:py-32">
+    <div class="flex flex-col items-start gap-6 md:sticky md:top-28 md:self-start">
+      <Meander uid="meander-workflow" class="w-24 text-accent" />
+      <p class="font-mono text-xs tracking-widest text-accent uppercase">Workflow</p>
+      <h2 class="text-3xl font-semibold md:text-5xl">From plan to commit, one task at a time.</h2>
+      <p class="max-w-[48ch] text-muted">
+        Every <code class="text-text">/telos:*</code> skill is user-invoked: nothing runs until you call it.
+        Telos does not push; its git guard blocks <code class="text-text">git push</code>.
+      </p>
+    </div>
+    <ol class="m-0 list-none p-0">
+      {steps.map((s, i) => (
+        <li class="grid grid-cols-[3rem_1fr] gap-x-4 border-t border-line py-8 first:border-t-0 first:pt-0 md:grid-cols-[4rem_1fr]">
+          <span class="font-mono text-sm text-accent" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+          <div class="flex flex-col gap-3">
+            <p class="m-0 font-mono text-sm text-accent">{s.cmd}</p>
+            <h3 class="text-xl font-semibold md:text-2xl">{s.title}</h3>
+            <p class="max-w-[60ch] text-muted">{s.body}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
