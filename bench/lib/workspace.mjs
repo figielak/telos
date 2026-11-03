@@ -198,6 +198,8 @@ export function ensureSnapshot(key, { workDir, telosDir, build } = {}) {
   } catch { /* missing or unreadable metadata → rebuild */ }
   rmSync(dir, { recursive: true, force: true });
   rmSync(metaPath, { force: true });
+  mkdirSync(root, { recursive: true });
+  chmodSync(root, 0o700); // C/D overlays are copied in by the host; no session reads them here
   const tmp = join(root, `.${key}.tmp-${process.pid}`);
   rmSync(tmp, { recursive: true, force: true });
   mkdirSync(tmp, { recursive: true });

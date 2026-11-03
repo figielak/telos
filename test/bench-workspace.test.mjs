@@ -7,8 +7,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { setupKey } from '../bench/lib/matrix.mjs';
-import { exportPlugin, grantSession, revokeSession, sessionEnv } from '../bench/lib/sandbox.mjs';
-import { ensureSnapshot, prepareCopy } from '../bench/lib/workspace.mjs';
+import { exportPlugin, grantSession, handBack, revokeSession, sessionEnv } from '../bench/lib/sandbox.mjs';
+import { ensureSnapshot, prepareCopy, WorkspaceError } from '../bench/lib/workspace.mjs';
 import { UsageError } from '../lib/errors.mjs';
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
@@ -281,7 +281,7 @@ test('per-run config dir is fresh, holds only settings and credentials, and disa
   assert.deepEqual(readdirSync(bare.env.CLAUDE_CONFIG_DIR), ['settings.json']);
 });
 
-test('session access: only the running cell is group-writable, its parents are traverse-only, revoke closes it', (t) => {
+test('session access: only the running cell is group-writable, its parents are readable (bwrap mounts), revoke closes it', (t) => {
   const w = world(t);
   const mode = (p) => statSync(p).mode & 0o7777;
   const a = prepareCopy(cell('t1', 'A', w.start1), w.manifest, { workDir: w.workDir }).dir;
@@ -292,12 +292,57 @@ test('session access: only the running cell is group-writable, its parents are t
   for (const dir of [a, config, join(a, '.git')]) assert.equal(mode(dir) & 0o070, 0o070, `${dir} group rwx`);
   for (const file of [join(a, 'src', 'a.txt'), join(config, 'settings.json')]) assert.equal(mode(file) & 0o060, 0o060, `${file} group rw`);
   for (const dir of [w.workDir, join(w.workDir, 'copies'), join(w.workDir, 'config')]) {
-    assert.equal(mode(dir) & 0o077, 0o010, `${dir} traverse-only for the group, closed to others`);
+    assert.equal(mode(dir) & 0o077, 0o050, `${dir} group read and traverse only (bwrap reads every parent of a mount), closed to others`);
   }
   assert.equal(mode(other) & 0o077, 0, 'another cell stays closed');
   revokeSession([a, config]);
   for (const dir of [a, config]) assert.equal(mode(dir) & 0o077, 0, `${dir} closed after the cell`);
   assert.throws(() => grantSession([join(w.base, 'elsewhere')], { workDir: w.workDir }), UsageError);
+});
+
+test('the plugin export is closed until a C/D session opens it read-only; snapshots stay closed', async (t) => {
+  const w = world(t);
+  const mode = (p) => statSync(p).mode & 0o7777;
+  const out = join(w.workDir, 'plugin');
+  exportPlugin(plugin(t), out);
+  assert.equal(mode(out) & 0o077, 0, 'export closed to the group after export');
+  await ensureSnapshot(setupKey('r1', w.start1, 'deep'), { workDir: w.workDir, telosDir: plugin(t), build: stubBuild([]) });
+  assert.equal(mode(join(w.workDir, 'snapshots')) & 0o077, 0, 'snapshots closed to every session');
+  const c = prepareCopy(cell('t1', 'A', w.start1), w.manifest, { workDir: w.workDir }).dir;
+  grantSession([c], { workDir: w.workDir, readOnly: [out] });
+  for (const dir of [out, join(out, 'skills', 'map')]) assert.equal(mode(dir) & 0o070, 0o050, `${dir} group r-x, not writable`);
+  assert.equal(mode(join(out, 'skills', 'map', 'SKILL.md')) & 0o070, 0o040, 'file group read-only');
+  assert.equal(mode(join(out, 'bin', 'telos')) & 0o070, 0o050, 'executable stays executable, read-only');
+  revokeSession([c, out]);
+  assert.equal(mode(out) & 0o077, 0, 'export closed again after the cell');
+});
+
+test('instruction files above a session path are refused, never loaded (canary, PROTOCOL §5.2)', (t) => {
+  for (const planted of ['copies/CLAUDE.md', 'CLAUDE.local.md', '.claude/CLAUDE.md']) {
+    const w = world(t);
+    const a = prepareCopy(cell('t1', 'A', w.start1), w.manifest, { workDir: w.workDir }).dir;
+    put(w.workDir, planted, 'CANARY\n');
+    assert.throws(() => grantSession([a], { workDir: w.workDir }), (err) => err instanceof WorkspaceError
+      && /REFUSED:.*instruction/.test(err.message) && err.message.includes(join(w.workDir, planted.split('/')[0] === 'copies' ? planted : planted.split('/')[0])), planted);
+  }
+});
+
+test('handBack opens what the session user wrote with private modes to the group, symlink targets untouched', (t) => {
+  const w = world(t);
+  const mode = (p) => statSync(p).mode & 0o7777;
+  const a = prepareCopy(cell('t1', 'A', w.start1), w.manifest, { workDir: w.workDir }).dir;
+  grantSession([a], { workDir: w.workDir });
+  put(a, 'projects/s/t.jsonl', '{}\n');
+  chmodSync(join(a, 'projects/s/t.jsonl'), 0o600);
+  chmodSync(join(a, 'projects/s'), 0o700);
+  const outside = join(w.base, 'outside.txt');
+  writeFileSync(outside, 'x');
+  chmodSync(outside, 0o600);
+  symlinkSync(outside, join(a, 'link'));
+  assert.equal(handBack([a], ['env']), 0);
+  assert.equal(mode(join(a, 'projects/s')) & 0o070, 0o070, 'private dir group rwx');
+  assert.equal(mode(join(a, 'projects/s/t.jsonl')) & 0o070, 0o060, 'private file group rw');
+  assert.equal(mode(outside), 0o600, 'a symlink target outside is never changed');
 });
 
 test('a work dir inside this repository or a source repository is a usage error (exit 2)', (t) => {
