@@ -1,6 +1,6 @@
 # Telos benchmark protocol
 
-Status: **draft, not yet preregistered.** The final preregistration is the commit made after the pilot (§14); its hash and date are recorded in §14. Until then only dated entries in "Amendments" (end of file) may change this text.
+Status: **preregistered** (hash and date in §14). This text changes only by a post-registration deviation note in the report, never by editing §2–§9.
 
 ## 0. Disclosure and scope
 
@@ -157,7 +157,7 @@ Every run is a fresh headless session in a disposable copy outside this reposito
 7. **Recorded versions**: Claude Code, model IDs per turn, Telos commit and plugin version, profile, exact flags.
 
 ### 5.2 Canaries
-Before the pilot and again in every campaign preflight, in **every variant**: planted instruction files in an ancestor directory and in the user's home configuration; a planted memory entry; a planted trace of a previous cell in the sandbox's `$TMPDIR`; attempts to read the acceptance directory and the bench tree, and to list other cells and the plugin export; an attempt to fetch the upstream repository. Each canary must be absent from the loaded context or fail. Isolation is proven by canaries and by transcript inspection, **not** by init events listing plugins and tools. Any canary hit voids the affected runs and stops the campaign until fixed.
+Before the pilot and again in every campaign preflight, in **every variant**: planted instruction files in an ancestor directory and in the user's home configuration; a planted memory entry; a planted trace of a previous cell in the sandbox's `$TMPDIR`; attempts to read the acceptance directory and the bench tree, to enter other cells (their names can be listed, amendment of 2026-11-03), to list the repository mirrors and snapshots and, in A and B, the plugin export; an attempt to fetch the upstream repository. Each canary must be absent from the loaded context or fail. Isolation is proven by canaries and by transcript inspection, **not** by init events listing plugins and tools. Any canary hit voids the affected runs and stops the campaign until fixed.
 
 ## 6. Workflows and transitions (D-05, D-09)
 
@@ -213,8 +213,8 @@ The acceptance check (§4.2) runs on the final work tree.
 - A missing usage field stays `null` and the run is marked unverified; it is never treated as 0.
 
 ### 7.3 Budget and cap (D-12)
-- Total cap **$300 API-equivalent**. `S` = actual campaign spend so far: every attempt, retry, timeout, abandoned attempt and each snapshot paid (§6.1), the pilot included.
-- **Cell reservation** `R(cell)`: per variant and task kind, the pilot's most expensive matching cell plus 25 %, recorded by amendment. A block's reservation `R(block)` = the sum of its four cells, plus the full setup cost estimate for any snapshot the block needs and that is not yet built.
+- Total cap **$300 API-equivalent**. `S` = actual campaign spend so far: every attempt, retry, timeout, abandoned attempt and each snapshot paid (§6.1), the pilot included. The runner counts only its own spend, so the campaign runs with `--cap-usd 242`: $300 minus the pilot's spend (`bench/PILOT.md`).
+- **Cell reservation** `R(cell)`: one value for every cell, **$3.88**, which is the pilot's most expensive cell ($1.94, setup included) × 2 (`bench/PILOT.md`, amendment below). A block's reservation `R(block)` = the sum of its four cells, plus the full setup cost estimate for any snapshot the block needs and that is not yet built.
 - **A block starts only if `S + R(block) ≤ $300`.** Once started, a block completes all four variants, even if overshoot by the host's budget stop pushes `S` past the cap.
 - Every session runs with `--max-budget-usd` = `R(cell)` − spend of that cell so far. The cell's sessions share its reservation. A session stopped by this budget is a normal failure (§7.2).
 - When the next block cannot start, the campaign stops; the report lists the blocks not run. The forecast is redone after the pilot and recorded. If the forecast for the full matrix exceeds the cap, the quota (§3.5) shrinks only by amendment before preregistration.
@@ -292,6 +292,8 @@ Disclosed in advance, carried from phase 06 (D-03):
 - **Author-run.** §0. When the review of §3.4 is a model check, not a human review, the report says so here.
 - **Acceptance coverage.** Behavioural tests cannot prove an implementation correct; alternative implementations may be mis-graded.
 - **F6 and F9** are fixed in this phase (07-01 and 07-08); their live confirmation is in `bench/PILOT.md`.
+- **Interpreter edits and exploration.** Edits made through an interpreter (`python3 - <<EOF`) are not seen as product mutations, so the §8.4 counting window stays open longer in those sessions, in any variant.
+- **Repositories that ignore `.telos/`.** lazygit's `.gitignore` contains `.*`. There `/telos:approve` cannot commit the plan or create its tag, and `/telos:review` refuses to run. The benchmark measures this as shipped.
 
 ## 13. Mapping to the external plan review
 The external plan review (`BENCHMARK-PLAN-REVIEW.md`, applied during phase 07 revise; not kept in the repository) listed these items. Each is answered here or named as a limitation.
@@ -325,9 +327,12 @@ Pilot runs are excluded from results, published as the pilot, and their spend co
 
 After the pilot, PROTOCOL.md and the corpus are committed together as the **final preregistration**:
 
-- Commit hash: _to be recorded after the pilot_
-- Date: _to be recorded after the pilot_
-- Claude Code version / model ID / Telos commit: _to be recorded after the pilot_
+Final preregistration: _hash recorded by the commit that follows it_
+
+- Commit hash: _recorded by the commit that follows it_
+- Date: 2026-11-03
+- Claude Code version / model ID: 2.1.316 / `claude-sonnet-5-5`
+- Telos commit: the commit that records this hash; it changes only this section, `bench/PILOT.md` and `.telos/`, so the plugin runtime is the preregistered one
 
 Nothing in the measured campaign may start before this commit. After it, this protocol changes only by a post-registration deviation note in the report, never by editing §2–§9.
 
@@ -355,6 +360,8 @@ Dated entries, allowed **only before the final preregistration commit** (§14). 
 - **2026-11-03 · §6.1, bench/README · snapshot overlay.** The overlay is the untracked `.telos/` and `CLAUDE.md`, ignored files included; init's edit of a tracked `.gitignore` is not carried. *Reason:* lazygit's `.*` rule left a snapshot with `CLAUDE.md` only.
 - **2026-11-03 · §6.3 step 3 · how C/D confirm.** The fixed text is sent as `/telos:revise accept the recommended options`. *Reason:* as a plain prompt the session rightly refused to edit `.telos/`, and the scenario stopped with `awaiting: 01:D-01`. The README documents `/telos:revise` as the command that confirms a proposed decision from notes.
 - **2026-11-03 · §5.1 item 2, §6.1, §7.4 · overlay `CLAUDE.md`, local mirrors, infrastructure stops.** (1) The overlay's `CLAUDE.md` is listed in the copy's `.git/info/exclude`. *Reason:* a user commits it with the map, but in a copy the start commit stays HEAD, so it showed as untracked and every `telos accept` failed its scope check on a file the agent never touched. In the pilot agents worked around it by naming it under Deviations, until one rightly stopped to ask, which failed scenario D. Only C and D were exposed, so this biased results against them. An agent's edit of `CLAUDE.md` no longer shows in `git status`, but it still shows in the recorded patch. (2) Copies clone with `--no-local` from one bare mirror per repository in `<workDir>-mirrors`, mode `0700`, not from the network. (3) A failed `prepare` that is not a refusal stops the run with no record, marker or charge, and the cell runs as attempt 1 on resume. *Reason for (2) and (3):* a `Connection reset` during a clone ended a pilot run in cell C, and resuming would have charged the whole reservation as abandoned for a cell in which no session ran.
+- **2026-11-03 · §7.3 · one cell reservation of $3.88, campaign cap argument (project owner's decision after the pilot).** `R(cell)` is one value for all cells, the most expensive pilot cell × 2, replacing the per-variant value at +25 %. *Reason:* the pilot covered only the Go repository, the forecast ($72–90) leaves wide room under the cap, and a limit set too low would count C and D, the most expensive variants, as failures because of the harness. One value also gives every variant the same limit. `--cap-usd 242` subtracts the pilot's $58 from $300, counting its $42 of unverified abandoned attempts in full.
+- **2026-11-03 · §5.2, §8.4, §12 · pilot audit.** The canaries now also cover the mirrors and entering another cell. The classifier audit needed no rule change; §12 records its known gap and the behaviour of repositories that ignore `.telos/`. *Reason:* findings of the final pilot (`bench/PILOT.md`).
 - **2026-11-03 · §7.2 · usage limits.** Added the rule above. *Reason:* a pilot cell ended at turn 19 on `You've hit your 5-hour limit` (HTTP 429), which would have counted as the agent failing, against whichever variant happened to run at that moment.
 - **2026-11-03 · §8.2, §8.4 · classifier audit.** Only pipeline heads count, heredoc bodies and quoted text are ignored, and `out_of_scope_paths` excludes instruction files and `.telos/`. *Reason:* on the pilot transcripts 82 of the 204 Bash calls classified as exploration did not start with a reading command (`go test … | tail`, `telos accept … | tail`, heredoc lines), and every B, C and D run reported its own `CLAUDE.md` as out of scope.
 - **2026-11-02 · §5.1 item 1 · how the OS user's read set is enforced.** The work dir belongs to the host user with the benchmark user's group (setgid, traverse only). Copies are created closed; the runner opens only the running cell's copy and config dir to that group and closes both after grading, and every ancestor is traverse-only, so a session can neither list nor enter another cell. The launcher sets umask `007`; grading runs from `<workDir>/grading`. *Reason:* the first host setup showed that a shared group-writable work dir would let a session read other cells' copies, including finished solutions.
