@@ -1,0 +1,36 @@
+---
+import Terminal from './Terminal.astro';
+import Meander from './Meander.astro';
+const GITHUB = 'https://github.com/figielak/telos';
+---
+
+<section class="mx-auto grid min-h-[100dvh] max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 md:grid-cols-[1fr_1.05fr] md:gap-14 md:py-20">
+  <div class="flex flex-col items-start gap-8">
+    <Meander class="w-24 text-accent" />
+    <p class="font-mono text-xs tracking-widest text-accent uppercase">Claude Code plugin · pre-alpha</p>
+    <h1 class="text-4xl font-semibold md:text-6xl">From intent to completion.</h1>
+    <p class="max-w-[52ch] text-base text-muted md:text-lg">
+      Telos is a lightweight workflow for Claude Code. Plan a phase, approve it, implement each
+      task with tests first, check it against acceptance commands and commit. Project memory stays
+      in <code class="text-text">.telos/</code> inside your repository.
+    </p>
+    <div class="flex flex-wrap gap-3">
+      <a
+        href="#getting-started"
+        class="inline-flex min-h-12 items-center rounded-sm bg-accent px-6 font-display text-sm font-semibold text-bg transition-transform duration-200 hover:brightness-110 active:translate-y-px"
+      >
+        Get started
+      </a>
+      <a
+        href={GITHUB}
+        class="inline-flex min-h-12 items-center rounded-sm border border-line px-6 font-display text-sm font-semibold text-text transition-colors duration-300 hover:border-accent active:translate-y-px"
+      >
+        View on GitHub
+      </a>
+    </div>
+    <p class="font-mono text-xs text-muted">Requires Claude Code with plugin support, Git and Node.js 20.10 or newer.</p>
+  </div>
+  <div class="min-w-0">
+    <Terminal />
+  </div>
+</section>

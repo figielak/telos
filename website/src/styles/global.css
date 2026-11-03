@@ -1,4 +1,5 @@
-@import 'tailwindcss';
+@import 'tailwindcss' source(none);
+@source '../';
 
 /* Fonts: self-hosted variable woff2 (latin subset), see public/fonts/*-LICENSE.txt */
 @font-face {
