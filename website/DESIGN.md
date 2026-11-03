@@ -65,21 +65,30 @@ Tailwind's 4px base scale; use these steps only.
 | Page side gutter | `px-4` below `sm`, `px-6` from `sm` |
 | Inside a panel | `p-5`, `md:p-8` |
 | Between blocks in a section | `gap-8` to `gap-12` |
-| Between sections | `py-24`, `md:py-32` |
+| Between sections | `section-y`: 80 px below `md`, 136 px from `md` |
 
-Content width: `max-w-6xl` (72rem) centered; reading text `max-w-[65ch]`. Full-height sections use
-`min-h-[100dvh]`, never `h-screen`. Layouts use CSS Grid, not percentage math.
+Content width: `max-w-page` (`--container-page`, 75rem = 1200 px) centered; descriptive text
+600 to 680 px (`max-w-[40rem]`), long reading text `max-w-[65ch]`. Never `h-screen`. Layouts use
+CSS Grid, not percentage math.
 
 ## Layout rules
 
-- Asymmetric from `md` up (for example `grid-cols-[1.1fr_0.9fr]`); a strict single column
-  below `md`, with no horizontal page scroll at 390, 768 or 1440 px.
-- No row of three equal cards. Group with rules (`border-t border-line`) and space.
-- Wide content (terminal lines, tables) scrolls inside its own container, never the page.
+- Content is 1200 px wide at most (`max-w-page`); sections are separated by `section-y`
+  (80 px on small screens, 136 px from `md`, as two paddings of 40 px and 68 px).
+- The hero is a centered stack: eyebrow, headline (two lines at most on desktop), a 600 to 680 px
+  description, two calls to action and a terminal 900 to 1000 px wide that starts in the first view.
+  There is no split hero and no large illustration beside the copy.
+- Each section has its own composition; the sections that follow the hero vary (horizontal
+  process, 2 x 2 grid, text beside a tree, a single row of three profile cards).
+- A frame (border or surface) wraps a real group of information only, not every element.
+- Below `md` every layout is a single column with no horizontal page scroll at 390, 768 or 1440 px.
+- Wide content (terminal lines, trees) scrolls inside its own container, never the page.
 
 ## Components
 
 - **Skip link**: first focusable element, visible on focus, accent background.
+- **Monogram** (`components/Monogram.astro`): Greek capital tau inside a thin circle (the target
+  motif), `aria-hidden`, `currentColor`; used in the navigation and as the favicon.
 - **Meander** (`components/Meander.astro`): one SVG band, `aria-hidden`, `currentColor`.
   Used as divider or section mark in accent. At most one per section.
 - **Button, primary**: `bg-accent text-bg`, Manrope 600, radius `sm`, `:active` moves 1px
@@ -88,6 +97,7 @@ Content width: `max-w-6xl` (72rem) centered; reading text `max-w-[65ch]`. Full-h
 - **Link**: accent, underline offset 4px; never color alone for meaning in running text.
 - **Panel**: `bg-surface`, 1px `line` border, radius `md`, no shadow. Only where grouping needs it.
 - **Terminal**: panel with mono text; real text in `<pre>`, labelled illustrative, scrolls inside.
+  In the hero it is 960 px wide, left-aligned inside the centered stack.
 - **Focus**: 2px accent outline, 3px offset on every `:focus-visible`.
 
 ## Motion

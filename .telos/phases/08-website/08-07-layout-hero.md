@@ -2,7 +2,7 @@
 id: 08-07
 title: Layout system and centered hero
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [08-05]         # task IDs, e.g. [01-01]
@@ -62,11 +62,14 @@ Set the shared layout rules from D-05 and rebuild the first screen: centered cop
 - Check the first view at 1440x900 and 390x844.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm --prefix website test` → exit 0
-- [ ] At 1440x900 the terminal starts in the first view and the h1 takes at most two lines
-- [ ] At 390x844 the h1 breaks naturally, the primary CTA is visible without scrolling and the page has no horizontal scroll
+- [x] all listed tests pass
+- [x] `npm --prefix website test` → exit 0
+- [x] At 1440x900 the terminal starts in the first view and the h1 takes at most two lines
+- [x] At 390x844 the h1 breaks naturally, the primary CTA is visible without scrolling and the page has no horizontal scroll
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+Shared layout rules from D-05: `--container-page: 75rem` (`max-w-page`) and a `section-y` utility (80 px below `md`, 136 px from `md`). Hero is now a centered stack with the exact eyebrow, h1, description and both CTAs, a `Pre-alpha. Requires Claude Code, Git and Node.js ≥ 20.10.` line below them, and the 960 px terminal under that (left-aligned inside, still labelled Illustrative). Nav has logo, five anchors in the D-05 order, a GitHub link outside the small-screen menu, and a new `Monogram.astro` (tau in a thin circle) that is also the favicon.
+Tests: `hero.test.mjs` now 18 tests; 61 in the site suite, all pass. Browser at 1440x900: h1 one line, description 640 px in two lines, terminal 960 px wide starting at 473 px (427 px visible). At 390x844: h1 two natural lines, primary CTA at 401 px, no page overflow. CSS 20 KB.
+RED: node --test website/test/hero.test.mjs → exit 1: 9 of 18 failed on the new hero, nav, token and DESIGN.md assertions.
+Surprises: the dev server restores the previous scroll position, so layout numbers must be measured after scrollTo(0, 0). Other sections still use `max-w-6xl` and `py-24`; 08-08 to 08-10 move them to `max-w-page` and `section-y`.
+Deviations: none

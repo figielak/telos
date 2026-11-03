@@ -33,6 +33,8 @@
   --color-muted: #a5a29a;
   --color-line: #2a2d33;
 
+  --container-page: 75rem;
+
   --font-display: 'Manrope', ui-sans-serif, system-ui, sans-serif;
   --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
@@ -41,6 +43,14 @@
   --radius-md: 4px;
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Vertical rhythm between sections: 80 px below md, 136 px from md (two paddings). */
+@utility section-y {
+  padding-block: 2.5rem;
+  @media (min-width: 48rem) {
+    padding-block: 4.25rem;
+  }
 }
 
 @layer base {

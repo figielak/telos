@@ -1,10 +1,12 @@
 ---
+import Monogram from './Monogram.astro';
+
 const GITHUB = 'https://github.com/figielak/telos';
 const links = [
   { href: '#workflow', label: 'Workflow' },
   { href: '#features', label: 'Features' },
-  { href: '#profiles', label: 'Profiles' },
   { href: '#memory', label: 'Project memory' },
+  { href: '#profiles', label: 'Profiles' },
   { href: '#getting-started', label: 'Getting started' },
 ];
 const linkClass =
@@ -12,30 +14,29 @@ const linkClass =
 ---
 
 <header class="sticky top-0 z-40 border-b border-line bg-bg">
-  <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-4 sm:px-6">
+  <div class="mx-auto flex h-16 max-w-page items-center justify-between gap-4 px-4 sm:px-6">
     <a href="/" class="flex items-center gap-3 font-display text-lg font-semibold tracking-tight text-text">
-      <svg width="22" height="22" viewBox="0 0 32 32" aria-hidden="true" focusable="false" class="text-accent">
-        <path d="M5 8h22M16 8v18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"></path>
-      </svg>
+      <Monogram size={26} class="text-accent" />
       Telos
     </a>
     <nav aria-label="Primary" class="hidden items-center gap-6 md:flex">
       {links.map((l) => <a href={l.href} class={linkClass}>{l.label}</a>)}
-      <a href={GITHUB} class={`${linkClass} text-text`}>GitHub</a>
     </nav>
-    <details class="group relative md:hidden">
-      <summary
-        class="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-sm border border-line px-4 font-display text-sm font-medium text-text marker:hidden [&::-webkit-details-marker]:hidden"
-      >
-        Menu
-        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false" class="transition-transform duration-300 group-open:rotate-180">
-          <path d="M2 4.5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"></path>
-        </svg>
-      </summary>
-      <nav aria-label="Primary, small screens" class="absolute right-0 mt-2 flex w-64 flex-col rounded-md border border-line bg-surface p-2">
-        {links.map((l) => <a href={l.href} class={`${linkClass} px-3`}>{l.label}</a>)}
-        <a href={GITHUB} class={`${linkClass} px-3 text-text`}>GitHub</a>
-      </nav>
-    </details>
+    <div class="flex items-center gap-2">
+      <a href={GITHUB} class={`${linkClass} px-3 text-text`}>GitHub</a>
+      <details class="group relative md:hidden">
+        <summary
+          class="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-sm border border-line px-4 font-display text-sm font-medium text-text marker:hidden [&::-webkit-details-marker]:hidden"
+        >
+          Menu
+          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false" class="transition-transform duration-300 group-open:rotate-180">
+            <path d="M2 4.5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"></path>
+          </svg>
+        </summary>
+        <nav aria-label="Primary, small screens" class="absolute right-0 mt-2 flex w-64 flex-col rounded-md border border-line bg-surface p-2">
+          {links.map((l) => <a href={l.href} class={`${linkClass} px-3`}>{l.label}</a>)}
+        </nav>
+      </details>
+    </div>
   </div>
 </header>

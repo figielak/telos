@@ -1,20 +1,16 @@
 ---
 import Terminal from './Terminal.astro';
-import Meander from './Meander.astro';
 const GITHUB = 'https://github.com/figielak/telos';
 ---
 
-<section class="mx-auto grid min-h-[100dvh] max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 md:grid-cols-[1fr_1.05fr] md:gap-14 md:py-20">
-  <div class="flex flex-col items-start gap-8">
-    <Meander class="w-24 text-accent" />
-    <p class="font-mono text-xs tracking-widest text-accent uppercase">Claude Code plugin · pre-alpha</p>
-    <h1 class="text-4xl font-semibold md:text-6xl">From intent to completion.</h1>
-    <p class="max-w-[52ch] text-base text-muted md:text-lg">
-      Telos is a lightweight workflow for Claude Code. Plan a phase, approve it, implement each
-      task with tests first, check it against acceptance commands and commit. Project memory stays
-      in <code class="text-text">.telos/</code> inside your repository.
+<section class="section-y">
+  <div class="mx-auto flex max-w-page flex-col items-center px-4 text-center sm:px-6">
+    <p class="font-mono text-xs tracking-widest text-accent uppercase">PURPOSE-BUILT FOR CLAUDE CODE</p>
+    <h1 class="mt-6 text-4xl font-semibold text-balance md:text-6xl">From intent to completion.</h1>
+    <p class="mt-6 max-w-[40rem] text-base text-balance text-muted md:text-lg">
+      Plan, approve, implement, verify. A lightweight workflow that keeps you in control.
     </p>
-    <div class="flex flex-wrap gap-3">
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
       <a
         href="#getting-started"
         class="inline-flex min-h-12 items-center rounded-sm bg-accent px-6 font-display text-sm font-semibold text-bg transition-transform duration-200 hover:brightness-110 active:translate-y-px"
@@ -28,9 +24,9 @@ const GITHUB = 'https://github.com/figielak/telos';
         View on GitHub
       </a>
     </div>
-    <p class="font-mono text-xs text-muted">Requires Claude Code with plugin support, Git and Node.js 20.10 or newer.</p>
-  </div>
-  <div class="min-w-0">
-    <Terminal />
+    <p class="mt-4 font-mono text-xs text-muted">Pre-alpha. Requires Claude Code, Git and Node.js ≥ 20.10.</p>
+    <div class="mt-10 w-full max-w-[60rem] min-w-0 md:mt-12">
+      <Terminal />
+    </div>
   </div>
 </section>
