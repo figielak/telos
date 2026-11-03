@@ -37,7 +37,7 @@ function readTasks(ctx) {
 function bundleOf(ctx, args) {
   const r = telosCli(ctx, ['budget', '--ctx', ...args]);
   const lines = r.stdout.split('\n').filter(Boolean);
-  return { args: args.join(' '), exit: r.code, lines: lines.slice(lines.findLastIndex((l) => l.startsWith('- .telos/')) + 1) };
+  return { args: args.join(' '), exit: r.code, lines: lines.slice(Math.max(lines.findIndex((l) => l.startsWith('Stored total')), 0)) };
 }
 
 /**

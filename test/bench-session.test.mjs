@@ -97,7 +97,8 @@ test('C/D scenario: plan → lint → confirm → approve → do / do-hard as Ne
   assert.equal(new Set(run.sessions.map((s) => s.sessionId)).size, 6);
   assert.deepEqual(run.sessions.map((s) => s.step), ['plan', 'confirm', 'approve', 'do', 'do', 'do']);
   assert.deepEqual(run.sessions.map((s) => s.bundle?.args), ['plan', 'plan', 'approve', 'do', 'do 01-02', 'do'], 'every C/D step records its bundle (§6.4)');
-  assert.deepEqual(run.sessions[4].bundle.lines, ['Injected do 01-02 · ~100 est. tokens'], 'without the stored-files list');
+  assert.deepEqual(run.sessions[4].bundle.lines, ['Stored total: 1 files · 10 B · ~3 est. tokens', 'Rendered injections:', '- ctx do 01-02 · ~100 est. tokens',
+    'Omitted:', '- .telos/phases/x.md · not injected'], 'without the stored-files list, and an omitted .telos path does not cut the rows');
 });
 
 test('C/D: a /telos:do that blocks and escalates to /telos:do-hard is followed', async (t) => {

@@ -20,7 +20,11 @@ if (args[0] === 'status') {
   out('Telos budget · estimated tokens');
   out('Stored .telos files (raw):');
   out('- .telos/STATUS.md · 10 B · ~3 est. tokens');
-  out(`Injected ${args.slice(2).join(' ')} · ~100 est. tokens`);
+  out('Stored total: 1 files · 10 B · ~3 est. tokens');
+  out('Rendered injections:');
+  out(`- ctx ${args.slice(2).join(' ')} · ~100 est. tokens`);
+  out('Omitted:');
+  out('- .telos/phases/x.md · not injected');
 } else if (args[0] === 'lint-plan') {
   out(s.lint === 0 ? `ok: ${s.tasks.length} tasks` : '01-02: Files not in scope');
   process.exitCode = s.lint;
