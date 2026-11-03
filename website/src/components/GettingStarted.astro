@@ -1,6 +1,4 @@
 ---
-import Meander from './Meander.astro';
-
 const commands = [
   '/plugin marketplace add figielak/telos',
   '/plugin install telos@telos',
@@ -15,47 +13,55 @@ const steps = [
 ---
 
 <section id="getting-started" class="border-t border-line">
-  <div class="mx-auto grid max-w-6xl gap-12 px-4 py-24 sm:px-6 md:grid-cols-[0.85fr_1.15fr] md:gap-16 md:py-32">
-    <div class="flex flex-col items-start gap-6 md:sticky md:top-28 md:self-start">
-      <Meander uid="meander-start" class="w-24 text-accent" />
+  <div class="section-y mx-auto max-w-page px-4 sm:px-6">
+    <div class="flex max-w-[40rem] flex-col items-start gap-5">
       <p class="font-mono text-xs tracking-widest text-accent uppercase">Getting started</p>
-      <h2 class="text-3xl font-semibold md:text-5xl">Three commands to begin.</h2>
-      <p class="max-w-[44ch] text-muted">
+      <h2 class="text-3xl font-semibold text-balance md:text-5xl">Three commands to begin.</h2>
+      <p class="text-muted">
         Telos is set up per repository. Run these inside Claude Code, in the repository you want to use it in.
       </p>
-      <ul class="m-0 flex list-none flex-col gap-1 p-0 font-mono text-xs text-muted">
-        <li>Requires:</li>
-        {requirements.map((r) => <li class="text-text">{r}</li>)}
-      </ul>
     </div>
 
-    <div class="flex min-w-0 flex-col gap-12">
-      <div>
-        <ol class="m-0 flex list-none flex-col gap-3 p-0">
+    <figure data-install-block class="m-0 mt-12 max-w-[60rem] lg:mt-16">
+      <div class="rounded-md border border-line bg-surface">
+        <div class="flex items-center justify-between border-b border-line px-4 py-2.5 font-mono text-xs tracking-widest text-muted uppercase">
+          <span>claude code</span>
+          <span>your repository</span>
+        </div>
+        <ol class="m-0 flex list-none flex-col gap-1 p-3 md:p-4">
           {commands.map((c, i) => (
-            <li class="flex items-center justify-between gap-3 rounded-md border border-line bg-surface py-2 pr-2 pl-4">
-              <span class="font-mono text-xs text-muted" aria-hidden="true">{i + 1}</span>
-              <code class="min-w-0 flex-1 overflow-x-auto py-1.5 font-mono text-sm whitespace-nowrap text-text select-all">{c}</code>
+            <li class="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 rounded-sm py-2 pl-2 sm:grid-cols-[auto_1fr_auto] sm:py-1">
+              <span class="self-start pt-0.5 font-mono text-sm text-accent sm:self-center sm:pt-0" aria-hidden="true">&gt;</span>
+              <code class="min-w-0 py-0.5 font-mono text-sm break-words whitespace-normal text-text select-all sm:overflow-x-auto sm:py-2 sm:whitespace-nowrap md:text-base">{c}</code>
               <button
                 type="button"
                 hidden
                 data-copy={c}
                 aria-label={`Copy ${c}`}
-                class="min-h-10 shrink-0 cursor-pointer rounded-sm border border-line px-4 font-display text-sm font-semibold text-text transition-colors duration-300 hover:border-accent active:translate-y-px"
+                class="col-start-2 min-h-10 shrink-0 cursor-pointer justify-self-start rounded-sm border border-line px-4 font-display text-sm font-semibold text-text transition-colors duration-300 hover:border-accent active:translate-y-px sm:col-start-auto"
               >
                 Copy
               </button>
             </li>
           ))}
         </ol>
-        <p id="copy-status" aria-live="polite" class="mt-3 min-h-6 font-mono text-xs text-accent"></p>
+        <p id="copy-status" aria-live="polite" class="m-0 min-h-6 px-4 pb-3 font-mono text-xs text-accent md:px-5"></p>
       </div>
+      <figcaption class="sr-only">Install commands, one per line, each with a copy button</figcaption>
+    </figure>
 
-      <div class="flex flex-col gap-4">
-        <h3 class="text-xl font-semibold md:text-2xl">Then, in order</h3>
+    <div class="mt-12 grid gap-10 md:grid-cols-[0.8fr_1.2fr] md:gap-16 lg:mt-16">
+      <div class="flex flex-col gap-3">
+        <h3 class="text-xl font-semibold">Requires</h3>
+        <ul class="m-0 flex list-none flex-col gap-1 p-0 text-muted">
+          {requirements.map((r) => <li>{r}</li>)}
+        </ul>
+      </div>
+      <div class="flex flex-col gap-3">
+        <h3 class="text-xl font-semibold">Then, in order</h3>
         <ol class="m-0 list-none p-0">
           {steps.map(([cmd, text]) => (
-            <li class="grid gap-1 border-t border-line py-4 first:border-t-0 first:pt-0 sm:grid-cols-[11rem_1fr] sm:gap-6">
+            <li class="grid gap-1 border-t border-line py-3 first:border-t-0 first:pt-0 sm:grid-cols-[11rem_1fr] sm:gap-6">
               <code class="font-mono text-sm text-accent">{cmd}</code>
               <span class="text-muted">{text}</span>
             </li>

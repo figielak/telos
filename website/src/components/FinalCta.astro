@@ -1,0 +1,26 @@
+---
+const REPO = 'https://github.com/figielak/telos';
+---
+
+<section id="final-cta" class="border-t border-line">
+  <div class="section-y mx-auto flex max-w-page flex-col items-center px-4 text-center sm:px-6">
+    <h2 class="text-3xl font-semibold text-balance md:text-5xl">Try it on one phase.</h2>
+    <p class="mt-5 max-w-[40rem] text-muted">
+      Telos is pre-alpha. The README documents every command, and the SPEC explains how it is designed.
+    </p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a
+        href={REPO}
+        class="inline-flex min-h-12 items-center rounded-sm bg-accent px-6 font-display text-sm font-semibold text-bg transition-transform duration-200 hover:brightness-110 active:translate-y-px"
+      >
+        View on GitHub
+      </a>
+      <a
+        href={`${REPO}#readme`}
+        class="inline-flex min-h-12 items-center rounded-sm border border-line px-6 font-display text-sm font-semibold text-text transition-colors duration-300 hover:border-accent active:translate-y-px"
+      >
+        Read the README
+      </a>
+    </div>
+  </div>
+</section>

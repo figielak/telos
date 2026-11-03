@@ -1,7 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync } from 'node:fs';
-import { TOKENS, contrast, distCss, distPath, exists, readDist, readSite } from './helpers.mjs';
+import { existsSync, readdirSync } from 'node:fs';
+import { TOKENS, contrast, distCss, distPath, exists, readDist, readSite, siteRoot } from './helpers.mjs';
 
 const html = () => readDist('index.html');
 const count = (s, re) => (s.match(re) ?? []).length;
@@ -102,8 +102,13 @@ describe('base layout', () => {
     assert.match(css, /:focus-visible/);
   });
 
-  test('meander is decorative', () => {
-    assert.match(readSite('src', 'components', 'Meander.astro'), /aria-hidden="true"/);
-    assert.match(readSite('src', 'components', 'Meander.astro'), /currentColor/);
+  test('the meander is gone: no file, no import, no mention in DESIGN.md', () => {
+    assert.ok(!existsSync(join(siteRoot, 'src', 'components', 'Meander.astro')), 'Meander.astro still exists');
+    for (const dir of ['components', 'layouts', 'pages']) {
+      for (const f of readdirSync(join(siteRoot, 'src', dir))) {
+        assert.ok(!/meander/i.test(readSite('src', dir, f)), `${dir}/${f} mentions the meander`);
+      }
+    }
+    assert.ok(!/meander/i.test(readSite('DESIGN.md')));
   });
 });

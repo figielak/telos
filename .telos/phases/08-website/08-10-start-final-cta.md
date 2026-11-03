@@ -2,7 +2,7 @@
 id: 08-10
 title: "Getting Started block, final CTA and footer"
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [08-09]         # task IDs, e.g. [01-01]
@@ -54,10 +54,13 @@ Rebuild Getting Started as one large terminal block with short instructions, add
 - Check copy and layout in a browser at 390 and 1440 px.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm --prefix website test` → exit 0
-- [ ] Copy still works in a browser, and the block has no page overflow at 390 px
+- [x] all listed tests pass
+- [x] `npm --prefix website test` → exit 0
+- [x] Copy still works in a browser, and the block has no page overflow at 390 px
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+Getting Started is now one large terminal-style `<figure data-install-block>` (960 px) holding the three README commands, their copy buttons and the single `aria-live` status; requirements and the `/telos:plan`, `/telos:approve`, `/telos:do` steps (plus `/telos:map`) sit outside it. New `FinalCta.astro` (`#final-cta`, h2 "Try it on one phase.", links to the repository and README, no promise) sits between Getting Started and the footer. The footer uses `Monogram.astro` and `max-w-page`; `Meander.astro` is deleted and DESIGN.md now lists only the tau monogram, thin lines and the target motif as Greek references.
+Tests: 72 in the site suite (`getting-started.test.mjs` 18 with the install block and final CTA, `foundation.test.mjs` with the meander-gone test), all pass. Browser: copy success, failure and status reset verified with a stubbed clipboard; 1440 px block 960 px wide; at 390 px no page overflow.
+RED: node --test website/test/getting-started.test.mjs website/test/foundation.test.mjs → exit 1: 7 of 30 failed on the install block, final CTA, footer monogram and meander-gone assertions.
+Surprises: at 390 px the commands were cut off with inner scrollbars, so they now wrap and the Copy button sits under each command until `sm`. DESIGN.md also named the meander in the colour table and intro, both updated.
+Deviations: none

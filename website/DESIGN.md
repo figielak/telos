@@ -1,7 +1,7 @@
 # Telos website: design system
 
 Direction: **Ancient Precision / Obsidian & Gold**. A quiet, dark developer-tool page with one
-metal accent and a restrained Greek key (meander) motif. Tokens live in
+metal accent and restrained Greek references: a tau monogram, thin lines and a target motif. Tokens live in
 `src/styles/global.css` (`@theme`); this file is the reference for them. The tests in
 `test/foundation.test.mjs` check that both agree.
 
@@ -19,7 +19,7 @@ One accent, five roles. Never pure black or white, no gradients on text, no glow
 |---|---|---|---|
 | bg | `#101114` | `bg-bg` | Page background, text on accent |
 | surface | `#1A1C20` | `bg-surface` | Raised areas: terminal, table, panels |
-| accent | `#C8A96B` | `text-accent`, `bg-accent` | Links, primary action, meander, focus ring |
+| accent | `#C8A96B` | `text-accent`, `bg-accent` | Links, primary action, monogram, focus ring |
 | text | `#F1EEE6` | `text-text` | Headings and body |
 | muted | `#A5A29A` | `text-muted` | Secondary text, captions, labels |
 | line | `#2A2D33` | `border-line` | 1px rules and dividers (decorative only) |
@@ -89,8 +89,6 @@ CSS Grid, not percentage math.
 - **Skip link**: first focusable element, visible on focus, accent background.
 - **Monogram** (`components/Monogram.astro`): Greek capital tau inside a thin circle (the target
   motif), `aria-hidden`, `currentColor`; used in the navigation and as the favicon.
-- **Meander** (`components/Meander.astro`): one SVG band, `aria-hidden`, `currentColor`.
-  Used as divider or section mark in accent. At most one per section.
 - **Button, primary**: `bg-accent text-bg`, Manrope 600, radius `sm`, `:active` moves 1px
   (`translate-y-px`).
 - **Button, secondary**: 1px `line` border, `text-text`, hover border `accent`.
@@ -98,6 +96,9 @@ CSS Grid, not percentage math.
 - **Panel**: `bg-surface`, 1px `line` border, radius `md`, no shadow. Only where grouping needs it.
 - **Terminal**: panel with mono text; real text in `<pre>`, labelled illustrative, scrolls inside.
   In the hero it is 960 px wide, left-aligned inside the centered stack.
+- **Install block**: a `figure` styled like the terminal with one row per command, a copy button
+  (enabled by one small inline script) and one `aria-live` status; the commands stay selectable text.
+- **Final CTA**: centered h2, one sentence and two links, to the repository and the README.
 - **Focus**: 2px accent outline, 3px offset on every `:focus-visible`.
 
 ## Motion

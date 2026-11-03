@@ -38,6 +38,54 @@ describe('getting started section', () => {
   });
 });
 
+describe('install block', () => {
+  const block = () => html().match(/<figure\b[^>]*data-install-block[\s\S]*?<\/figure>/)?.[0];
+
+  test('all three commands, all three copy buttons and the status sit in one block', () => {
+    const b = block();
+    assert.ok(b, 'install block (figure data-install-block) missing');
+    for (const c of COMMANDS) assert.ok(strip(b).includes(c), `block lacks ${c}`);
+    assert.equal((b.match(/<button\b/g) ?? []).length, 3);
+    assert.equal((b.match(/aria-live="/g) ?? []).length, 1);
+    assert.match(b, /id="copy-status"/);
+  });
+
+  test('requirements and the next steps are outside the block', () => {
+    const outside = strip((section('getting-started') ?? '').replace(block() ?? '', ''));
+    assert.match(outside, /Node\.js ≥ 20\.10/);
+    assert.match(outside, /\/telos:plan/);
+    assert.ok(!/\/plugin install/.test(outside), 'install commands only in the block');
+  });
+
+  test('section uses the shared width and spacing', () => {
+    const s = section('getting-started') ?? '';
+    assert.match(s, /\bsection-y\b/);
+    assert.match(s, /\bmax-w-page\b/);
+    assert.ok(!/meander/i.test(s));
+  });
+});
+
+describe('final CTA', () => {
+  const cta = () => section('final-cta');
+
+  test('follows getting started, comes before the footer, has an h2', () => {
+    const h = html();
+    assert.ok(cta(), '#final-cta missing');
+    assert.match(cta(), /<h2\b/);
+    assert.ok(h.search(/<section\b[^>]*\bid="getting-started"/) < h.search(/<section\b[^>]*\bid="final-cta"/));
+    assert.ok(h.search(/<section\b[^>]*\bid="final-cta"/) < h.indexOf('<footer'));
+  });
+
+  test('links to the repository and the README, and promises nothing', () => {
+    const c = cta() ?? '';
+    assert.ok(c.includes(`href="${REPO}"`));
+    assert.match(c, /href="[^"]*#readme"/);
+    assert.ok(!/guarantee|always|never fail|best|fastest/i.test(strip(c)));
+    assert.match(c, /\bsection-y\b/);
+    assert.match(c, /\bmax-w-page\b/);
+  });
+});
+
 describe('copy buttons', () => {
   test('one named button per command, hidden until the script enables them', () => {
     const s = section('getting-started') ?? '';
@@ -84,6 +132,10 @@ describe('footer', () => {
     const t = strip(f);
     assert.match(t, /pre-alpha/i);
     assert.match(t, /MIT/);
+  });
+
+  test('uses the monogram', () => {
+    assert.match(footer() ?? '', /<circle\b/);
   });
 
   test('does not link a LICENSE file', () => {
