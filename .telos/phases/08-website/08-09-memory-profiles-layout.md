@@ -2,7 +2,7 @@
 id: 08-09
 title: "Memory before Profiles, with profile cards"
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [08-08]         # task IDs, e.g. [01-01]
@@ -52,10 +52,13 @@ Move Project memory before Profiles, with text left and the file tree right, and
 - Check at 390, 768 and 1440 px.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm --prefix website test` → exit 0
-- [ ] Profile cards sit side by side at 1440 px and stack at 390 px, and the tree's limit column is fully visible at 1440 px
+- [x] all listed tests pass
+- [x] `npm --prefix website test` → exit 0
+- [x] Profile cards sit side by side at 1440 px and stack at 390 px, and the tree's limit column is fully visible at 1440 px
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+Order is now Hero, Workflow, Core features, Project memory, Profiles, Getting started. Memory has the text left and the `.telos/` tree right (text first in the HTML, no `md:order-*`); at 1440 px the tree is 596 px wide and its limit column is fully visible without scrolling. Profiles are three equal cards from `lg` (368 px each at 1440 px), stacked below it, each an `h3` with a `<dl>` of the six areas from `profiles.mjs`; no table, no highlighted profile, no cost targets.
+Tests: `profiles-memory.test.mjs` now 13 tests (cards and labels, every cell shown, lg three-column grid, no promotion wording, memory text before tree, section order); 66 in the site suite, all pass. Browser: 1440 px side-by-side cards and visible limits; 768 and 390 px stacked cards; no page overflow.
+RED: node --test website/test/profiles-memory.test.mjs → exit 1: 5 of 13 failed on the card, label, grid, text-before-tree and order assertions.
+Surprises: the two-column Memory layout starts at `lg` instead of `md` as planned, because at 768 px the tree got 359 px and its limit column scrolled out of view; at 768 px it is a single 703 px column. Both sections now use `section-y` and `max-w-page`.
+Deviations: none

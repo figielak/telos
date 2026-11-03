@@ -25,25 +25,33 @@ describe('profiles data', () => {
 });
 
 describe('profiles section', () => {
-  test('real table with three column headers and six row headers', () => {
+  test('cards, not a table: three h3 in order, each with a dl of the six labels', () => {
     const s = section('profiles');
     assert.ok(s, '#profiles missing');
     assert.match(s, /<h2\b/);
-    assert.match(s, /<table\b/);
-    const cols = [...s.matchAll(/<th\b[^>]*scope="col"[^>]*>([\s\S]*?)<\/th>/g)].map((m) => strip(m[1]).trim().toLowerCase());
-    for (const c of columns) assert.ok(cols.includes(c), `column ${c}`);
-    const rowHeads = [...s.matchAll(/<th\b[^>]*scope="row"[^>]*>([\s\S]*?)<\/th>/g)].map((m) => strip(m[1]).trim());
-    assert.deepEqual(rowHeads, rows.map((r) => r.label));
+    assert.ok(!/<table\b/.test(s), 'the table is replaced by cards');
+    const names = [...s.matchAll(/<h3\b[^>]*>([\s\S]*?)<\/h3>/g)].map((m) => strip(m[1]).trim().toLowerCase());
+    assert.deepEqual(names, columns);
+    const dls = [...s.matchAll(/<dl\b[\s\S]*?<\/dl>/g)].map((m) => m[0]);
+    assert.equal(dls.length, 3);
+    for (const dl of dls) {
+      const labels = [...dl.matchAll(/<dt\b[^>]*>([\s\S]*?)<\/dt>/g)].map((m) => strip(m[1]).trim());
+      assert.deepEqual(labels, rows.map((r) => r.label));
+    }
   });
 
-  test('explicit ARIA table roles survive the stacked layout', () => {
+  test('every cell of profiles.mjs appears in its card', () => {
     const s = section('profiles') ?? '';
-    const n = (role) => (s.match(new RegExp(`role="${role}"`, 'g')) ?? []).length;
-    assert.equal(n('table'), 1);
-    assert.equal(n('row'), 7);
-    assert.equal(n('columnheader'), 4);
-    assert.equal(n('rowheader'), 6);
-    assert.equal(n('cell'), 18);
+    const dls = [...s.matchAll(/<dl\b[\s\S]*?<\/dl>/g)].map((m) => strip(m[0]));
+    columns.forEach((c, i) => rows.forEach((r) => assert.ok(dls[i].includes(r.cells[i]), `${c} / ${r.label}: ${r.cells[i]}`)));
+  });
+
+  test('three equal cards from lg, stacked below; none highlighted', () => {
+    const s = section('profiles') ?? '';
+    assert.match(s, /lg:grid-cols-3/);
+    assert.match(s, /\bsection-y\b/);
+    assert.match(s, /\bmax-w-page\b/);
+    assert.ok(!/recommended|popular|most people|best for/i.test(strip(s)), 'no profile is promoted');
   });
 
   test('states the superset rule and how to switch', () => {
@@ -78,6 +86,14 @@ describe('memory section', () => {
     assert.match(t, /repository/i);
   });
 
+  test('text comes before the tree, and the layout does not reorder with CSS', () => {
+    const s = section('memory') ?? '';
+    assert.ok(s.search(/<h2\b/) < s.indexOf('<figure'), 'heading before the tree in the HTML');
+    assert.ok(!/md:order-/.test(readFileSync(join(siteRoot, 'src', 'components', 'Memory.astro'), 'utf8')));
+    assert.match(s, /\bsection-y\b/);
+    assert.match(s, /\bmax-w-page\b/);
+  });
+
   test('tree is a labelled scroll region', () => {
     const s = section('memory') ?? '';
     assert.match(s, /role="region"[^>]*aria-label="[^"]+"[^>]*tabindex="0"|tabindex="0"[^>]*role="region"/);
@@ -85,9 +101,9 @@ describe('memory section', () => {
 });
 
 describe('page', () => {
-  test('sections appear in order', () => {
+  test('memory comes before profiles, and both follow features', () => {
     const h = html();
-    const at = ['workflow', 'features', 'profiles', 'memory'].map((id) => h.search(new RegExp(`<section\\b[^>]*\\bid="${id}"`)));
+    const at = ['workflow', 'features', 'memory', 'profiles'].map((id) => h.search(new RegExp(`<section\\b[^>]*\\bid="${id}"`)));
     assert.ok(at.every((i) => i > -1), `positions ${at}`);
     assert.deepEqual([...at].sort((a, b) => a - b), at);
   });
