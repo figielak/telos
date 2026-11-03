@@ -46,12 +46,22 @@ describe('profiles section', () => {
     columns.forEach((c, i) => rows.forEach((r) => assert.ok(dls[i].includes(r.cells[i]), `${c} / ${r.label}: ${r.cells[i]}`)));
   });
 
-  test('three equal cards from lg, stacked below; none highlighted', () => {
+  test('profiles offer audience guidance and recommend Standard', () => {
     const s = section('profiles') ?? '';
     assert.match(s, /lg:grid-cols-3/);
     assert.match(s, /\bsection-y\b/);
     assert.match(s, /\bmax-w-page\b/);
-    assert.ok(!/recommended|popular|most people|best for/i.test(strip(s)), 'no profile is promoted');
+    const cards = s.match(/<article\b[\s\S]*?<\/article>/g);
+    assert.equal(cards.length, 3);
+    assert.match(cards[1], /Recommended start/);
+    assert.match(cards[1], /border-accent/);
+    for (const card of cards) {
+      const detail = card.match(/<details\b[\s\S]*?<\/details>/)?.[0];
+      assert.ok(detail);
+      assert.ok(!/<details[^>]*\bopen\b/.test(detail));
+      assert.match(detail, /<dl\b/);
+      assert.match(strip(card.replace(detail, '')), /For /);
+    }
   });
 
   test('states the superset rule and how to switch', () => {

@@ -15,6 +15,6 @@ Awaiting user: 07:D-05, 07:D-06, 07:D-07, 07:D-08, 07:D-09, 07:D-11, 07:D-12
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 08-11 done: clearer copy, recommended Standard, task example and mobile menu; 75 site tests and browser checks pass
 - 08-10 done: install block, final CTA, meander removed; 72 site tests
 - 08-09 done: Memory before Profiles, profile cards; 66 site tests
-- 08-08 done: horizontal Workflow, 2x2 Core features; 64 site tests

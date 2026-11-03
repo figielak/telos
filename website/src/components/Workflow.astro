@@ -7,22 +7,22 @@ const stages = [
   {
     name: 'Plan',
     cmd: '/telos:plan',
-    body: 'Telos writes draft task files, each with a scope and acceptance items, and fixes them until telos lint-plan passes. You get a short summary.',
+    body: 'Describe what you need. Get draft tasks with clear boundaries and acceptance criteria.',
   },
   {
     name: 'Approve',
     cmd: '/telos:approve',
-    body: 'Approval refuses a plan with lint problems and keeps tasks with unconfirmed decisions in draft. The rest become approved, the plan is committed and a local tag marks the start.',
+    body: 'Review the tasks and resolve open decisions before implementation begins.',
   },
   {
     name: 'Implement',
     cmd: '/telos:do',
-    body: 'Telos writes the tests first, then the implementation. After two failed fix attempts the task is marked blocked instead of guessing further.',
+    body: 'Telos writes tests first, then implements the approved task. Work stops after two failed fix attempts.',
   },
   {
     name: 'Verify',
     cmd: 'telos accept',
-    body: 'Runs the task’s command items and checks that every changed file is inside its scope or listed as a deviation. When git.auto_commit is true, a passing task is committed on its own; otherwise Telos lists the paths and the subject.',
+    body: 'Check the result against the task. When auto-commit is enabled, passing work gets its own commit.',
   },
 ];
 ---
@@ -32,7 +32,7 @@ const stages = [
     <div class="flex max-w-[40rem] flex-col items-start gap-5">
       <p class="font-mono text-xs tracking-widest text-accent uppercase">Workflow</p>
       <h2 class="text-3xl font-semibold text-balance md:text-5xl">From plan to commit, one task at a time.</h2>
-      <p class="text-muted" set:html={code('Every /telos:* skill is user-invoked: nothing runs until you call it. Telos does not push; its git guard blocks git push.')} />
+      <p class="text-muted" set:html={code('Every skill is user-invoked. You choose the next step. Telos does not push.')} />
     </div>
     <ol class="m-0 mt-12 grid list-none gap-10 p-0 lg:mt-16 lg:grid-cols-4 lg:gap-0">
       {stages.map((s, i) => (
@@ -47,5 +47,40 @@ const stages = [
         </li>
       ))}
     </ol>
+
+    <figure data-task-example class="m-0 mt-12 overflow-hidden rounded-md border border-line bg-surface lg:mt-16">
+      <figcaption class="border-b border-line px-6 py-4 text-sm text-muted md:px-8">
+        <span class="text-accent">One request, made concrete.</span> Illustrative example in a sample repository.
+      </figcaption>
+      <div class="grid lg:grid-cols-[0.85fr_1.15fr]">
+        <div class="flex flex-col justify-between gap-8 p-6 md:p-8">
+          <div>
+            <p class="font-mono text-xs tracking-widest text-muted uppercase">01 / Your request</p>
+            <blockquote class="m-0 mt-4 max-w-[24ch] font-display text-2xl font-medium text-balance md:text-3xl">
+              “Add a greeting helper with tests.”
+            </blockquote>
+          </div>
+          <p class="max-w-[38ch] text-sm text-muted">A small change, with an explicit boundary and an outcome you can check before moving on.</p>
+        </div>
+        <div class="min-w-0 border-t border-line p-6 md:p-8 lg:border-t-0 lg:border-l">
+          <p class="font-mono text-xs tracking-widest text-accent uppercase">02 / Approved task · 01-01</p>
+          <dl class="mt-5 grid gap-5 text-sm">
+            <div>
+              <dt class="font-semibold">Scope</dt>
+              <dd class="m-0 mt-1 font-mono text-muted">src/greet.mjs<br />test/greet.test.mjs</dd>
+            </div>
+            <div>
+              <dt class="font-semibold">Acceptance</dt>
+              <dd class="m-0 mt-1 text-muted"><code>greet('Ada')</code> returns <code>“Hello, Ada!”</code>.<br /><code>npm test</code> exits 0.</dd>
+            </div>
+          </dl>
+          <div class="mt-6 border-t border-line pt-5">
+            <p class="font-mono text-xs tracking-widest text-accent uppercase">03 / Checked commit</p>
+            <p class="mt-3 font-mono text-sm text-muted">npm test → exit 0<br />telos accept 01-01 → PASS</p>
+            <p class="mt-3 font-mono text-sm break-words text-text">feat(01-01): add greeting helper</p>
+          </div>
+        </div>
+      </div>
+    </figure>
   </div>
 </section>

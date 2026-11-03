@@ -33,10 +33,13 @@ describe('headline and calls to action', () => {
     assert.match(h, new RegExp(`<a[^>]*href="${GITHUB}"[^>]*>\\s*View on GitHub`));
   });
 
-  test('eyebrow, description and both CTA labels are exactly as specified', () => {
+  test('hero identifies the product, repo memory and the session/scope problems', () => {
     const t = strip(hero());
     assert.ok(t.includes('PURPOSE-BUILT FOR CLAUDE CODE'));
-    assert.ok(t.includes('Plan, approve, implement, verify. A lightweight workflow that keeps you in control.'));
+    assert.match(t, /A Claude Code plugin that turns your request into scoped tasks, tests and commits/);
+    assert.match(t, /project memory kept in your repo/);
+    assert.match(t, /context between sessions/);
+    assert.match(t, /agreed scope/);
     assert.ok(/>\s*Get started\s*</.test(hero()));
     assert.ok(/>\s*View on GitHub\s*</.test(hero()));
   });
@@ -58,7 +61,7 @@ describe('headline and calls to action', () => {
   });
 
   test('description is 600 to 680 px wide', () => {
-    const p = hero().match(/<p\b[^>]*class="([^"]*)"[^>]*>\s*Plan, approve, implement, verify\./)?.[1];
+    const p = hero().match(/<p\b[^>]*class="([^"]*)"[^>]*>\s*A Claude Code plugin/)?.[1];
     assert.ok(p, 'description paragraph not found');
     const px = maxWidthPx(p);
     assert.ok(px >= 600 && px <= 680, `description max width ${px}px`);

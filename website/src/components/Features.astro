@@ -9,13 +9,13 @@ const rows = [
     items: [
       {
         title: 'You stay in control',
-        body: 'Skills are user-invoked, and no task starts before you approve the plan. In the standard and deep profiles an edit outside the running task’s scope adds a warning, or is blocked with strict_scope: true. /telos:undo lists the exact commits and dependent tasks, asks once, then reverts newest first.',
-        tag: '/telos:approve · strict_scope · /telos:undo',
+        body: 'Agree on the work before it starts. Review the plan, approve its scope and see when a change reaches beyond it.',
+        detail: 'Skills are user-invoked, and no task starts before you approve the plan. In the standard and deep profiles an edit outside the running task’s scope adds a warning, or is blocked with strict_scope: true. /telos:undo lists the exact commits and dependent tasks, asks once, then reverts newest first.',
       },
       {
-        title: 'Memory in your repository',
-        body: 'Plain files in .telos/ hold the rules, map, roadmap and status. Each skill reads one context bundle of at most 6000 characters, and the SessionStart status stays within 1200.',
-        tag: '.telos/',
+        title: 'Memory between sessions',
+        body: 'Resume work with the project’s rules, decisions and next task already available. The memory lives alongside your code.',
+        detail: 'Plain files in .telos/ hold the rules, map, roadmap and status. Each skill reads one context bundle of at most 6000 characters, and the SessionStart status stays within 1200.',
       },
     ],
   },
@@ -23,14 +23,14 @@ const rows = [
     cols: 'lg:grid-cols-[0.65fr_1.35fr]',
     items: [
       {
-        title: 'Tests before code',
-        body: 'Every task lists acceptance items. telos lint-plan rejects files outside the scope and acceptance with no command to run, implementation starts with tests first, and telos accept runs each command item and compares every changed file with the scope.',
-        tag: 'telos lint-plan · telos accept',
+        title: 'Tests define done',
+        body: 'Give each task a checkable outcome. Tests come before implementation, and acceptance checks show what passed and what still needs attention.',
+        detail: 'Every task lists acceptance items. telos lint-plan rejects files outside the scope and acceptance with no command to run, implementation starts with tests first, and telos accept runs each command item and compares every changed file with the scope.',
       },
       {
-        title: 'One commit per task',
-        body: 'Each task is committed on its own, with explicit paths, when git.auto_commit is true. A git guard blocks git push, --no-verify, git add -A and git add ., git reset --hard, and amending a commit already on a remote branch.',
-        tag: 'git guard',
+        title: 'A commit you can review',
+        body: 'Follow a completed task from its agreed scope to its changes in Git. Separate commits make that work easier to inspect or undo.',
+        detail: 'Each task is committed on its own, with explicit paths, when git.auto_commit is true. A git guard blocks git push, --no-verify, git add -A and git add ., git reset --hard, and amending a commit already on a remote branch.',
       },
     ],
   },
@@ -43,7 +43,7 @@ const rows = [
       <p class="font-mono text-xs tracking-widest text-accent uppercase">Core features</p>
       <h2 class="text-3xl font-semibold text-balance md:text-5xl">Control, memory, tests, commits.</h2>
       <p class="text-muted">
-        Each item is shipped behavior described in the README and checked by the plugin’s tests.
+        Less context to repeat. A clearer boundary for every change.
       </p>
     </div>
     <div class="mt-12 flex flex-col gap-10 lg:mt-16 lg:gap-14">
@@ -53,7 +53,10 @@ const rows = [
             <article class="flex flex-col gap-3 border-t border-line pt-6">
               <h3 class="text-xl font-semibold md:text-2xl">{f.title}</h3>
               <p class="max-w-[60ch] text-muted" set:html={code(f.body)} />
-              <p class="m-0 font-mono text-xs text-accent">{f.tag}</p>
+              <details class="group">
+                <summary class="w-fit cursor-pointer py-2 text-sm text-accent">How it works<span class="sr-only">: {f.title}</span></summary>
+                <p class="mt-2 max-w-[60ch] text-sm leading-relaxed text-muted" set:html={code(f.detail)} />
+              </details>
             </article>
           ))}
         </div>

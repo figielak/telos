@@ -29,7 +29,7 @@ describe('getting started section', () => {
 
   test('first steps name plan, approve, do, and map for existing repositories', () => {
     const t = strip(section('getting-started') ?? '');
-    for (const c of ['/telos:plan', '/telos:approve', '/telos:do', '/telos:map']) assert.ok(t.includes(c), c);
+    for (const c of ['/telos:plan Add a greeting helper with tests', '/telos:approve', '/telos:do', '/telos:map']) assert.ok(t.includes(c), c);
   });
 
   test('commands are selectable text in <code>', () => {
@@ -102,11 +102,12 @@ describe('copy buttons', () => {
     assert.equal((html().match(/aria-live="/g) ?? []).length, 1);
   });
 
-  test('a single small inline script with success and failure messages', () => {
+  test('small inline scripts within the combined budget, with copy feedback', () => {
     const scripts = [...html().matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
-    assert.equal(scripts.length, 1);
-    assert.ok(!/\bsrc=/.test(scripts[0][1]), 'script must be inline');
-    const code = scripts[0][2];
+    assert.equal(scripts.length, 2);
+    assert.ok(scripts.every((s) => !/\bsrc=/.test(s[1])), 'scripts must be inline');
+    assert.ok(Buffer.byteLength(scripts.map((s) => s[2]).join('')) <= 2048);
+    const code = scripts.find((s) => s[2].includes('navigator.clipboard'))[2];
     assert.ok(Buffer.byteLength(code) <= 2048, `script is ${Buffer.byteLength(code)} bytes`);
     assert.match(code, /navigator\.clipboard/);
     assert.match(code, /Copied/);

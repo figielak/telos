@@ -6,7 +6,7 @@ const commands = [
 ];
 const requirements = ['Claude Code with plugin support', 'Git', 'Node.js ≥ 20.10'];
 const steps = [
-  ['/telos:plan', 'Describe a phase and get draft tasks.'],
+  ['/telos:plan Add a greeting helper with tests', 'Start a new phase with a concrete request and get draft tasks.'],
   ['/telos:approve', 'Review the plan and approve it.'],
   ['/telos:do', 'Run the next approved task.'],
 ];
@@ -61,7 +61,7 @@ const steps = [
         <h3 class="text-xl font-semibold">Then, in order</h3>
         <ol class="m-0 list-none p-0">
           {steps.map(([cmd, text]) => (
-            <li class="grid gap-1 border-t border-line py-3 first:border-t-0 first:pt-0 sm:grid-cols-[11rem_1fr] sm:gap-6">
+            <li class="grid gap-1 border-t border-line py-3 first:border-t-0 first:pt-0">
               <code class="font-mono text-sm text-accent">{cmd}</code>
               <span class="text-muted">{text}</span>
             </li>

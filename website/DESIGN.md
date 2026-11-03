@@ -98,6 +98,12 @@ CSS Grid, not percentage math.
   In the hero it is 960 px wide, left-aligned inside the centered stack.
 - **Install block**: a `figure` styled like the terminal with one row per command, a copy button
   (enabled by one small inline script) and one `aria-live` status; the commands stay selectable text.
+- **Mobile menu**: native details/summary works without JS; inline enhancement closes on
+  anchor selection, focuses the destination heading, and returns focus to the summary on Escape.
+- **Feature details**: benefits remain visible; native disclosures hold implementation mechanics.
+- **Profiles**: audience and benefit first, Standard labelled Recommended start with an accent
+  border, full comparison in closed native disclosures for each profile.
+- **Task example**: an illustrative request beside scope, acceptance and checked commit in one panel.
 - **Final CTA**: centered h2, one sentence and two links, to the repository and the README.
 - **Focus**: 2px accent outline, 3px offset on every `:focus-visible`.
 

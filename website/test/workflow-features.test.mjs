@@ -25,11 +25,11 @@ describe('workflow section', () => {
     assert.deepEqual(names, ['Plan', 'Approve', 'Implement', 'Verify']);
   });
 
-  test('Verify names the commit and git.auto_commit; the section says Telos does not push', () => {
+  test('Verify explains the commit condition; the section says Telos does not push', () => {
     const s = section('workflow') ?? '';
     const verify = strip(s.match(/<li\b[\s\S]*?<\/li>/g)?.[3] ?? '');
     assert.match(verify, /commit/i);
-    assert.match(verify, /git\.auto_commit/);
+    assert.match(verify, /auto-commit is enabled/);
     const t = strip(s);
     assert.match(t, /does not push|never pushes/i);
     assert.match(t, /user-invoked/i);
@@ -61,9 +61,14 @@ describe('features section', () => {
     assert.ok(!/grid-cols-3/.test(s));
   });
 
-  test('keeps every claim and stays within the shared spacing', () => {
+  test('technical mechanics are available in closed disclosures', () => {
     const s = section('features') ?? '';
-    const t = strip(s);
+    const details = s.match(/<details\b[\s\S]*?<\/details>/g) ?? [];
+    assert.equal(details.length, 4);
+    assert.ok(details.every((d) => !/<details[^>]*\bopen\b/.test(d)));
+    const visible = strip(s.replace(/<details\b[\s\S]*?<\/details>/g, ''));
+    assert.ok(!/6000|1200|strict_scope|--no-verify/.test(visible));
+    const t = strip(details.join(' '));
     for (const must of ['git push', '--no-verify', 'strict_scope', '6000', '1200', '/telos:undo', 'lint-plan', 'telos accept', 'tests first']) {
       assert.ok(t.includes(must), `features lacks ${must}`);
     }
@@ -95,4 +100,12 @@ describe('whole page', () => {
     const bad = contentViolations('We elevate builds, 40% faster, /telos:nonexistent');
     assert.ok(bad.length >= 3, bad.join('; '));
   });
+});
+
+
+test('illustrative example connects the request, scoped acceptance and checked commit', () => {
+  const example = section('workflow').match(/<figure\b[^>]*data-task-example[\s\S]*?<\/figure>/)?.[0];
+  assert.ok(example);
+  const t = strip(example);
+  for (const part of ['Illustrative', 'Add a greeting helper with tests', 'Scope', 'src/greet.mjs', 'test/greet.test.mjs', 'Acceptance', 'Hello, Ada!', 'npm test', 'telos accept 01-01', 'feat(01-01): add greeting helper']) assert.ok(t.includes(part), part);
 });
