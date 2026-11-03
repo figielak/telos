@@ -44,7 +44,7 @@ describe('navigation', () => {
     assert.ok(header, '<header> missing');
     assert.ok(h.indexOf('<header') < h.indexOf('<main'));
     assert.match(header, /<details\b[\s\S]*<summary\b/);
-    assert.ok(!/<script\b/.test(h), 'no client script expected');
+    assert.ok(!/<script\b[^>]*\bsrc=/.test(h), 'no external script expected');
   });
 });
 

@@ -2,7 +2,7 @@
 id: 08-05
 title: Getting Started section and footer
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [08-04]         # task IDs, e.g. [01-01]
@@ -51,10 +51,12 @@ Add the Getting Started section with the real install commands and first steps, 
 - Test the copy button in a browser, including the failure state.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm --prefix website test` → exit 0
-- [ ] Copy works in a browser and the commands stay selectable with JavaScript off
+- [x] all listed tests pass
+- [x] `npm --prefix website test` → exit 0
+- [x] Copy works in a browser and the commands stay selectable with JavaScript off
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+Getting Started: the three README install commands (verbatim, selectable `<code>` with `select-all`), the three requirements, the first steps `/telos:plan`, `/telos:approve`, `/telos:do` and `/telos:map` for existing repositories. Copy buttons are `hidden` in the HTML and enabled by one 0.9 KB inline script only when the Clipboard API exists; an `aria-live` status reports "Copied: …" or a failure. Footer links GitHub, README and SPEC, shows "Pre-alpha. MIT, as declared in the plugin manifest." and links no LICENSE file.
+Tests: 14 in `website/test/getting-started.test.mjs`; 54 in the site suite, all pass. Browser: copy success, failure and status reset verified with a stubbed clipboard; no page overflow at 1440 and 390 px. CSS 20 KB.
+RED: node --test website/test/getting-started.test.mjs → exit 1: no #getting-started section, buttons or footer in the built page (10 of 14 failed on those assertions).
+Deviations: website/test/hero.test.mjs — the "no script" assertion became "no external script", since one small inline script is now intended (file belongs to 08-02, inside scope)

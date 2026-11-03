@@ -1,0 +1,29 @@
+---
+const REPO = 'https://github.com/figielak/telos';
+const links = [
+  { href: REPO, label: 'GitHub' },
+  { href: `${REPO}#readme`, label: 'README' },
+  { href: `${REPO}/blob/HEAD/SPEC.md`, label: 'SPEC' },
+];
+---
+
+<footer class="border-t border-line">
+  <div class="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 md:flex-row md:items-center md:justify-between">
+    <div class="flex flex-col gap-2">
+      <p class="m-0 flex items-center gap-3 font-display text-lg font-semibold text-text">
+        <svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true" focusable="false" class="text-accent">
+          <path d="M5 8h22M16 8v18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"></path>
+        </svg>
+        Telos
+      </p>
+      <p class="m-0 font-mono text-xs text-muted">Pre-alpha. MIT, as declared in the plugin manifest.</p>
+    </div>
+    <nav aria-label="Footer">
+      <ul class="m-0 flex list-none flex-wrap gap-x-6 gap-y-2 p-0">
+        {links.map((l) => (
+          <li><a href={l.href} class="inline-block py-2 font-display text-sm font-medium text-muted transition-colors duration-300 hover:text-text">{l.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+</footer>
