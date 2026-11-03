@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 import { setupKey } from '../bench/lib/matrix.mjs';
 import { applyDeps, clearUserFiles, ensureDeps, exportPlugin, grantSession, handBack, reclaim, revokeSession, sessionEnv } from '../bench/lib/sandbox.mjs';
-import { ensureSnapshot, lockWorkDir, prepareCopy, WorkspaceError } from '../bench/lib/workspace.mjs';
+import { ensureMirrors, ensureSnapshot, lockWorkDir, prepareCopy, WorkspaceError } from '../bench/lib/workspace.mjs';
 import { UsageError } from '../lib/errors.mjs';
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
@@ -458,4 +458,36 @@ test('a work dir inside this repository or a source repository is a usage error 
   assert.throws(() => prepareCopy(c, w.manifest, { workDir: dirname(repoRoot) }), UsageError, 'work dir containing the checkout');
   assert.ok(existsSync(telosDir) && existsSync(join(repoRoot, 'package.json')));
   assert.ok(!existsSync(inside));
+});
+
+test('a snapshot CLAUDE.md does not show as a change in the copy; the Telos state and the agent\'s own files still do', (t) => {
+  const w = world(t);
+  const telosDir = plugin(t);
+  const c0 = cell('t1', 'C', w.start1);
+  const snap = ensureSnapshot(c0.setup, { workDir: w.workDir, telosDir, build: ({ dir }) => {
+    put(dir, '.telos/config.json', '{"profile":"deep"}\n');
+    put(dir, 'CLAUDE.md', 'telos block\n');
+    return {};
+  } });
+  const c = prepareCopy(c0, w.manifest, { workDir: w.workDir, snapshot: snap.dir });
+  assert.equal(readFileSync(join(c.dir, 'CLAUDE.md'), 'utf8'), 'telos block\n', 'the file is there');
+  put(c.dir, 'mine.txt', 'x\n');
+  const status = execFileSync('git', ['-C', c.dir, 'status', '--porcelain', '-uall'], { encoding: 'utf8' });
+  assert.doesNotMatch(status, /CLAUDE\.md/);
+  assert.match(status, /\.telos\/config\.json/);
+  assert.match(status, /mine\.txt/);
+});
+
+test('ensureMirrors: one closed bare mirror per repository next to the work dir, reused; copies clone from it with no origin left', (t) => {
+  const w = world(t);
+  const local = ensureMirrors(w.manifest, w.workDir);
+  const bare = local.repos[0].url;
+  assert.equal(bare, join(`${w.workDir}-mirrors`, 'r1.git'));
+  assert.equal(statSync(`${w.workDir}-mirrors`).mode & 0o077, 0, 'closed to every session');
+  writeFileSync(join(bare, 'reuse-mark'), 'x');
+  assert.ok(existsSync(join(ensureMirrors(w.manifest, w.workDir).repos[0].url, 'reuse-mark')), 'not cloned twice');
+  assert.equal(w.manifest.repos[0].url !== bare, true, 'the manifest itself is not changed');
+  const c = prepareCopy(cell('t1', 'A', w.start1), local, { workDir: w.workDir });
+  assert.equal(execFileSync('git', ['-C', c.dir, 'remote'], { encoding: 'utf8' }).trim(), '');
+  assert.equal(execFileSync('git', ['-C', c.dir, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), w.start1);
 });

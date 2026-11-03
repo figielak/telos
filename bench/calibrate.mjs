@@ -7,7 +7,7 @@ import { pathToFileURL } from 'node:url';
 
 import { UsageError } from '../lib/errors.mjs';
 import { loadManifest } from './lib/manifest.mjs';
-import { guardWorkDir, prepareCopy } from './lib/workspace.mjs';
+import { ensureMirrors, guardWorkDir, prepareCopy } from './lib/workspace.mjs';
 
 // Acceptance calibration (bench/PROTOCOL.md §4.2). An acceptance script runs with the work tree as cwd and exits
 // 0 = accepted, 1 = behavioural check fails, 2 = regression check fails. Per task it must exit 1 at the start commit
@@ -57,22 +57,7 @@ export function calibrate(manifest, { workDir, only = [], setup = () => {}, path
   for (const id of only) if (!manifest.tasks.some((t) => t.id === id)) throw new UsageError(`unknown task ${id}`);
   const root = guardWorkDir(workDir, manifest.repos.map((r) => r.url));
   mkdirSync(root, { recursive: true });
-  // One bare mirror per repository next to the work dir (prepareCopy refuses sources inside it); copies clone from it,
-  // so the network is used once per repository, with retries.
-  const mirrors = `${root}-mirrors`;
-  const mirrorOf = (repo) => {
-    const bare = join(mirrors, `${repo.id}.git`);
-    for (let attempt = 1; !existsSync(join(bare, 'HEAD')); attempt++) {
-      rmSync(bare, { recursive: true, force: true });
-      mkdirSync(mirrors, { recursive: true });
-      try { git(mirrors, ['clone', '-q', '--bare', '--no-local', '--', repo.url, bare]); } catch (err) {
-        rmSync(bare, { recursive: true, force: true });
-        if (attempt >= 3) throw err;
-      }
-    }
-    return bare;
-  };
-  const local = { ...manifest, repos: manifest.repos.map((r) => ({ ...r, url: mirrorOf(r) })) };
+  const local = ensureMirrors(manifest, root);
   const rows = [];
   for (const task of manifest.tasks.filter((t) => !only.length || only.includes(t.id))) {
     const repo = manifest.repos.find((r) => r.id === task.repo);

@@ -145,7 +145,14 @@ export async function runMatrix(cells, manifest, { outDir, gradeRoot, capUsd, re
 
     let ws;
     try { ws = await deps.prepare(cell, manifest); } catch (err) {
-      if (!(err instanceof WorkspaceError)) throw err;
+      if (err instanceof UsageError) throw err;
+      if (!(err instanceof WorkspaceError)) {
+        // no session of this cell ran (a clone or setup step failed): not a refusal and not an abandoned attempt
+        stopped = `infra: ${cell.id}: ${String(err.message).split('\n').slice(0, 3).join(' ')}`;
+        rmSync(markerPath(cell.id), { force: true });
+        result.skipped.push(cell.id);
+        return null;
+      }
       stopped = `refused: ${cell.id}`;
       return finish(cell, base, { status: 'refused', reason: err.message, accepted: false, acceptance: null, sessions: [], spentUsd: 0 });
     }

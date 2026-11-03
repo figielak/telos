@@ -351,3 +351,22 @@ test('grading runs through the given grader argv (the launcher), never directly 
   const copy = join(root, 'work', 'copies', 't-one.A.1');
   assert.ok(readFileSync(log, 'utf8').includes(`env safe.directory=${copy} ${join(copy, '.git', 'bench-home', 'go-build')}`), 'grader trusts the copy, caches inside it');
 });
+
+test('an infrastructure failure in prepare stops the run cleanly: no record, marker or charge, and the cell runs as attempt 1 on resume', async (t) => {
+  const root = tmp(t);
+  const out = join(root, 'out');
+  const deps = fakeDeps(join(root, 'work'));
+  const prepare = deps.prepare;
+  deps.prepare = async () => { throw new Error('git clone: Connection reset by peer'); };
+  const m = manifest(['t-one']);
+  const first = await runMatrix(cellsOf(m, { variant: 'A' }), m, { outDir: out, capUsd: 5, reservation: 2, deps });
+  assert.match(first.stopped, /^infra: t-one\.A\.1: .*Connection reset/);
+  assert.equal(first.spentUsd, 0, 'nothing ran, nothing is charged');
+  assert.deepEqual(first.skipped, ['t-one.A.1']);
+  assert.deepEqual(readdirSync(join(out, 'records')), [], 'no record and no marker');
+  deps.prepare = prepare;
+  const second = await runMatrix(cellsOf(m, { variant: 'A' }), m, { outDir: out, capUsd: 5, reservation: 2, deps });
+  assert.equal(second.stopped ?? null, null);
+  assert.equal(record(out, 't-one.A.1').attempt, 1);
+  assert.ok(!second.spentUsd || second.spentUsd < 2, 'no abandoned reservation was charged on resume');
+});

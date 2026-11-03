@@ -11,7 +11,7 @@ import { runMatrix } from './lib/orchestrate.mjs';
 import { applyDeps, clearUserFiles, ensureDeps, exportPlugin, grantSession, handBack, reclaim, revokeSession, sessionEnv } from './lib/sandbox.mjs';
 import { baseArgv, runSession } from './lib/session.mjs';
 import { runTrajectory } from './lib/transitions.mjs';
-import { canonical, ensureSnapshot, lockWorkDir, prepareCopy, TELOS_ROOT, within } from './lib/workspace.mjs';
+import { canonical, ensureMirrors, ensureSnapshot, lockWorkDir, prepareCopy, TELOS_ROOT, within } from './lib/workspace.mjs';
 
 // Benchmark runner CLI (bench/README.md "Running the matrix"). Exit 0 = every cell ran, 1 = a cell was skipped or
 // refused or the run stopped, 2 = usage error.
@@ -85,6 +85,8 @@ function realDeps(manifest, config) {
   const telosArgv = [...config.launcher, join(plugin, 'bin', 'telos')];
   const argvBase = (variant) => baseArgv(variant, { ...config, pluginDir: plugin });
   const built = new Set();
+  let mirrored = null;
+  const local = () => (mirrored ??= ensureMirrors(manifest, workDir)); // copies clone locally, the network is used once per repo
   const suitesFile = join(manifest.dir, 'suites.json');
   const suites = existsSync(suitesFile) ? JSON.parse(readFileSync(suitesFile, 'utf8')) : {};
 
@@ -96,7 +98,7 @@ function realDeps(manifest, config) {
     const copy = join(workDir, 'copies', cell.id);
     const open = () => {
       reclaim([copy], config.launcher);
-      prepareCopy(cell, manifest, { workDir });
+      prepareCopy(cell, local(), { workDir });
       grantSession([copy], { workDir });
       return copy;
     };
@@ -108,7 +110,7 @@ function realDeps(manifest, config) {
     const cell = { id: `setup.${key}`, task: task.id, variant: 'A' };
     reclaim([join(workDir, 'copies', cell.id), join(workDir, 'config', cell.id)], config.launcher);
     clearUserFiles(config.launcher);
-    const copy = prepareCopy(cell, manifest, { workDir }).dir;
+    const copy = prepareCopy(cell, local(), { workDir }).dir;
     const overlay = depsFor(task);
     if (overlay) applyDeps(overlay, copy);
     const { env } = sessionEnv({ id: cell.id, variant: 'C' }, { configTemplate: config.configTemplate, workDir });
@@ -148,7 +150,7 @@ function realDeps(manifest, config) {
       }
       reclaim([join(workDir, 'copies', cell.id), join(workDir, 'config', cell.id)], config.launcher); // left by an interrupted attempt
       clearUserFiles(config.launcher);
-      const copy = prepareCopy(cell, manifest, { workDir, snapshot });
+      const copy = prepareCopy(cell, local(), { workDir, snapshot });
       const overlay = depsFor(manifest.tasks.find((t) => t.id === cell.task));
       if (overlay) applyDeps(overlay, copy.dir);
       const { env, readable } = sessionEnv(cell, { configTemplate: config.configTemplate, workDir });

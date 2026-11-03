@@ -134,6 +134,36 @@ function placeSnapshot(dir, cell, snapshot) {
   };
   walk(snapshot);
   cpSync(snapshot, dir, { recursive: true, verbatimSymlinks: true });
+  // A user commits init's CLAUDE.md with the map; here the start commit stays HEAD, so it would read as the agent's
+  // change and fail every `telos accept` scope check of C and D, never of A or B.
+  if (existsSync(join(snapshot, 'CLAUDE.md'))) {
+    mkdirSync(join(dir, '.git', 'info'), { recursive: true });
+    writeFileSync(join(dir, '.git', 'info', 'exclude'), '/CLAUDE.md\n', { flag: 'a' });
+  }
+}
+
+/**
+ * One bare mirror per repository next to the work dir (prepareCopy refuses sources inside it, and the mirror holds the
+ * future, so it stays closed to every session): the network is used once per repository, with retries.
+ * @returns the manifest with `repos[].url` pointing at the mirrors
+ */
+export function ensureMirrors(manifest, workDir) {
+  const root = guardWorkDir(workDir, manifest.repos.map((r) => r.url));
+  const mirrors = `${root}-mirrors`;
+  mkdirSync(mirrors, { recursive: true, mode: 0o700 });
+  chmodSync(mirrors, 0o700);
+  const mirrorOf = (repo) => {
+    const bare = join(mirrors, `${repo.id}.git`);
+    for (let attempt = 1; !existsSync(join(bare, 'HEAD')); attempt++) {
+      rmSync(bare, { recursive: true, force: true });
+      try { git(mirrors, ['clone', '-q', '--bare', '--no-local', '--', repo.url, bare]); } catch (err) {
+        rmSync(bare, { recursive: true, force: true });
+        if (attempt >= 3) throw err;
+      }
+    }
+    return bare;
+  };
+  return { ...manifest, repos: manifest.repos.map((r) => ({ ...r, url: mirrorOf(r) })) };
 }
 
 /**
