@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, existsSync, lchownSync, lstatSync, mkdirSync, readdirSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 
 import { UsageError } from '../../lib/errors.mjs';
@@ -116,13 +116,15 @@ export function ancestorInstructions(path) {
  * Open `paths` (the running cell's copy and config dir) to the work dir's group, which the benchmark OS user
  * belongs to (PROTOCOL §5.1 item 1): their trees become group-writable, `readOnly` trees (the plugin export, C/D only)
  * group-readable, and every ancestor up to `workDir` group read + traverse, since the sandbox (bwrap) reads each parent
- * of a mount. Other cells' dirs stay closed. Refused when an instruction file lies above a path (§5.2 canaries).
+ * of a mount; everything opened is moved into the work dir's group. Other cells' dirs stay closed. Refused when an instruction file lies above a path (§5.2 canaries).
  * Symlinks are left as they are.
  */
 export function grantSession(paths, { workDir, readOnly = [] } = {}) {
   const root = guardWorkDir(workDir);
+  const { gid } = lstatSync(root);
   const open = (p, write) => {
     const st = lstatSync(p);
+    if (st.gid !== gid) lchownSync(p, st.uid, gid); // group bits only reach the benchmark user through the work dir's group
     if (st.isSymbolicLink()) return;
     const bits = write ? 0o060 : 0o040;
     if (st.isDirectory()) {

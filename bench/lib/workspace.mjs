@@ -151,7 +151,7 @@ export function prepareCopy(cell, manifest, { workDir, snapshot } = {}) {
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dirname(dir), { recursive: true });
   git(root, ['clone', '-q', '--no-local', '--no-checkout', '--', repo.url, dir]);
-  chmodSync(dir, 0o700); // closed to the benchmark user until grantSession opens it for its own cell
+  chmodSync(dir, 0o2700); // closed to the benchmark user until grantSession opens it; setgid keeps the checkout in the work dir group
   if (!gitOk(dir, ['cat-file', '-e', `${task.start}^{commit}`])) refuse(`start ${task.start} is not a commit of ${task.repo}`);
   const native = nativeInstructions(dir, task.start);
   if (native) refuse(`start ${task.start} of ${task.repo} ships native instructions (${native}); exclude this commit`);

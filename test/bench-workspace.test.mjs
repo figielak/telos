@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, chownSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -298,6 +298,25 @@ test('session access: only the running cell is group-writable, its parents are r
   revokeSession([a, config]);
   for (const dir of [a, config]) assert.equal(mode(dir) & 0o077, 0, `${dir} closed after the cell`);
   assert.throws(() => grantSession([join(w.base, 'elsewhere')], { workDir: w.workDir }), UsageError);
+});
+
+test('a granted copy belongs to the work dir group throughout, even when checked out under another group', (t) => {
+  const group = process.getgroups().find((g) => g !== process.getgid());
+  if (group === undefined) return t.skip('needs a supplementary group');
+  const w = world(t);
+  mkdirSync(w.workDir, { recursive: true });
+  chownSync(w.workDir, process.getuid(), group);
+  chmodSync(w.workDir, 0o2710);
+  const a = prepareCopy(cell('t1', 'A', w.start1), w.manifest, { workDir: w.workDir }).dir;
+  grantSession([a], { workDir: w.workDir });
+  const wrong = [];
+  const walk = (p) => {
+    const st = lstatSync(p);
+    if (st.gid !== group) wrong.push(p);
+    if (st.isDirectory()) for (const name of readdirSync(p)) walk(join(p, name));
+  };
+  walk(a);
+  assert.deepEqual(wrong.slice(0, 5), [], 'every path of the copy is in the benchmark group');
 });
 
 test('the plugin export is closed until a C/D session opens it read-only; snapshots stay closed', async (t) => {
