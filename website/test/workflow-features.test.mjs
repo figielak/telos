@@ -8,43 +8,75 @@ const section = (id) => html().match(new RegExp(`<section\\b[^>]*\\bid="${id}"[\
 const strip = (s) => s.replace(/<[^>]+>/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' ');
 
 describe('workflow section', () => {
-  test('ordered list of five steps in the real order', () => {
+  test('ordered list of four stages in the real order, tests first in the third', () => {
     const s = section('workflow');
     assert.ok(s, '#workflow section missing');
     const ol = s.match(/<ol\b[\s\S]*?<\/ol>/)?.[0];
     assert.ok(ol, '<ol> missing');
     const items = [...ol.matchAll(/<li\b[\s\S]*?<\/li>/g)].map((m) => strip(m[0]));
-    assert.equal(items.length, 5);
-    const order = [/\/telos:plan/, /\/telos:approve/, /\/telos:do\b/, /telos accept/, /commit/i];
-    order.forEach((re, i) => assert.match(items[i], re, `step ${i + 1}`));
+    assert.equal(items.length, 4);
+    const order = [/\/telos:plan/, /\/telos:approve/, /\/telos:do\b/, /telos accept/];
+    order.forEach((re, i) => assert.match(items[i], re, `stage ${i + 1}`));
     assert.match(items[2], /tests first/i);
   });
 
-  test('states the auto_commit condition and that Telos does not push', () => {
-    const t = strip(section('workflow') ?? '');
-    assert.match(t, /git\.auto_commit/);
+  test('stage names are Plan, Approve, Implement, Verify', () => {
+    const names = [...(section('workflow') ?? '').matchAll(/<h3\b[^>]*>([\s\S]*?)<\/h3>/g)].map((m) => strip(m[1]).trim());
+    assert.deepEqual(names, ['Plan', 'Approve', 'Implement', 'Verify']);
+  });
+
+  test('Verify names the commit and git.auto_commit; the section says Telos does not push', () => {
+    const s = section('workflow') ?? '';
+    const verify = strip(s.match(/<li\b[\s\S]*?<\/li>/g)?.[3] ?? '');
+    assert.match(verify, /commit/i);
+    assert.match(verify, /git\.auto_commit/);
+    const t = strip(s);
     assert.match(t, /does not push|never pushes/i);
     assert.match(t, /user-invoked/i);
   });
 
-  test('has its own h2', () => {
-    assert.match(section('workflow') ?? '', /<h2\b/);
+  test('horizontal from lg, drawn with CSS lines, no meander', () => {
+    const s = section('workflow') ?? '';
+    assert.match(s.match(/<ol\b[^>]*>/)?.[0] ?? '', /lg:grid-cols-4/);
+    assert.ok(!/meander/i.test(s));
+    assert.match(s, /\bsection-y\b/);
+    assert.match(s, /\bmax-w-page\b/);
+    assert.match(s, /<h2\b/);
   });
 });
 
 describe('features section', () => {
-  test('exists with its own h2 and claims only shipped behavior', () => {
+  test('h2 and exactly four h3 items', () => {
     const s = section('features');
     assert.ok(s, '#features section missing');
-    assert.match(s, /<h2\b/);
-    const t = strip(s);
-    for (const must of ['git push', 'strict_scope', '6000', '1200', '/telos:undo', 'lint-plan']) {
-      assert.ok(t.includes(must), `features lacks ${must}`);
-    }
+    assert.equal((s.match(/<h2\b/g) ?? []).length, 1);
+    assert.equal((s.match(/<h3\b/g) ?? []).length, 4);
   });
 
-  test('no equal three-column card row', () => {
-    assert.ok(!/grid-cols-3/.test(html()));
+  test('2 x 2 grid with unequal fractional columns', () => {
+    const s = section('features') ?? '';
+    const grids = [...s.matchAll(/grid-cols-\[(\d+(?:\.\d+)?)fr_(\d+(?:\.\d+)?)fr\]/g)];
+    assert.ok(grids.length >= 2, 'one asymmetric grid per row');
+    assert.ok(grids.every((g) => g[1] !== g[2]), 'columns must be unequal');
+    assert.ok(!/grid-cols-3/.test(s));
+  });
+
+  test('keeps every claim and stays within the shared spacing', () => {
+    const s = section('features') ?? '';
+    const t = strip(s);
+    for (const must of ['git push', '--no-verify', 'strict_scope', '6000', '1200', '/telos:undo', 'lint-plan', 'telos accept', 'tests first']) {
+      assert.ok(t.includes(must), `features lacks ${must}`);
+    }
+    assert.ok(!/meander/i.test(s));
+    assert.match(s, /\bsection-y\b/);
+    assert.match(s, /\bmax-w-page\b/);
+  });
+
+  test('item titles cover control, memory, tests and commits', () => {
+    const titles = [...(section('features') ?? '').matchAll(/<h3\b[^>]*>([\s\S]*?)<\/h3>/g)].map((m) => strip(m[1]).toLowerCase());
+    for (const k of ['control', 'memory', 'tests', 'commit']) {
+      assert.ok(titles.some((t) => t.includes(k)), `no item about ${k}: ${titles}`);
+    }
   });
 });
 

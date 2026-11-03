@@ -2,7 +2,7 @@
 id: 08-08
 title: Horizontal Workflow and 2x2 Core features
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [08-07]         # task IDs, e.g. [01-01]
@@ -49,11 +49,14 @@ Turn Workflow into one horizontal process with four stages and Core features int
 - Check at 390, 768 and 1440 px.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm --prefix website test` → exit 0
-- [ ] Workflow reads as one horizontal process at 1440 px and a vertical line at 390 px
-- [ ] Each feature claim was checked against its README or SPEC line
+- [x] all listed tests pass
+- [x] `npm --prefix website test` → exit 0
+- [x] Workflow reads as one horizontal process at 1440 px and a vertical line at 390 px
+- [x] Each feature claim was checked against its README or SPEC line
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+Workflow: one `<ol>` of four stages (Plan `/telos:plan`, Approve `/telos:approve`, Implement `/telos:do` with tests first, Verify `telos accept` ending in the commit under `git.auto_commit`), laid out as a horizontal process with CSS lines and dots from `lg` and a vertical line of steps below. It states that skills are user-invoked and Telos does not push. Core features: four items (control, memory, tests, commits) in two rows with alternating 1.35fr/0.65fr columns from `lg`, rules instead of boxes, all seven earlier claims kept and re-checked against the README rows for skills, scope guard, undo, bundle caps, lint-plan, accept and git guard.
+Tests: `workflow-features.test.mjs` now 11 tests (stage order and names, Verify commit text, no meander, four h3, unequal grids, claims kept); 64 in the site suite, all pass. Browser: 1440 px four stages in one row and 740/356 px feature columns; 768 px single column; 390 px vertical stage line; no page overflow at any of them.
+RED: node --test website/test/workflow-features.test.mjs → exit 1: 8 of 11 failed on the four-stage order, stage names, h3 count and grid assertions.
+Surprises: commands broke mid-token in prose (`telos lint-` / `plan`), so static copy now wraps them in nowrap `<code>`; the asymmetric grid moved from `md` to `lg` because 211 px columns were cramped at 768 px. Section spacing now uses `section-y` and `max-w-page` here.
+Deviations: none

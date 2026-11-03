@@ -1,52 +1,63 @@
 ---
-const features = [
+const TOKENS = /(telos lint-plan|telos accept|git reset --hard|git add -A|git add \.|git push|--no-verify|strict_scope: true|git\.auto_commit|\/telos:undo|\.telos\/)/g;
+/** Static copy only: wraps commands in <code> so they never break across lines. */
+const code = (s: string) => s.replace(TOKENS, '<code class="font-mono text-[0.92em] whitespace-nowrap text-text">$1</code>');
+
+const rows = [
   {
-    title: 'Task files with scope',
-    body: 'Each task is a plain Markdown file with its files, a path scope and acceptance items. telos lint-plan rejects files outside the scope and acceptance with no command to run.',
+    cols: 'lg:grid-cols-[1.35fr_0.65fr]',
+    items: [
+      {
+        title: 'You stay in control',
+        body: 'Skills are user-invoked, and no task starts before you approve the plan. In the standard and deep profiles an edit outside the running task’s scope adds a warning, or is blocked with strict_scope: true. /telos:undo lists the exact commits and dependent tasks, asks once, then reverts newest first.',
+        tag: '/telos:approve · strict_scope · /telos:undo',
+      },
+      {
+        title: 'Memory in your repository',
+        body: 'Plain files in .telos/ hold the rules, map, roadmap and status. Each skill reads one context bundle of at most 6000 characters, and the SessionStart status stays within 1200.',
+        tag: '.telos/',
+      },
+    ],
   },
   {
-    title: 'Machine-checked acceptance',
-    body: 'telos accept runs every command item and compares each changed file with the task’s scope or its recorded deviations.',
-  },
-  {
-    title: 'Git guard',
-    body: 'A hook blocks git push, --no-verify, git add -A and git add ., git reset --hard, and amending a commit already on a remote branch.',
-  },
-  {
-    title: 'Scope guard',
-    body: 'In the standard and deep profiles an edit outside the running task’s scope adds a warning. With strict_scope: true it is blocked.',
-  },
-  {
-    title: 'Confirmed undo',
-    body: '/telos:undo lists the exact commits and dependent tasks, asks once, then reverts newest first with git revert. Standard and deep profiles.',
-  },
-  {
-    title: 'Capped context',
-    body: 'Each skill reads one context bundle of at most 6000 characters, and the SessionStart status stays within 1200 characters.',
-  },
-  {
-    title: 'User-invoked skills',
-    body: 'Skills run only when you call them, and the hooks are plain Node scripts that make no model calls.',
+    cols: 'lg:grid-cols-[0.65fr_1.35fr]',
+    items: [
+      {
+        title: 'Tests before code',
+        body: 'Every task lists acceptance items. telos lint-plan rejects files outside the scope and acceptance with no command to run, implementation starts with tests first, and telos accept runs each command item and compares every changed file with the scope.',
+        tag: 'telos lint-plan · telos accept',
+      },
+      {
+        title: 'One commit per task',
+        body: 'Each task is committed on its own, with explicit paths, when git.auto_commit is true. A git guard blocks git push, --no-verify, git add -A and git add ., git reset --hard, and amending a commit already on a remote branch.',
+        tag: 'git guard',
+      },
+    ],
   },
 ];
 ---
 
 <section id="features" class="border-t border-line">
-  <div class="mx-auto grid max-w-6xl gap-12 px-4 py-24 sm:px-6 md:grid-cols-[0.7fr_1.3fr] md:gap-16 md:py-32">
-    <div class="flex flex-col items-start gap-6 md:sticky md:top-28 md:self-start">
-      <p class="font-mono text-xs tracking-widest text-accent uppercase">Features</p>
-      <h2 class="text-3xl font-semibold md:text-5xl">Guardrails you can read.</h2>
-      <p class="max-w-[40ch] text-muted">
-        Each item below is shipped behavior, described in the README and checked by the plugin’s tests.
+  <div class="section-y mx-auto max-w-page px-4 sm:px-6">
+    <div class="flex max-w-[40rem] flex-col items-start gap-5">
+      <p class="font-mono text-xs tracking-widest text-accent uppercase">Core features</p>
+      <h2 class="text-3xl font-semibold text-balance md:text-5xl">Control, memory, tests, commits.</h2>
+      <p class="text-muted">
+        Each item is shipped behavior described in the README and checked by the plugin’s tests.
       </p>
     </div>
-    <ul class="m-0 list-none p-0">
-      {features.map((f) => (
-        <li class="grid gap-2 border-t border-line py-6 first:border-t-0 first:pt-0 md:grid-cols-[11rem_1fr] md:gap-8">
-          <h3 class="text-lg font-semibold">{f.title}</h3>
-          <p class="max-w-[60ch] text-muted">{f.body}</p>
-        </li>
+    <div class="mt-12 flex flex-col gap-10 lg:mt-16 lg:gap-14">
+      {rows.map((row) => (
+        <div class={`grid gap-10 lg:gap-14 ${row.cols}`}>
+          {row.items.map((f) => (
+            <article class="flex flex-col gap-3 border-t border-line pt-6">
+              <h3 class="text-xl font-semibold md:text-2xl">{f.title}</h3>
+              <p class="max-w-[60ch] text-muted" set:html={code(f.body)} />
+              <p class="m-0 font-mono text-xs text-accent">{f.tag}</p>
+            </article>
+          ))}
+        </div>
       ))}
-    </ul>
+    </div>
   </div>
 </section>
