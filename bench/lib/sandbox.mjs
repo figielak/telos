@@ -1,5 +1,6 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { chmodSync, copyFileSync, existsSync, lchownSync, lstatSync, mkdirSync, readdirSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { chmodSync, copyFileSync, existsSync, lchownSync, lstatSync, mkdirSync, readdirSync, readlinkSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 
 import { UsageError } from '../../lib/errors.mjs';
@@ -16,6 +17,7 @@ const INSTRUCTIONS = Object.freeze(['CLAUDE.md', 'CLAUDE.local.md', '.claude']);
 /** Hosts the session sandbox may reach: the model API only (PROTOCOL §5.1 item 5). */
 export const MODEL_HOSTS = Object.freeze(['api.anthropic.com']);
 const refuse = (reason) => { throw new WorkspaceError(`REFUSED: ${reason}`); };
+const DEPS_TIMEOUT_MS = 15 * 60_000;
 
 /**
  * Copy the tracked runtime files of `telosDir` into a fresh `outDir`, keeping file modes and inner symlinks.
@@ -199,4 +201,39 @@ export function clearUserFiles(launcher, roots = SHARED_TMP) {
   const r = spawnSync(launcher[0], [...launcher.slice(1), 'sh', '-c', 'for r in "$@"; do [ -d "$r" ] && find "$r" -mindepth 1 -maxdepth 1 -uid "$(id -u)" -exec rm -rf {} +; done; exit 0', 'sh', ...roots],
     { cwd: '/', stdio: 'ignore', env: { PATH: process.env.PATH ?? '/usr/bin:/bin' } });
   return r.status;
+}
+
+/**
+ * The installed dependencies of `key` (`<repo>.<start>`) as an overlay dir, built once per recipe: the `suites.json` setup
+ * runs in `copy` as the benchmark user (with network; sessions have none) and only what git ignores is kept, so every
+ * variant starts from the same tree and no install output reaches a patch. `copy` is a path or a function that opens one,
+ * called only when the overlay must be built. A failing recipe throws and leaves nothing.
+ */
+export function ensureDeps(key, recipe, { workDir, copy: openCopy, launcher }) {
+  const root = join(guardWorkDir(workDir), 'deps');
+  mkdirSync(root, { recursive: true });
+  chmodSync(root, 0o700);
+  const dir = join(root, `${key}.${createHash('sha256').update(recipe).digest('hex').slice(0, 12)}`);
+  if (existsSync(dir)) return dir;
+  const copy = typeof openCopy === 'function' ? openCopy() : openCopy;
+  const r = spawnSync(launcher[0], [...launcher.slice(1), 'bash', '-c', recipe], { cwd: copy, encoding: 'utf8', timeout: DEPS_TIMEOUT_MS, maxBuffer: 64 << 20,
+    env: { PATH: process.env.PATH ?? '/usr/bin:/bin', LANG: process.env.LANG ?? 'C.UTF-8', CI: '1', ...toolEnv(copy) } });
+  handBack([copy], launcher);
+  if (r.status !== 0) throw new WorkspaceError(`deps ${key}: setup recipe exit ${r.status}: ${(r.stderr ?? '').slice(-400)}`);
+  const ignored = execFileSync('git', ['-C', copy, '-c', `safe.directory=${copy}`, 'ls-files', '--others', '--ignored', '--exclude-standard', '--directory', '-z'],
+    { encoding: 'utf8', maxBuffer: 64 << 20 }).split('\0').filter(Boolean);
+  const tmp = `${dir}.tmp-${process.pid}`;
+  rmSync(tmp, { recursive: true, force: true });
+  mkdirSync(tmp);
+  for (const p of ignored.map((x) => x.replace(/\/$/, ''))) {
+    mkdirSync(dirname(join(tmp, p)), { recursive: true });
+    execFileSync('cp', ['-a', '--reflink=auto', '--', join(copy, p), join(tmp, p)]);
+  }
+  renameSync(tmp, dir);
+  return dir;
+}
+
+/** Put a dependency overlay into a cell's copy, before `grantSession` opens it. */
+export function applyDeps(overlay, copy) {
+  execFileSync('cp', ['-a', '--reflink=auto', '--', `${overlay}/.`, copy]); // `/.` merges into the copy's existing dirs
 }

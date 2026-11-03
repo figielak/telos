@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { setupKey } from '../bench/lib/matrix.mjs';
-import { clearUserFiles, exportPlugin, grantSession, handBack, reclaim, revokeSession, sessionEnv } from '../bench/lib/sandbox.mjs';
+import { applyDeps, clearUserFiles, ensureDeps, exportPlugin, grantSession, handBack, reclaim, revokeSession, sessionEnv } from '../bench/lib/sandbox.mjs';
 import { ensureSnapshot, lockWorkDir, prepareCopy, WorkspaceError } from '../bench/lib/workspace.mjs';
 import { UsageError } from '../lib/errors.mjs';
 
@@ -350,6 +350,32 @@ test('instruction files above a session path are refused, never loaded (canary, 
     assert.throws(() => grantSession([a], { workDir: w.workDir }), (err) => err instanceof WorkspaceError
       && /REFUSED:.*instruction/.test(err.message) && err.message.includes(join(w.workDir, planted.split('/')[0] === 'copies' ? planted : planted.split('/')[0])), planted);
   }
+});
+
+test('dependencies: the recipe runs once per (repo, start, recipe), only ignored files reach each copy, same for every variant', (t) => {
+  const w = world(t);
+  const a = prepareCopy(cell('t1', 'A', w.start1), w.manifest, { workDir: w.workDir }).dir;
+  writeFileSync(join(a, '.gitignore'), 'node_modules/\n');
+  git(a, 'add', '.gitignore');
+  git(a, '-c', 'user.email=t@e', '-c', 'user.name=t', 'commit', '-qm', 'ignore');
+  const recipe = `echo run >> ${join(w.base, 'runs.log')}; mkdir -p node_modules/dep && echo code > node_modules/dep/index.js && echo stray > stray.txt && echo changed >> src/a.txt; test -n "$GIT_CONFIG_VALUE_0"`;
+  const key = 'r1.start';
+  const overlay = ensureDeps(key, recipe, { workDir: w.workDir, copy: a, launcher: ['env'] });
+  assert.equal(statSync(join(w.workDir, 'deps')).mode & 0o077, 0, 'closed to sessions');
+  assert.deepEqual(readdirSync(overlay), ['node_modules'], 'neither the stray file nor a tracked change is carried');
+  assert.equal(ensureDeps(key, recipe, { workDir: w.workDir, copy: () => assert.fail('no copy is prepared for a cached overlay'), launcher: ['env'] }), overlay);
+  assert.equal(readFileSync(join(w.base, 'runs.log'), 'utf8'), 'run\n', 'cached');
+  assert.notEqual(ensureDeps(key, `${recipe}; true`, { workDir: w.workDir, copy: a, launcher: ['env'] }), overlay, 'another recipe builds again');
+  const b = prepareCopy(cell('t2', 'A', w.start2), w.manifest, { workDir: w.workDir }).dir;
+  applyDeps(overlay, b);
+  assert.equal(readFileSync(join(b, 'node_modules/dep/index.js'), 'utf8'), 'code\n');
+  put(overlay, 'src/node_modules/inner/index.js', 'inner\n');
+  applyDeps(overlay, b);
+  assert.equal(readFileSync(join(b, 'src/node_modules/inner/index.js'), 'utf8'), 'inner\n', 'merged into an existing tracked dir');
+  assert.ok(existsSync(join(b, 'src/a.txt')), 'its tracked files stay');
+  assert.equal(existsSync(join(b, 'src/src')), false, 'never nested');
+  assert.throws(() => ensureDeps('r1.bad', 'exit 3', { workDir: w.workDir, copy: a, launcher: ['env'] }), /r1\.bad.*exit 3/);
+  assert.equal(existsSync(join(w.workDir, 'deps', 'r1.bad')), false, 'a failed build leaves nothing');
 });
 
 test('clearUserFiles removes what the benchmark user left in the shared temp roots, nothing else', (t) => {
