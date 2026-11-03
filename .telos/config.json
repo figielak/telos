@@ -6,7 +6,7 @@
     "javascript"
   ],
   "checks": {
-    "test": "npm test",
+    "test": "node --test --test-reporter=dot test/*.test.mjs",
     "e2e": "node --test test/e2e-*.test.mjs"
   },
   "docs": {
