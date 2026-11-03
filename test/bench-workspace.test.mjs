@@ -265,6 +265,12 @@ test('per-run config dir is fresh, holds only settings and credentials, and disa
   assert.equal(s.autoMemoryEnabled, false);
   assert.equal(a.env.CLAUDE_CODE_DISABLE_AUTO_MEMORY, '1');
   assert.equal(a.env.HOME, dir);
+  const copy = join(w.workDir, 'copies', 't1.A.1');
+  // git refuses a repo owned by the host for the benchmark user; tool caches must live where the sandbox lets it write
+  assert.deepEqual([a.env.GIT_CONFIG_COUNT, a.env.GIT_CONFIG_KEY_0, a.env.GIT_CONFIG_VALUE_0], ['1', 'safe.directory', copy]);
+  assert.equal(a.env.GOCACHE, join(copy, '.git', 'bench-home', 'go-build'));
+  assert.equal(a.env.XDG_CACHE_HOME, join(copy, '.git', 'bench-home', 'cache'));
+  assert.equal(a.env.GOTOOLCHAIN, 'local');
   assert.equal(s.sandbox.enabled, true);
   assert.equal(s.sandbox.allowUnsandboxedCommands, false);
   assert.deepEqual(s.sandbox.network.allowedDomains, ['api.anthropic.com']);

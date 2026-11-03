@@ -319,9 +319,11 @@ test('grading runs through the given grader argv (the launcher), never directly 
   const m = manifest(['t-one']);
   const log = join(root, 'grader.log');
   const wrapper = join(root, 'launch.sh');
-  writeFileSync(wrapper, `#!/bin/sh\necho "$@" >> ${log}\nexec "$@"\n`, { mode: 0o755 });
+  writeFileSync(wrapper, `#!/bin/sh\necho "$@" >> ${log}\necho "env $GIT_CONFIG_KEY_0=$GIT_CONFIG_VALUE_0 $GOCACHE" >> ${log}\nexec "$@"\n`, { mode: 0o755 });
   const res = await runMatrix(cellsOf(m, { variant: 'A' }), m, { outDir: join(root, 'out'), capUsd: 5, reservation: 1,
     deps: fakeDeps(join(root, 'work')), graderArgv: [wrapper, process.execPath] });
   assert.equal(res.records[0].accepted, true);
   assert.match(readFileSync(log, 'utf8'), /grading\/t-one\.A\.1-.*\/t-one\.mjs/);
+  const copy = join(root, 'work', 'copies', 't-one.A.1');
+  assert.ok(readFileSync(log, 'utf8').includes(`env safe.directory=${copy} ${join(copy, '.git', 'bench-home', 'go-build')}`), 'grader trusts the copy, caches inside it');
 });

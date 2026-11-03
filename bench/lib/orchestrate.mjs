@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 
 import { UsageError } from '../../lib/errors.mjs';
+import { toolEnv } from './sandbox.mjs';
 import { round } from './session.mjs';
 import { canonical, within, WorkspaceError } from './workspace.mjs';
 
@@ -58,7 +59,7 @@ function grade(script, cwd, root, id, graderArgv) {
     copyFileSync(script, copy);
     if (graderArgv.length > 1) { chmodSync(dir, 0o755); chmodSync(copy, 0o644); } // readable to the launcher's user, only now
     const r = spawnSync(graderArgv[0], [...graderArgv.slice(1), copy], { cwd, encoding: 'utf8', timeout: GRADE_TIMEOUT_MS, maxBuffer: 64 << 20,
-      env: { PATH: process.env.PATH ?? '/usr/bin:/bin', LANG: process.env.LANG ?? 'C.UTF-8' } });
+      env: { PATH: process.env.PATH ?? '/usr/bin:/bin', LANG: process.env.LANG ?? 'C.UTF-8', ...toolEnv(cwd) } });
     return { exit: r.status, signal: r.signal ?? null, tail: `${r.stdout ?? ''}${r.stderr ?? ''}`.slice(-TAIL), ms: Date.now() - started };
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }

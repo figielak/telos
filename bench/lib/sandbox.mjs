@@ -59,6 +59,19 @@ export function exportPlugin(telosDir, outDir) {
 }
 
 /**
+ * Environment for tools the benchmark user runs in `copy` (sessions and grading): git trusts the host-owned copy,
+ * and toolchain caches live in `<copy>/.git/bench-home`, the one place the sandbox lets a session write that is
+ * neither shared between cells nor part of the patch. `sudo` resets `HOME` to the user's real home, so no tool may
+ * rely on it.
+ */
+export function toolEnv(copy) {
+  const home = join(copy, '.git', 'bench-home');
+  return { GIT_CONFIG_COUNT: '1', GIT_CONFIG_KEY_0: 'safe.directory', GIT_CONFIG_VALUE_0: copy,
+    GOCACHE: join(home, 'go-build'), GOPATH: join(home, 'go'), GOTOOLCHAIN: 'local', XDG_CACHE_HOME: join(home, 'cache'),
+    npm_config_cache: join(home, 'npm') };
+}
+
+/**
  * Fresh per-run `CLAUDE_CONFIG_DIR` (settings + optional credentials only) and a minimal environment.
  * `configTemplate`: `{ settings?, credentials?, allowedDomains?, passEnv? }` — base settings (shared permission
  * mode and allow list, D-09), a credentials file to copy, model API hosts, host env names to pass through.
@@ -96,6 +109,7 @@ export function sessionEnv(cell, { configTemplate = {}, workDir } = {}) {
     GIT_CONFIG_NOSYSTEM: '1',
     GIT_AUTHOR_NAME: 'Telos Bench', GIT_AUTHOR_EMAIL: 'bench@example.invalid',
     GIT_COMMITTER_NAME: 'Telos Bench', GIT_COMMITTER_EMAIL: 'bench@example.invalid',
+    ...toolEnv(join(root, 'copies', cell.id)),
   };
   for (const name of configTemplate.passEnv ?? []) if (process.env[name] !== undefined) env[name] = process.env[name];
   const telos = cell.variant === 'C' || cell.variant === 'D';
