@@ -66,8 +66,10 @@ test('C/D single task: one /telos:quick session with the task text', async (t) =
   const run = await runTrajectory(single('C'), ctx(c, 'C'));
   assert.equal(run.status, 'completed');
   assert.deepEqual(calls(c.dir).map((x) => x.prompt), ['/telos:quick Add a --verbose flag to the CLI.']);
+  assert.equal(run.sessions[0].bundle.args, 'quick');
   const a = copy(t, []);
-  await runTrajectory(single('A'), ctx(a, 'A'));
+  const bare = await runTrajectory(single('A'), ctx(a, 'A'));
+  assert.equal(bare.sessions[0].bundle, undefined);
   assert.deepEqual(calls(a.dir).map((x) => x.prompt), ['Add a --verbose flag to the CLI.']);
 });
 
@@ -94,6 +96,8 @@ test('C/D scenario: plan → lint → confirm → approve → do / do-hard as Ne
   assert.equal(run.sessions.length, 6);
   assert.equal(new Set(run.sessions.map((s) => s.sessionId)).size, 6);
   assert.deepEqual(run.sessions.map((s) => s.step), ['plan', 'confirm', 'approve', 'do', 'do', 'do']);
+  assert.deepEqual(run.sessions.map((s) => s.bundle?.args), ['plan', 'plan', 'approve', 'do', 'do 01-02', 'do'], 'every C/D step records its bundle (§6.4)');
+  assert.deepEqual(run.sessions[4].bundle.lines, ['Injected do 01-02 · ~100 est. tokens'], 'without the stored-files list');
 });
 
 test('C/D: a /telos:do that blocks and escalates to /telos:do-hard is followed', async (t) => {

@@ -16,6 +16,11 @@ if (args[0] === 'status') {
   out(`Phase: ${s.phase} [active] · Task: ${s.tasks.find((t) => t.status !== 'done')?.id ?? 'none'}`);
   out(`Next: ${s.next}`);
   out(`Blockers: ${s.blockers}`);
+} else if (args[0] === 'budget') {
+  out('Telos budget · estimated tokens');
+  out('Stored .telos files (raw):');
+  out('- .telos/STATUS.md · 10 B · ~3 est. tokens');
+  out(`Injected ${args.slice(2).join(' ')} · ~100 est. tokens`);
 } else if (args[0] === 'lint-plan') {
   out(s.lint === 0 ? `ok: ${s.tasks.length} tasks` : '01-02: Files not in scope');
   process.exitCode = s.lint;

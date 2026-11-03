@@ -33,6 +33,13 @@ function readTasks(ctx) {
   return { tasks: [...r.stdout.matchAll(/^- (\d{2}-\d{2}) \[([a-z-]+)\]/gm)].map(([, id, status]) => ({ id, status })) };
 }
 
+/** What a C/D step is about to receive (§6.4): the rendered rows of `telos budget --ctx`, without its stored-files list. */
+function bundleOf(ctx, args) {
+  const r = telosCli(ctx, ['budget', '--ctx', ...args]);
+  const lines = r.stdout.split('\n').filter(Boolean);
+  return { args: args.join(' '), exit: r.code, lines: lines.slice(lines.findLastIndex((l) => l.startsWith('- .telos/')) + 1) };
+}
+
 /**
  * Run every session of `cell` (`{ id, variant, task: { type: 'single', prompt } | { type: 'multi', steps[] } }`) in the
  * copy `ctx.cwd` → `{ status: completed|failed|timeout|infra-failed, reason?, usageLimit?, sessions[], spentUsd }`.
@@ -52,15 +59,16 @@ export async function runTrajectory(cell, ctx) {
   const end = (status, reason) => ({ status, ...(reason ? { reason } : {}), sessions, spentUsd: unknown ? null : spent });
 
   /** One session → `null` when the run may go on, else the run's final record. */
-  const session = async (step, prompt) => {
+  const session = async (step, prompt, bundleArgs) => {
     if (unknown) return end('failed', 'budget: spend unknown, the reservation cannot be kept');
     const left = round(ctx.cellBudgetUsd - spent);
     if (!(left > 0)) return end('failed', `budget: ${spent} of ${ctx.cellBudgetUsd} USD spent`);
     const runLeft = ctx.runTimeoutMs - (Date.now() - started);
     if (runLeft <= 0) return end('timeout', 'run time limit');
+    const bundle = telos && bundleArgs ? bundleOf(ctx, bundleArgs) : undefined;
     const s = await runSession({ prompt, env: ctx.env, cwd: ctx.cwd, argvBase: ctx.argvBase, budgetUsd: left,
       timeoutMs: Math.min(ctx.sessionTimeoutMs, runLeft), killGraceMs: ctx.killGraceMs, spawn: ctx.spawn });
-    sessions.push({ step, prompt, ...s });
+    sessions.push({ step, prompt, ...(bundle ? { bundle } : {}), ...s });
     for (const a of s.attempts) {
       if (a.costUsd == null) unknown = true;
       else spent = round(spent + a.costUsd);
@@ -74,7 +82,7 @@ export async function runTrajectory(cell, ctx) {
     return null;
   };
 
-  if (task.type !== 'multi') return (await session('task', telos ? `/telos:quick ${task.prompt}` : task.prompt)) ?? end('completed');
+  if (task.type !== 'multi') return (await session('task', telos ? `/telos:quick ${task.prompt}` : task.prompt, ['quick'])) ?? end('completed');
   const text = task.steps.join('\n\n');
   if (!telos) {
     for (const [i, step] of task.steps.entries()) {
@@ -88,16 +96,16 @@ export async function runTrajectory(cell, ctx) {
 
 /** PROTOCOL §6.3 steps 1–6 for C and D. */
 async function cdScenario(ctx, text, session, end) {
-  let stop = await session('plan', `/telos:plan ${text}`);
+  let stop = await session('plan', `/telos:plan ${text}`, ['plan']);
   if (stop) return stop;
   const lint = telosCli(ctx, ['lint-plan']);
   if (lint.code !== 0) return end('failed', `lint: ${lint.stdout.split('\n')[0] || `exit ${lint.code}`}`);
   // the shipped way to confirm proposed decisions headless: revise notes (a plain prompt may not edit .telos/)
-  if ((stop = await session('confirm', `/telos:revise ${CONFIRM_TEXT}`))) return stop;
+  if ((stop = await session('confirm', `/telos:revise ${CONFIRM_TEXT}`, ['plan']))) return stop;
   const after = readStatus(ctx);
   if (after.error) return end('failed', after.error);
   if (after.awaiting && after.awaiting !== 'none') return end('failed', `awaiting: ${after.awaiting}`);
-  if ((stop = await session('approve', '/telos:approve'))) return stop;
+  if ((stop = await session('approve', '/telos:approve', ['approve']))) return stop;
   const generated = readTasks(ctx);
   if (generated.error) return end('failed', generated.error);
   if (!generated.tasks.length) return end('failed', 'no tasks');
@@ -118,7 +126,7 @@ async function cdScenario(ctx, text, session, end) {
     if (st.blockers !== 'none' && !st.next.startsWith('/telos:do-hard ')) return end('failed', `blocker: ${st.blockers}`);
     if (count >= limit) return end('failed', `session limit: ${limit} loop sessions for ${generated.tasks.length} tasks`);
     const before = JSON.stringify([st.next, index.tasks]);
-    if ((stop = await session('do', st.next))) return stop;
+    if ((stop = await session('do', st.next, ['do', ...st.next.split(' ').slice(1)]))) return stop;
     const ran = st.next;
     st = readStatus(ctx);
     index = readTasks(ctx);

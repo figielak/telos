@@ -138,6 +138,15 @@ test('classifyBash: read-like commands explore, known others do not, unknown is 
   for (const c of ['frobnicate --all', 'curl http://x', '']) assert.equal(classifyBash(c), 'unclassified', c);
 });
 
+test('classifyBash: filtering a command\'s own output, heredoc bodies and quoted text are not reading files (pilot audit)', () => {
+  for (const c of ['go test ./pkg/config 2>&1 | tail -20', 'go build ./... 2>&1 | grep -v "no test files" | head -30', 'telos accept 01-01 2>&1 | tail -4',
+    "python3 - <<'E'\nimport re\ncat = open('x').read()\nhead\nE", 'git commit -q -m "fix it" -m "- cat the file\n- grep | tail"', 'f=x.go sed -i s/a/b/ $f',
+    "cat > config/keys_test.go <<'EOF'\npackage config\nEOF"]) assert.equal(classifyBash(c), 'other', c);
+  for (const c of ['git status --short; cat pkg/a.go', 'go build ./... && grep -n x pkg/a.go', 'f=a.go; sed -n 1,5p $f', 'f=a.go grep -n x $f', 'cat a.go | grep "x|y"',
+    'cat a.go > b.go']) assert.equal(classifyBash(c), 'explore', c);
+  assert.equal(classifyBash('git add pkg/a.go && git commit -m "subject\n\n- body line"'), 'other');
+});
+
 test('cat via Bash counts as exploration with its returned bytes; npm test does not; an unknown command is counted separately', (t) => {
   const d = dir(t);
   write(d, 's1', [
@@ -188,7 +197,7 @@ test('changed paths outside expectedPaths → out_of_scope_paths', (t) => {
   write(d, 's1', [turn('m')]);
   const rec = record([session('task', [attempt('s1')])], { changedPaths: ['src/a.py', 'src/deep/b.py', 'docs/x.md', 'README.md', '.telos/STATUS.md'] });
   const row = rowFromRecord(rec, { transcriptsDir: d, expectedPaths: ['src/', 'README.md'] });
-  assert.deepEqual(row.out_of_scope_paths, ['.telos/STATUS.md', 'docs/x.md']);
+  assert.deepEqual(row.out_of_scope_paths, ['docs/x.md'], 'instruction files and Telos state are the variant, not the agent going out of scope');
   assert.equal(rowFromRecord(rec, { transcriptsDir: d }).out_of_scope_paths, null, 'no expectedPaths, no verdict');
 });
 

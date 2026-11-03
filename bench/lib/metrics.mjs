@@ -13,17 +13,29 @@ const INSTRUCTION = /(^|\/)(\.telos|\.claude)\/|(^|\/)(CLAUDE(\.local)?|AGENTS|G
 
 // --- Bash ---------------------------------------------------------------------------------------------------------
 const READ_LIKE = /^(cat|head|tail|grep|egrep|fgrep|rg|find|ls|tree|wc|file|stat|less|more|sed\s+-n|git\s+(show|log|diff|blame|grep|ls-files|ls-tree|cat-file))\b/;
-const KNOWN_OTHER = /^(npm|npx|pnpm|yarn|node|python3?|pytest|uv|pip3?|go|cargo|make|mvn|gradle|git|telos|mkdir|cp|mv|rm|touch|echo|printf|cd|pwd|export|env|true|false|test|chmod|diff|sort|tee|sed|awk|tr|cut|xargs|which|date|sleep|bash|sh)\b/;
+const KNOWN_OTHER = /^(npm|npx|pnpm|yarn|node|python3?|pytest|uv|pip3?|go|gofmt|cargo|make|mvn|gradle|git|telos|mkdir|cp|mv|rm|touch|echo|printf|cd|pwd|export|env|true|false|test|chmod|diff|sort|tee|sed|awk|tr|cut|xargs|which|date|sleep|bash|sh)\b/;
 
-/** Split a command line into simple commands on `&&`, `||`, `;`, `|` and newlines, dropping a leading `cd <dir>`. */
-const segments = (command) => command.split(/&&|\|\||;|\||\n/).map((s) => s.trim().replace(/^\(+/, '')).filter(Boolean).filter((s) => !/^cd(\s|$)/.test(s));
+/** A command line without heredoc bodies and quoted text: neither is a command. */
+const code = (command) => command
+  .replace(/<<-?\s*(['"]?)(\w+)\1[^\n]*\n[\s\S]*?(?:\n\s*\2\s*(?=\n|$)|$)/g, ' ')
+  .replace(/"(?:[^"\\]|\\.)*"|'[^']*'/g, '""');
 
-/** `explore` when any simple command reads files, `other` when all are known non-reading ones, else `unclassified`. */
+/**
+ * The commands that choose their input: the head of each pipeline split on `&&`, `||`, `;` and newlines. What follows a
+ * `|` only filters that head's output (`go test | tail`). Leading `VAR=value`, a bare assignment and `cd <dir>` are dropped.
+ */
+const segments = (command) => code(command).split(/&&|\|\||;|\n/).map((s) => s.split('|')[0].trim().replace(/^\(+/, '').replace(/^(\w+=\S*\s+)+/, ''))
+  .filter(Boolean).filter((s) => !/^cd(\s|$)/.test(s) && !/^\w+=\S*$/.test(s));
+
+/** `cat > file` writes; it reads nothing. */
+const CAT_WRITE = /^cat\s*>/;
+
+/** `explore` when any pipeline head reads files, `other` when all are known non-reading ones, else `unclassified`. */
 export function classifyBash(command) {
   const parts = segments(String(command ?? ''));
   if (!parts.length) return 'unclassified';
-  if (parts.some((p) => READ_LIKE.test(p))) return 'explore';
-  return parts.every((p) => KNOWN_OTHER.test(p)) ? 'other' : 'unclassified';
+  if (parts.some((p) => READ_LIKE.test(p) && !CAT_WRITE.test(p))) return 'explore';
+  return parts.every((p) => KNOWN_OTHER.test(p) || CAT_WRITE.test(p)) ? 'other' : 'unclassified';
 }
 
 /** Paths a Bash command writes to: `sed -i`, `tee`, and `>`/`>>` redirects (not `/dev/null` or fd duplication). */
@@ -166,7 +178,7 @@ export function rowFromRecord(record, { transcriptsDir, expectedPaths = record.e
   } else {
     Object.assign(row, { per_model: null, tools: null, denied: null, explore_calls: null, explore_bytes: null, explore_unclassified: null });
   }
-  row.out_of_scope_paths = Array.isArray(expectedPaths) && record.changedPaths ? record.changedPaths.filter((p) => outside(p, expectedPaths)).sort() : null;
+  row.out_of_scope_paths = Array.isArray(expectedPaths) && record.changedPaths ? record.changedPaths.filter((p) => !INSTRUCTION.test(p) && outside(p, expectedPaths)).sort() : null;
   row.unverified = !readable || [row.cost_usd, row.input, row.cache_creation, row.output, row.cache_read, row.turns].includes(null);
   return row;
 }
