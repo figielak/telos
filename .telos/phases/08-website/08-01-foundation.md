@@ -2,7 +2,7 @@
 id: 08-01
 title: "Astro and Tailwind foundation, tokens, fonts, DESIGN.md"
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: []         # task IDs, e.g. [01-01]
@@ -57,10 +57,12 @@ Create the standalone Astro and Tailwind package in `website/` with design token
 - Write `DESIGN.md`: color tokens with roles, type scale, spacing scale, component rules, motion rules, and how to run the site.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm --prefix website test` → exit 0
-- [ ] `npm test` → exit 0
+- [x] all listed tests pass
+- [x] `npm --prefix website test` → exit 0
+- [x] `npm test` → exit 0
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+Standalone Astro 7.4.5 + Tailwind 4.3.4 package in `website/` (exactly three pinned dependencies, lockfile committed). Tokens, self-hosted latin variable fonts (113 KB, OFL texts), semantic `Base.astro` with skip link and `<main id="main">`, decorative `Meander.astro`, favicon, placeholder `index.astro`, and `DESIGN.md` with measured contrast ratios.
+Tests: 10 in `website/test/foundation.test.mjs`, all pass; `npm test` (746 plugin tests) still passes; built CSS is 13 KB, no client JavaScript.
+RED: node --test website/test/*.test.mjs → exit 1: no dist, DESIGN.md or Meander yet (missing files, not setup). Two test defects fixed on the way (font-display regex, Tailwind `focus:font-display` match).
+Deviations: none
