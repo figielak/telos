@@ -91,7 +91,8 @@ async function cdScenario(ctx, text, session, end) {
   if (stop) return stop;
   const lint = telosCli(ctx, ['lint-plan']);
   if (lint.code !== 0) return end('failed', `lint: ${lint.stdout.split('\n')[0] || `exit ${lint.code}`}`);
-  if ((stop = await session('confirm', CONFIRM_TEXT))) return stop;
+  // the shipped way to confirm proposed decisions headless: revise notes (a plain prompt may not edit .telos/)
+  if ((stop = await session('confirm', `/telos:revise ${CONFIRM_TEXT}`))) return stop;
   const after = readStatus(ctx);
   if (after.error) return end('failed', after.error);
   if (after.awaiting && after.awaiting !== 'none') return end('failed', `awaiting: ${after.awaiting}`);

@@ -77,7 +77,7 @@ const approved = TASKS.map((x) => ({ ...x, status: 'approved' }));
 const withStatus = (done) => approved.map((x) => (done.includes(x.id) ? { ...x, status: 'done' } : x));
 const planRules = (over = {}) => [
   { match: '/telos:plan ', state: { tasks: TASKS, awaiting: '01:D-01', next: '/telos:approve' }, ...over.plan },
-  { match: 'accept the recommended options', state: { awaiting: null }, ...over.confirm },
+  { match: '/telos:revise accept the recommended options', state: { awaiting: null }, ...over.confirm },
   { match: '/telos:approve', state: { tasks: approved, next: '/telos:do' }, ...over.approve },
   { match: '/telos:do-hard 01-02', state: { tasks: withStatus(['01-01', '01-02']), next: '/telos:do' }, ...over.doHard },
   { match: '/telos:do', states: [{ tasks: withStatus(['01-01']), next: '/telos:do-hard 01-02' },
@@ -89,7 +89,7 @@ test('C/D scenario: plan → lint → confirm → approve → do / do-hard as Ne
   const run = await runTrajectory(multi('D'), ctx(c, 'D'));
   assert.equal(run.status, 'completed', run.reason);
   assert.deepEqual(calls(c.dir).map((x) => x.prompt), ['/telos:plan Build the export feature.\n\nAdd CSV output.\n\nDocument the flag.',
-    'accept the recommended options', '/telos:approve', '/telos:do', '/telos:do-hard 01-02', '/telos:do']);
+    '/telos:revise accept the recommended options', '/telos:approve', '/telos:do', '/telos:do-hard 01-02', '/telos:do']);
   assert.ok(telosCalls(c.dir).some((a) => a[0] === 'lint-plan'));
   assert.equal(run.sessions.length, 6);
   assert.equal(new Set(run.sessions.map((s) => s.sessionId)).size, 6);

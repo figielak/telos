@@ -60,7 +60,7 @@ All of it lives under one `workDir` that neither lies inside nor contains this c
 | A/B single | the task text |
 | C/D single | `/telos:quick <task text>` |
 | A/B multi | `steps` joined by blank lines, then `continue the work in this repository: <step>` for `steps[1…]`, one fresh session each |
-| C/D multi | `/telos:plan <task text>` → `telos lint-plan` → `accept the recommended options` → `/telos:approve` → loop on `telos status` Next |
+| C/D multi | `/telos:plan <task text>` → `telos lint-plan` → `/telos:revise accept the recommended options` → `/telos:approve` → loop on `telos status` Next |
 
 C/D checks, all from `telos` output in the copy (no model judgement):
 
