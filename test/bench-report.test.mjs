@@ -267,3 +267,21 @@ test('report.mjs: usage errors exit 2; rows + manifest → runs.csv and tables.m
     assert.equal(again.status, 0);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+test('blocked runs count as accepted when the hidden tests pass, and the block rate and acceptance without blocks are shown', () => {
+  const rows = [
+    row('u', 'C', 1), row('u', 'C', 2, { status: 'blocked', reason: 'next: fix by hand' }),
+    row('u', 'C', 3, { status: 'blocked', reason: 'next: fix by hand', accepted: false }),
+    row('u', 'C', 4, { accepted: false }), row('u', 'C', 5),
+  ];
+  const agg = aggregate(rows, matrix(task('u')), protocol());
+  const c = agg.units[0].variants.C;
+  assert.equal(c.accepted, 3);
+  assert.equal(c.blocked, 2);
+  assert.equal(c.acceptedUnblocked, 2);
+  assert.equal(agg.units[0].variants.A.blocked, 0);
+  const md = toMarkdown(agg);
+  assert.match(md, /\| blocked \|/);
+  assert.match(md, /\| accepted without a block \|/);
+  assert.match(md, /\| u \| C \| 3\/5 \|.*\| 2 \| 2\/5 \|/);
+});

@@ -193,7 +193,7 @@ export async function runMatrix(cells, manifest, { outDir, gradeRoot, capUsd, re
     }
     // the sessions have all exited: only now does the acceptance material leave its directory (D-06)
     const { patch, changedPaths } = capturePatch(ws.dir, ws.start);
-    const acceptance = traj.status === 'completed' ? grade(script, ws.dir, gradeRoot ?? join(outDir, 'grading'), cell.id, graderArgv) : null;
+    const acceptance = traj.status === 'completed' || traj.status === 'blocked' ? grade(script, ws.dir, gradeRoot ?? join(outDir, 'grading'), cell.id, graderArgv) : null;
     return finish(cell, base, { status: traj.status, ...(traj.reason ? { reason: traj.reason } : {}), accepted: acceptance?.exit === 0,
       acceptance, patch, changedPaths, sessions: traj.sessions, spentUsd: unverified ? null : traj.spentUsd, spendUnverified: unverified,
       priorAttemptsUsd: priorUsd, setupUsd, versions: deps.versions?.() ?? null });

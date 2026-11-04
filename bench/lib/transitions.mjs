@@ -42,7 +42,7 @@ function bundleOf(ctx, args) {
 
 /**
  * Run every session of `cell` (`{ id, variant, task: { type: 'single', prompt } | { type: 'multi', steps[] } }`) in the
- * copy `ctx.cwd` → `{ status: completed|failed|timeout|infra-failed, reason?, usageLimit?, sessions[], spentUsd }`.
+ * copy `ctx.cwd` → `{ status: completed|blocked|failed|timeout|infra-failed, reason?, usageLimit?, sessions[], spentUsd }`.
  * ctx: `env`, `argvBase` (from `baseArgv`), `telos` (argv prefix of the CLI, launcher included), `cellBudgetUsd`
  * (the cell reservation; each session gets what its predecessors left, §7.3), `sessionTimeoutMs`, `runTimeoutMs`,
  * optional `killGraceMs` and `spawn`.
@@ -119,11 +119,11 @@ async function cdScenario(ctx, text, session, end) {
     if (st.error || index.error) return end('failed', st.error ?? index.error);
     if (CLOSE.test(st.next)) {
       const open = index.tasks.filter((t) => t.status !== 'done').map((t) => t.id);
-      return open.length ? end('failed', `next: ${st.next} with tasks not done: ${open.join(', ')}`) : end('completed');
+      return open.length ? end('blocked', `next: ${st.next} with tasks not done: ${open.join(', ')}`) : end('completed');
     }
-    if (!DO.test(st.next ?? '')) return end('failed', `next: ${st.next}`);
+    if (!DO.test(st.next ?? '')) return end('blocked', `next: ${st.next}`);
     // a blocker is only followed through the shipped /telos:do → /telos:do-hard escalation
-    if (st.blockers !== 'none' && !st.next.startsWith('/telos:do-hard ')) return end('failed', `blocker: ${st.blockers}`);
+    if (st.blockers !== 'none' && !st.next.startsWith('/telos:do-hard ')) return end('blocked', `blocker: ${st.blockers}`);
     if (count >= limit) return end('failed', `session limit: ${limit} loop sessions for ${generated.tasks.length} tasks`);
     const before = JSON.stringify([st.next, index.tasks]);
     if ((stop = await session('do', st.next, ['do', ...st.next.split(' ').slice(1)]))) return stop;
@@ -131,7 +131,7 @@ async function cdScenario(ctx, text, session, end) {
     st = readStatus(ctx);
     index = readTasks(ctx);
     if (st.error || index.error) return end('failed', st.error ?? index.error);
-    if (st.blockers !== 'none' && DO.test(st.next ?? '') && !st.next.startsWith('/telos:do-hard ')) return end('failed', `blocker: ${st.blockers}`);
+    if (st.blockers !== 'none' && DO.test(st.next ?? '') && !st.next.startsWith('/telos:do-hard ')) return end('blocked', `blocker: ${st.blockers}`);
     if (JSON.stringify([st.next, index.tasks]) === before) return end('failed', `no progress: ${ran}`);
   }
 }

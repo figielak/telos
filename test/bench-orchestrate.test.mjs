@@ -399,3 +399,18 @@ test('any failed setup session charges what it cost, also when it is an infrastr
   assert.match(first.stopped, /^infra: t-one\.A\.1/);
   assert.equal(first.spentUsd, 0.25);
 });
+
+test('a blocked trajectory is graded and fully costed; a failed one is not graded', async (t) => {
+  for (const [status, graded] of [['blocked', true], ['failed', false], ['timeout', false]]) {
+    const root = tmp(t);
+    const out = join(root, 'out');
+    const deps = fakeDeps(join(root, 'work'), { status, cost: 0.5 });
+    const m = manifest(['t-one']);
+    await runMatrix(cellsOf(m, { variant: 'C' }), m, { outDir: out, capUsd: 5, reservation: 2, deps });
+    const r = record(out, 't-one.C.1');
+    assert.equal(r.status, status);
+    assert.equal(r.acceptance != null, graded, status);
+    assert.equal(r.accepted, graded, status);
+    assert.equal(r.spentUsd, 0.5);
+  }
+});

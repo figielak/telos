@@ -110,13 +110,11 @@ test('C/D: a /telos:do that blocks and escalates to /telos:do-hard is followed',
   assert.deepEqual(calls(c.dir).slice(3).map((x) => x.prompt), ['/telos:do', '/telos:do-hard 01-01', '/telos:do']);
 });
 
-test('C/D failures: lint, awaiting user, blocker, unexpected Next, refusal, no progress → failed, no further sessions', async (t) => {
+test('C/D failures: lint, awaiting user, refusal, no progress → failed, no further sessions', async (t) => {
   const cases = [
     [{}, { lint: 1 }, /^lint/, 1],
     [{ confirm: { state: { awaiting: '01:D-01' } } }, null, /^awaiting/, 2],
     [{ approve: { state: { tasks: TASKS.map((x, i) => ({ ...x, status: i ? 'approved' : 'draft' })), next: '/telos:do' } } }, null, /^not approved: 01-01/, 3],
-    [{ doHard: { state: { blockers: '01-02: check fails', next: 'fix 01-02 by hand: check fails' } } }, null, /^next: fix 01-02 by hand/, 5],
-    [{ do: { states: [{ blockers: '01-01: tests fail', next: '/telos:do' }] } }, null, /^blocker: 01-01: tests fail/, 4],
     [{ do: { json: { result: 'REFUSED: task 01-01 is blocked by D-02 [proposed]' } } }, null, /^refused/, 4],
     [{ do: { states: [{}] } }, null, /^no progress/, 4],
   ];
@@ -234,4 +232,16 @@ test('the cell reservation is shared: each session gets what is left, an exhaust
   assert.equal(u.status, 'failed');
   assert.match(u.reason, /^budget: spend unknown/);
   assert.equal(calls(unknown.dir).length, 1);
+});
+
+test('C/D: a task the workflow stops on ends as blocked, with the reason kept', async (t) => {
+  for (const [over, reason] of [
+    [{ doHard: { state: { blockers: '01-02: check fails', next: 'fix 01-02 by hand: check fails' } } }, /^next: fix 01-02 by hand/],
+    [{ do: { states: [{ blockers: '01-01: tests fail', next: '/telos:do' }] } }, /^blocker: 01-01: tests fail/],
+  ]) {
+    const c = copy(t, planRules(over));
+    const run = await runTrajectory(multi('C'), ctx(c, 'C'));
+    assert.equal(run.status, 'blocked', JSON.stringify(over));
+    assert.match(run.reason, reason);
+  }
 });
