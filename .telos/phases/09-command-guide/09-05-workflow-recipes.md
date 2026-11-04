@@ -2,7 +2,7 @@
 id: 09-05
 title: Publish five complete workflow recipes
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [09-04]    # task IDs, e.g. [01-01]
@@ -53,11 +53,16 @@ Publish five practical recipes connecting commands into complete workflows with 
 - Add landing/docs entry points and manually walk each recipe against source behavior.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm --prefix website test` → exit 0
-- [ ] `node --test --test-reporter=dot test/*.test.mjs` → exit 0
-- [ ] Five complete recipes cover the agreed scenarios with prerequisites, outcomes, alternative choices and stop conditions.
-- [ ] Every recipe can be followed without assuming an unspecified phase, CONTEXT, approval or deep e2e configuration.
+- [x] all listed tests pass
+- [x] `npm --prefix website test` → exit 0
+- [x] `node --test --test-reporter=dot test/*.test.mjs` → exit 0
+- [x] Five complete recipes cover the agreed scenarios with prerequisites, outcomes, alternative choices and stop conditions.
+- [x] Every recipe can be followed without assuming an unspecified phase, CONTEXT, approval or deep e2e configuration.
 
 ## Result
 
+RED: node --test website/test/docs-workflows.test.mjs → exit 1: workflows.mjs missing, recipe set assertions failed (no recipes yet).
+Added workflows.mjs with five recipes (quick fix, onboarding, standard feature, deep critical, change/resume/undo), /docs/workflows/ index and detail routes with ordered, anchored steps, and entry links from the docs index and the landing workflow.
+docs-workflows.test.mjs (12 tests) covers recipe set, per-step location/outcome/checkpoint and resolving links, phase and CONTEXT before discuss/research, e2e before deep do, minimal onboarding without gated commands, optional confirmed undo, and built routes. Website suite 155 pass.
+Walked the recipes against the skill and README sources; no README row needed (no new command). No example was run.
+Deviations: bench/results/RUNLOG.md — untracked before this task, not changed or committed by it; flagged by the scope check only

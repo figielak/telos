@@ -1,0 +1,33 @@
+---
+import Docs from '../../../layouts/Docs.astro';
+import { workflows } from '../../../data/docs/workflows.mjs';
+---
+
+<Docs
+  title="Workflow recipes: Telos command guide"
+  description="Five complete Telos workflows: a quick fix, onboarding an existing repository, a standard feature, a deep critical feature, and changing, resuming or undoing work."
+>
+  <nav aria-label="Guide" class="mb-8 font-mono text-xs text-muted">
+    <a href="/docs/" class="text-accent underline underline-offset-4">Command guide</a>
+    <span aria-hidden="true"> / </span>Workflow recipes
+  </nav>
+  <div class="flex max-w-[44rem] flex-col items-start gap-5">
+    <p class="font-mono text-xs tracking-widest text-accent uppercase">Workflows</p>
+    <h1 class="text-4xl font-semibold text-balance md:text-6xl">Workflow recipes</h1>
+    <p class="text-muted">
+      Each recipe connects commands into a complete path: where it starts, which steps to take and where to run them, what to check
+      and when to stop. Scenarios are illustrative. Your phase numbers and task ids come from your own plan.
+    </p>
+  </div>
+  <ol class="m-0 mt-12 grid list-none gap-3 p-0 md:grid-cols-2">
+    {workflows.map((w) => (
+      <li class="rounded-md border border-line bg-surface">
+        <a href={`/docs/workflows/${w.slug}/`} class="block rounded-md p-5 transition-colors duration-300 hover:bg-bg">
+          <span class="block font-display text-lg font-semibold text-text">{w.title}</span>
+          <span class="mt-2 block text-sm text-muted">{w.summary}</span>
+          <span class="mt-3 block font-mono text-xs text-accent">Starts on: {w.start.profile}</span>
+        </a>
+      </li>
+    ))}
+  </ol>
+</Docs>

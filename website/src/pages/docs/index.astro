@@ -1,6 +1,7 @@
 ---
 import Docs from '../../layouts/Docs.astro';
 import { commands, groups } from '../../data/docs/commands.mjs';
+import { workflows } from '../../data/docs/workflows.mjs';
 
 const shown = groups
   .map((g) => ({ ...g, items: commands.filter((c) => c.kind === g.kind) }))
@@ -44,4 +45,21 @@ const shown = groups
       </ul>
     </section>
   ))}
+  <section aria-labelledby="workflows-heading" class="mt-12 border-t border-line pt-10">
+    <h2 id="workflows-heading" class="text-2xl font-semibold md:text-3xl">Workflow recipes</h2>
+    <p class="mt-2 text-muted">
+      Complete paths that connect the commands, with starting state, checkpoints and stop conditions.
+      <a href="/docs/workflows/" class="text-accent underline underline-offset-4">All recipes</a>
+    </p>
+    <ul class="m-0 mt-6 grid list-none gap-3 p-0 md:grid-cols-2">
+      {workflows.map((w) => (
+        <li class="rounded-md border border-line bg-surface">
+          <a href={`/docs/workflows/${w.slug}/`} class="block rounded-md p-5 transition-colors duration-300 hover:bg-bg">
+            <span class="block font-display text-base font-semibold text-text">{w.title}</span>
+            <span class="mt-2 block text-sm text-muted">{w.summary}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
 </Docs>
