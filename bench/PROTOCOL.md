@@ -337,6 +337,13 @@ First final preregistration, superseded by the amendment of 2026-11-04: `688860c
 - Claude Code version / model ID: 2.1.316 / `claude-sonnet-5-5`
 - Telos commit: the commit that records this hash; it changes only this section, `bench/PILOT.md` and `.telos/`, so the plugin runtime is the preregistered one
 
+**Second final preregistration** (amendment of 2026-11-04):
+
+- Commit hash: `c86ff34e905fdc08edf3fe3fbd931b87c5842a4d`
+- Date: 2026-11-04
+- Claude Code version / model ID: 2.1.316 / `claude-sonnet-5-5`
+- Telos commit: the commit that records this hash; it changes only this section, so the plugin runtime is the preregistered one
+
 Nothing in the measured campaign may start before this commit. After it, this protocol changes only by a post-registration deviation note in the report, never by editing §2–§9.
 
 ## Amendments
