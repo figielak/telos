@@ -179,3 +179,28 @@ The forecast fits under the cap, so the quota stays unchanged. Its main weakness
 - **07-09:** run the canaries again in the campaign preflight (§5.2), and keep one Telos commit for the whole campaign.
 - **07-10:** pass the setup figures to `report.mjs` through `--protocol`. Without them, C and D show `n/a` for fresh tokens and exploration, and H3 excludes every unit. Publish this pilot's evidence, redacted under §10. It is currently kept outside the repository, in `~/.cache/telos-bench/pilot-final2` and `~/.cache/telos-bench/pilot-final2-evidence`.
 - **Telos:** decide how `/telos:approve` and `/telos:review` should behave when `.telos/` is ignored.
+
+## Second pilot (2026-11-04)
+
+Run after the void first campaign run (`bench/results/RUNLOG.md`, `PROTOCOL.md` amendment of 2026-11-04) to check the environment fixes. Unlike the first pilot it used **measured scenarios**, because the first pilot's material could not expose these defects. Its cells are excluded from the results and are never reused.
+
+```bash
+node bench/run.mjs --manifest bench/corpus --seed 709 --reps 1 --only lazygit-scenario --only anything-llm-scenario \
+  --variant C --variant D --cap-usd 24 --cell-usd 3.88 --out <evidence> --config <pilot3 config>
+```
+
+| Cell | Result | USD with setup | Minutes |
+|---|---|---|---|
+| `anything-llm-scenario.C.1` | accepted | 1.52 | 5.2 |
+| `lazygit-scenario.C.1` | accepted | 2.63 | 11.3 |
+| `anything-llm-scenario.D.1` | blocked at `cd collector && yarn lint`: `collector/` had no dependencies. Fixed in the recipe. | 1.36 | 7.1 |
+| `lazygit-scenario.D.1` | blocked at the interactive integration CLI, which needs `/dev/tty`. Cannot be fixed in a headless session (§12). | 3.46 | 13.4 |
+
+The two blocked cells were not graded, because at that point blocked runs were not. Each cell ran once, so this says nothing about C against D.
+
+**Spend so far:** first pilot $57.62, first preflight $0.37, void run $15.89, environment smoke tests $0.36, second pilot $8.97, second preflight $0.37 (estimated from the first): $83.58.
+
+**Reservation and forecast.** `--cell-usd 6.92` ($3.46 × 2) and `--cap-usd 216`. Forecast from the void run and this pilot: lazygit scenario blocks about $6.60, anything-llm scenario blocks about $3.20, single-task blocks about $0.70, snapshots about $0.70, which gives 5 × 6.60 + 5 × 3.20 + 20 × 0.70 + 0.70 = **$64**, or $80 with a 25 % margin. Anything-llm single tasks are not yet measured, so this is the weakest part.
+
+**Known gap.** `telos --version` fails in the plugin export because `package.json` is not exported. Nothing in the workflow calls it, and it was left as it is.
+

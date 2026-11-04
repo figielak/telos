@@ -208,6 +208,7 @@ The acceptance check (§4.2) runs on the final work tree.
 ### 7.2 Failures, retries and time limits
 - **Pre-first-turn host error** (no model output in the attempt): ≤ 2 retries per session. Each retry's usage and cost counts.
 - **Every other failure** (timeout, crash after the first turn, denied tool, wrong answer, budget stop) is a normal outcome: not retried, not accepted, fully costed.
+- **Blocked run** (C/D, amendment of 2026-11-04): the workflow stopped on a task. Not retried, fully costed, graded like a completed run and counted apart in the report.
 - **Time limits**: 30 minutes of wall time per session; 4 hours per scenario run. The pilot may change these values only by amendment.
 - **Usage limit** (the host ends a session with HTTP 429, e.g. a subscription window): not a run outcome. The cost counts, the attempt is kept apart from the records, the campaign stops, and the cell runs again from a fresh copy on resume. The report lists every such attempt.
 - A missing usage field stays `null` and the run is marked unverified; it is never treated as 0.
@@ -294,6 +295,8 @@ Disclosed in advance, carried from phase 06 (D-03):
 - **F6 and F9** are fixed in this phase (07-01 and 07-08); their live confirmation is in `bench/PILOT.md`.
 - **Interpreter edits and exploration.** Edits made through an interpreter (`python3 - <<EOF`) are not seen as product mutations, so the §8.4 counting window stays open longer in those sessions, in any variant.
 - **Repositories that ignore `.telos/`.** lazygit's `.gitignore` contains `.*`. There `/telos:approve` cannot commit the plan or create its tag, and `/telos:review` refuses to run. The benchmark measures this as shipped.
+- **No terminal in sessions.** Sessions are headless, so a command that needs `/dev/tty` cannot run, such as lazygit's interactive integration CLI. A Telos plan that lists one as an acceptance check blocks the task; a person at a terminal would not hit this. Such runs count as `blocked`, which is reported per variant.
+- **Void first run.** The protocol was changed after 14 cells of a first run and 4 pilot cells on measured scenarios had been seen (amendment of 2026-11-04). The changes are about the environment and the grading rule, and the whole matrix was rerun, but a reader should weigh that the rule on blocked runs was decided knowing that it favours C and D.
 
 ## 13. Mapping to the external plan review
 The external plan review (`BENCHMARK-PLAN-REVIEW.md`, applied during phase 07 revise; not kept in the repository) listed these items. Each is answered here or named as a limitation.
@@ -327,7 +330,7 @@ Pilot runs are excluded from results, published as the pilot, and their spend co
 
 After the pilot, PROTOCOL.md and the corpus are committed together as the **final preregistration**:
 
-Final preregistration: `688860c2f98cec7a1c5706ccc45e22d1c8907d29` (2026-11-03)
+First final preregistration, superseded by the amendment of 2026-11-04: `688860c2f98cec7a1c5706ccc45e22d1c8907d29` (2026-11-03)
 
 - Commit hash: `688860c2f98cec7a1c5706ccc45e22d1c8907d29`
 - Date: 2026-11-03
@@ -339,6 +342,18 @@ Nothing in the measured campaign may start before this commit. After it, this pr
 ## Amendments
 
 Dated entries, allowed **only before the final preregistration commit** (§14). Each entry: date, section, change, reason. After that commit, deviations are listed in the report under "Deviations from the protocol", not here.
+
+- **2026-11-04 · §5.1, §6.1, §7.2, §7.3, §8.1, §9, §12, §14 · rerun after a void first run (user decision).** D-07 allows amendments only before the final preregistration, so this is a declared exception: the commit of 2026-11-03 is superseded, and the whole matrix runs again from zero. *Reason:* the first run stopped after 14 of 120 cells, and defects in the environment had stopped every C/D scenario at its own `telos accept` while A and B, which have no such step, were graded. All 5 of those cells later passed the hidden tests in a diagnostic run. Nothing from that run enters any table; its evidence is published as void (`bench/results/RUNLOG.md`). **Disclosure:** the owner and the author saw those 14 cells, the 4 cells of a second pilot on measured scenarios (§14, `bench/PILOT.md`) and the 5 diagnostic gradings before writing this amendment. Changes, each applying to every variant unless stated:
+  1. **Sandbox.** Sessions may write to all of `/tmp`, which is cleared between cells, because lazygit's integration runner hardcodes `/tmp/lazygit` and `/tmp/lazygit-<random>`. yarn is on the session `PATH`.
+  2. **Dependencies.** The anything-llm recipe also installs `collector/`. Calibration of that repository's tasks passes with the new recipe.
+  3. **Sandbox stubs.** The paths the sandbox mounts at the copy's root are in the copy's `.git/info/exclude`, so `telos accept` does not read them as the agent's change. Recorded patches are unaffected.
+  4. **Blocked runs are graded (C/D).** A trajectory the workflow stops on a task (`next: …`, `blocker: …`) has the new status `blocked` and is graded like a completed run, because A and B are graded whenever their sessions end, including when the agent reports a check it could not run. The full cost counts. The report shows blocked runs and acceptance without them next to the primary metric, so the cost of stopping stays visible: a blocked run that passes still needed a person to finish the workflow. Timeouts, budget stops, `no progress` and session-limit stops stay ungraded.
+  5. **Reservation and cap.** `--cell-usd 6.92`, the most expensive cell of the second pilot ($3.46) × 2, the rule the first pilot used. `--cap-usd 216`: $300 minus $83.58 spent so far, rounded down.
+  6. **Batches.** The campaign runs in batches between blocks, one per 5-hour usage window: a new block starts only while the batch has spent at most $8, which keeps a batch near $14. Blocks stay whole and gaps are logged (§7.1). A usage limit still stops the run as §7.2 says.
+  7. **Setup sessions.** A usage limit in a setup session stops the run as `usage-limit`, and any failed setup session charges its cost.
+  8. **Pinned tree.** The campaign runs from a detached worktree of its commit, so later commits on the main branch change neither the recorded Telos commit nor the snapshots.
+
+  The seed stays 709, as written before the first run, so the block order is not chosen after seeing results.
 
 - **2026-11-01 · §2, §8.1, §9 · metric and verdicts.** `U` is defined as the cost of all 5 runs divided by the accepted runs, not a median. Medians and IQR now apply to per-run cost, tokens and exploration. Added explicit rules for zero accepted runs, missing data and incomplete units, plus a per-hypothesis table with direction, ties (agree under ≥ and "not cheaper"), the per-unit H5 floor and signed differences. A scenario is one accepted run at most. *Reason:* the draft mixed a median with a ratio, applied one sign to every metric and made ties inconclusive even where the claim is non-strict (second review).
 - **2026-11-01 · §6.3 · C/D transitions.** `/telos:approve` replaces `telos task set … status=approved` and its cost counts. The loop follows `Next` as `telos status` shows it, which already routes hard tasks to `/telos:do-hard`. It also follows the shipped `/do` → `/do-hard` escalation after a block. It ends on `close phase`. Added an explicit list of failing `Next` values and a session limit. *Reason:* `task set` changes only task status and leaves `Next` stale, and the old "/do stops and is rerun" contradicted the shipped routing (verified in `lib/status.mjs` and `shared/do.md`).

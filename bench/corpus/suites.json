@@ -99,7 +99,7 @@
   },
   "mintplex-labs-anything-llm": {
     "url": "https://github.com/Mintplex-Labs/anything-llm.git",
-    "setup": "npm install -g -s --prefix \"$HOME/yarn\" yarn@1 && \"$HOME/yarn/bin/yarn\" install --silent && cd server && \"$HOME/yarn/bin/yarn\" install --frozen-lockfile --silent",
+    "setup": "npm install -g -s --prefix \"$HOME/yarn\" yarn@1 && \"$HOME/yarn/bin/yarn\" install --silent && cd server && \"$HOME/yarn/bin/yarn\" install --frozen-lockfile --silent && cd ../collector && \"$HOME/yarn/bin/yarn\" install --frozen-lockfile --silent",
     "test": "\"$HOME/yarn/bin/yarn\" test"
   }
 }
