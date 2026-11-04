@@ -2,7 +2,7 @@
 id: 09-01
 title: "Guide routes, command template and navigation"
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: []         # task IDs, e.g. [01-01]
@@ -58,11 +58,13 @@ Create the static guide shell and a reusable command-page contract, with one com
 - Document the guide conventions and verify the built pages and asset budgets.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm --prefix website test` → exit 0
-- [ ] `node --test --test-reporter=dot test/*.test.mjs` → exit 0
-- [ ] Landing and guide navigation work at 390, 768 and 1440 px without horizontal page overflow; long commands scroll locally.
-- [ ] The status detail is readable with JavaScript disabled and uses the existing visual design.
+- [x] all listed tests pass
+- [x] `npm --prefix website test` → exit 0
+- [x] `node --test --test-reporter=dot test/*.test.mjs` → exit 0
+- [x] Landing and guide navigation work at 390, 768 and 1440 px without horizontal page overflow; long commands scroll locally.
+- [x] The status detail is readable with JavaScript disabled and uses the existing visual design.
 
 ## Result
-
+Built the static /docs/ guide: a record contract (src/data/docs/commands.mjs, core.mjs with the /telos:status entry), Docs layout, index and /docs/commands/<slug>/ route, Guide links in desktop/mobile nav and footer, route-aware /#section anchors, and a DESIGN.md "Guide pages" section.
+Header menu now switches at lg (seven links overflow at 768 px). New docs-foundation tests (9) plus a navigation test; website suite 108/108 pass, root suite exit 0; no horizontal overflow at 390, 768, 1440 px (checked in a browser); no client JS beyond the menu script.
+Deviations: website/astro.config.mjs — inlineStylesheets 'never' keeps CSS as files after the shared chunk split (hero and budget tests read dist/_astro); website/test/foundation.test.mjs — meander scan now recurses into the new docs directories.; bench/results/RUNLOG.md — pre-existing phase 07-09 work, not touched by this task and not staged

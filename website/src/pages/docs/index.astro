@@ -1,0 +1,39 @@
+---
+import Docs from '../../layouts/Docs.astro';
+import { commands, groups } from '../../data/docs/commands.mjs';
+
+const shown = groups
+  .map((g) => ({ ...g, items: commands.filter((c) => c.kind === g.kind) }))
+  .filter((g) => g.items.length > 0);
+---
+
+<Docs
+  title="Command guide: Telos"
+  description="What each Telos command does, when to use it and when to choose another, with examples. Claude Code skills and the terminal CLI."
+>
+  <div class="flex max-w-[44rem] flex-col items-start gap-5">
+    <p class="font-mono text-xs tracking-widest text-accent uppercase">Guide</p>
+    <h1 class="text-4xl font-semibold text-balance md:text-6xl">Command guide</h1>
+    <p class="text-muted">
+      Every entry explains what a command does, what it reads and changes, when to use it and when to pick something else.
+      Examples are illustrative, not recorded output; each page links the repository files it is based on.
+    </p>
+  </div>
+
+  {shown.map((g) => (
+    <section aria-labelledby={`${g.id}-heading`} class="mt-12 border-t border-line pt-10">
+      <h2 id={`${g.id}-heading`} class="text-2xl font-semibold md:text-3xl">{g.title}</h2>
+      <p class="mt-2 text-muted">{g.blurb}</p>
+      <ul class="m-0 mt-6 grid list-none gap-3 p-0 md:grid-cols-2">
+        {g.items.map((c) => (
+          <li class="rounded-md border border-line bg-surface">
+            <a href={`/docs/commands/${c.slug}/`} class="block rounded-md p-5 transition-colors duration-300 hover:bg-bg">
+              <span class="block font-mono text-sm text-accent">{c.name}</span>
+              <span class="mt-2 block text-sm text-muted">{c.summary}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</Docs>

@@ -12,7 +12,8 @@ function navigation() {
   }));
   const menu = {
     open: true,
-    querySelectorAll() { return links; },
+    querySelectorAll(selector) { menu.selectors.push(selector); return links; },
+    selectors: [],
     querySelector() { return summary; },
     addEventListener(type, fn) { handlers[type] = fn; },
   };
@@ -44,4 +45,13 @@ test('Escape closes the menu and returns focus to its summary; other keys leave 
   handlers.keydown({ key: 'Escape' });
   assert.equal(menu.open, false);
   assert.equal(summary.focused, true);
+});
+
+test('the menu script only enhances same-page anchors, so cross-page guide links just navigate', () => {
+  const { menu } = navigation();
+  assert.deepEqual(menu.selectors, ['a[href^="#"]']);
+  const nav = readSite('src', 'components', 'Nav.astro');
+  assert.match(nav, /Astro\.props/, 'Nav takes the current page');
+  assert.match(nav, /'\/#'|`\/#|"\/#/, 'guide pages target /#section');
+  assert.match(nav, /\/docs\//, 'guide link');
 });

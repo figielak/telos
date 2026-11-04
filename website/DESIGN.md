@@ -139,3 +139,24 @@ npm test        # astro build, then node --test against dist/
 
 `website/` is a standalone npm package, not a workspace; it has no effect on the plugin or the
 root `npm test`.
+
+## Guide pages
+
+The command guide is static English content under `/docs/`, built from plain `.mjs` records.
+
+- **Routes**: `/docs/` is the index; `/docs/commands/<slug>/` is one command. Slugs are prefixed with
+  the kind (`skill-status`, `cli-status`) so skills and terminal commands never collide.
+- **Records** live in `src/data/docs/` and are registered in `commands.mjs`, which documents the
+  contract: slug, kind, name, invocation, summary, profiles, prerequisites, explanation, effects,
+  examples (title, command, outcome), use, avoid, alternatives, sources, and optional `variants`
+  and `subcommands` that render under the same template. Sources are repository paths linked on GitHub.
+- **Reading layout**: a breadcrumb, a Guide-labelled contents row (a sticky column from `lg`), then one
+  article at most 48 rem wide with `h1`, a syntax/profile/prerequisite panel and `h2` sections in a
+  fixed order: what it does, effects, examples, variants, subcommands, when to use, when to avoid,
+  alternatives, sources. Example commands are escaped text in a focusable, labelled scroll region;
+  nothing needs JavaScript beyond the shared menu script.
+- **Navigation**: the header and footer link `/docs/`. From guide pages the landing sections are
+  `/#section` links; on the landing page they stay in-page anchors. The header switches to the menu
+  below `lg`, because seven links do not fit at 768 px.
+- **Labels**: examples are illustrative, never recorded output or benchmark results.
+

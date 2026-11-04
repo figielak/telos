@@ -105,7 +105,8 @@ describe('base layout', () => {
   test('the meander is gone: no file, no import, no mention in DESIGN.md', () => {
     assert.ok(!existsSync(join(siteRoot, 'src', 'components', 'Meander.astro')), 'Meander.astro still exists');
     for (const dir of ['components', 'layouts', 'pages']) {
-      for (const f of readdirSync(join(siteRoot, 'src', dir))) {
+      for (const f of readdirSync(join(siteRoot, 'src', dir), { recursive: true })) {
+        if (statSync(join(siteRoot, 'src', dir, f)).isDirectory()) continue;
         assert.ok(!/meander/i.test(readSite('src', dir, f)), `${dir}/${f} mentions the meander`);
       }
     }

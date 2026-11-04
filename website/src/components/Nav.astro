@@ -1,13 +1,20 @@
 ---
 import Monogram from './Monogram.astro';
 
+interface Props {
+  current?: 'home' | 'docs';
+}
+const { current = 'home' } = Astro.props;
 const GITHUB = 'https://github.com/figielak/telos';
+// Guide pages reach the landing sections through /#section; the landing page keeps in-page anchors.
+const anchor = current === 'docs' ? '/#' : '#';
 const links = [
-  { href: '#workflow', label: 'Workflow' },
-  { href: '#features', label: 'Features' },
-  { href: '#memory', label: 'Project memory' },
-  { href: '#profiles', label: 'Profiles' },
-  { href: '#getting-started', label: 'Getting started' },
+  { href: `${anchor}workflow`, label: 'Workflow' },
+  { href: `${anchor}features`, label: 'Features' },
+  { href: `${anchor}memory`, label: 'Project memory' },
+  { href: `${anchor}profiles`, label: 'Profiles' },
+  { href: `${anchor}getting-started`, label: 'Getting started' },
+  { href: '/docs/', label: 'Guide', page: 'docs' },
 ];
 const linkClass =
   'rounded-sm px-1 py-2 font-display text-sm font-medium text-muted transition-colors duration-300 hover:text-text';
@@ -19,12 +26,12 @@ const linkClass =
       <Monogram size={26} class="text-accent" />
       Telos
     </a>
-    <nav aria-label="Primary" class="hidden items-center gap-6 md:flex">
-      {links.map((l) => <a href={l.href} class={linkClass}>{l.label}</a>)}
+    <nav aria-label="Primary" class="hidden items-center gap-6 lg:flex">
+      {links.map((l) => <a href={l.href} class={linkClass} aria-current={l.page === current ? 'page' : undefined}>{l.label}</a>)}
     </nav>
     <div class="flex items-center gap-2">
       <a href={GITHUB} class={`${linkClass} px-3 text-text`}>GitHub</a>
-      <details id="mobile-menu" class="group relative md:hidden">
+      <details id="mobile-menu" class="group relative lg:hidden">
         <summary
           class="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-sm border border-line px-4 font-display text-sm font-medium text-text marker:hidden [&::-webkit-details-marker]:hidden"
         >
@@ -34,7 +41,7 @@ const linkClass =
           </svg>
         </summary>
         <nav aria-label="Primary, small screens" class="absolute right-0 mt-2 flex w-64 flex-col rounded-md border border-line bg-surface p-2">
-          {links.map((l) => <a href={l.href} class={`${linkClass} px-3`}>{l.label}</a>)}
+          {links.map((l) => <a href={l.href} class={`${linkClass} px-3`} aria-current={l.page === current ? 'page' : undefined}>{l.label}</a>)}
         </nav>
       </details>
     </div>
