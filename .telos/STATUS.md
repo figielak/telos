@@ -2,8 +2,8 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 09-command-guide
-Task: 09-06
-Next: /telos:do
+Task: none
+Next: close phase 09 (/telos:done)
 Blockers: none
 Awaiting user: none
 <!-- Blockers: "NN-MM: reason". Awaiting user: IDs only, e.g. "02:Q-01, 02:D-03" -->
@@ -15,6 +15,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 09-06 done: guide audited at 390/768/1440 px, links, keyboard and no-JS; no material findings
 - 09-05 done: five workflow recipes with /docs/workflows/ routes
 - 09-04 done: CLI reference with subsections for actions and ctx bundles
-- 09-03 done: eight profile-gated skills and two variants documented, full skill inventory tested
