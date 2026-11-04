@@ -1,8 +1,8 @@
 # Status
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
-Phase: 07-benchmark
-Task: 07-09
+Phase: 09-command-guide
+Task: 09-01
 Next: /telos:do
 Blockers: none
 Awaiting user: none
@@ -15,6 +15,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- Before planning 09: 07-09 remains in-progress; next: smoke test after 15:00, pilot, new preregistration (batches of $14 per 5-hour window), then show results before the campaign
 - 07-08 done: pilot 8/8 accepted, canaries clean, F6 live; final preregistration committed
 - 08-website closed: landing page in website/, 93 site tests, ADR 001
-- 08-06 done: audit, no defects; 93 site tests, budgets met
