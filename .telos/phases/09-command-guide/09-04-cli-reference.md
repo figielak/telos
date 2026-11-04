@@ -2,7 +2,7 @@
 id: 09-04
 title: Document the CLI with practical examples and boundaries
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [09-03]    # task IDs, e.g. [01-01]
@@ -49,11 +49,15 @@ Add a separate terminal reference covering every public CLI command, with practi
 - Review syntax, quoting, effects and expected outputs without running the mutations; run checks.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm --prefix website test` → exit 0
-- [ ] `node --test --test-reporter=dot test/*.test.mjs` → exit 0
-- [ ] Every public CLI command and documented action/context bundle has explanatory coverage and an example.
-- [ ] A reader can identify where to enter each command and whether it runs checks or changes project state.
+- [x] all listed tests pass
+- [x] `npm --prefix website test` → exit 0
+- [x] `node --test --test-reporter=dot test/*.test.mjs` → exit 0
+- [x] Every public CLI command and documented action/context bundle has explanatory coverage and an example.
+- [x] A reader can identify where to enter each command and whether it runs checks or changes project state.
 
 ## Result
 
+Added cli.mjs with 17 records (15 registry commands plus help and version) and 30 anchored subsections for actions and ctx bundles; registered them in commands.mjs.
+docs-cli.test.mjs (10 tests) compares the guide with the exported registry and with the README CLI table signatures, and checks examples, outcomes, anchors and the stated boundaries (ctx REFUSED with exit 0, MANUAL accept, setters, budget estimate).
+Test RED first: guide commands missing from the registry comparison. Website suite 143 pass; root suite exit 0. No README row needed: no new command. No example was executed.
+Deviations: bench/results/RUNLOG.md — untracked before this task, not changed or committed by it; flagged by the scope check only

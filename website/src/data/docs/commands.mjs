@@ -1,5 +1,6 @@
 import { core } from './core.mjs';
 import { advanced } from './advanced.mjs';
+import { cli } from './cli.mjs';
 
 /**
  * Guide record contract (documented in website/DESIGN.md, "Guide pages").
@@ -25,7 +26,7 @@ import { advanced } from './advanced.mjs';
 export const REPO = 'https://github.com/figielak/telos';
 export const sourceUrl = (path) => `${REPO}/blob/HEAD/${path}`;
 
-export const commands = [...core, ...advanced];
+export const commands = [...core, ...advanced, ...cli];
 
 export const groups = [
   { kind: 'skill', id: 'skills', title: 'Claude Code skills', blurb: 'Slash commands you type inside Claude Code.' },

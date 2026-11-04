@@ -2,7 +2,7 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 09-command-guide
-Task: 09-04
+Task: 09-05
 Next: /telos:do
 Blockers: none
 Awaiting user: none
@@ -15,6 +15,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 09-04 done: CLI reference with subsections for actions and ctx bundles
 - 09-03 done: eight profile-gated skills and two variants documented, full skill inventory tested
 - 09-02 done: nine core skills and five model variants documented
-- 09-01 done: /docs/ guide shell, record contract, status entry and nav links
