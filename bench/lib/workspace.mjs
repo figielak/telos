@@ -166,6 +166,9 @@ export function ensureMirrors(manifest, workDir) {
   return { ...manifest, repos: manifest.repos.map((r) => ({ ...r, url: mirrorOf(r) })) };
 }
 
+/** Paths the session sandbox stubs at the copy's root (seen in the campaign's first run, RUNLOG defect 3). */
+const SANDBOX_STUBS = Object.freeze(['.bash_profile', '.bashrc', '.claude/', '.gitconfig', '.mcp.json', '.profile', '.ripgreprc', '.zprofile', '.zshrc']);
+
 /**
  * Disposable copy of the cell's repository at its task's start commit (PROTOCOL §5.1 items 2, 4) with the
  * variant's instructions: A none, B its `(repo, start)` file, C/D the overlay of `snapshot` (from ensureSnapshot).
@@ -190,6 +193,10 @@ export function prepareCopy(cell, manifest, { workDir, snapshot } = {}) {
   if (cell.variant === 'B') placeB(dir, task, manifest);
   else if (cell.variant === 'C' || cell.variant === 'D') placeSnapshot(dir, cell, snapshot);
   else if (cell.variant !== 'A') refuse(`unknown variant ${cell.variant}`);
+  // the sandbox mounts empty stubs over these paths in the copy while a session runs, in every variant; they are not the
+  // agent's work, but `git status` and the `telos accept` scope check would read them so. The recorded patch does not use this file.
+  mkdirSync(join(dir, '.git', 'info'), { recursive: true });
+  writeFileSync(join(dir, '.git', 'info', 'exclude'), SANDBOX_STUBS.map((p) => `/${p}\n`).join(''), { flag: 'a' });
   checkSymlinks(dir, 'copy');
   return { dir, start: task.start, refsChecked: true };
 }

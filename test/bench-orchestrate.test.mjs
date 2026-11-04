@@ -370,3 +370,32 @@ test('an infrastructure failure in prepare stops the run cleanly: no record, mar
   assert.equal(record(out, 't-one.A.1').attempt, 1);
   assert.ok(!second.spentUsd || second.spentUsd < 2, 'no abandoned reservation was charged on resume');
 });
+
+test('a usage limit in a setup session stops as usage-limit, charges its cost and leaves no record', async (t) => {
+  const root = tmp(t);
+  const out = join(root, 'out');
+  const deps = fakeDeps(join(root, 'work'));
+  const prepare = deps.prepare;
+  deps.prepare = async () => { throw Object.assign(new Error('setup k: /telos:map exit 1'), { costUsd: 0.1, usageLimit: true }); };
+  const m = manifest(['t-one']);
+  const first = await runMatrix(cellsOf(m, { variant: 'A' }), m, { outDir: out, capUsd: 5, reservation: 2, deps });
+  assert.match(first.stopped, /^usage-limit: t-one\.A\.1/);
+  assert.equal(first.spentUsd, 0.1, 'the setup session ran, so its cost counts');
+  assert.deepEqual(first.skipped, ['t-one.A.1']);
+  assert.deepEqual(readdirSync(join(out, 'records')), [], 'no record and no marker');
+  deps.prepare = prepare;
+  const second = await runMatrix(cellsOf(m, { variant: 'A' }), m, { outDir: out, capUsd: 5, reservation: 2, deps });
+  assert.equal(second.stopped ?? null, null);
+  assert.equal(record(out, 't-one.A.1').attempt, 1);
+});
+
+test('any failed setup session charges what it cost, also when it is an infrastructure stop', async (t) => {
+  const root = tmp(t);
+  const out = join(root, 'out');
+  const deps = fakeDeps(join(root, 'work'));
+  deps.prepare = async () => { throw Object.assign(new Error('setup k: /telos:map exit 1'), { costUsd: 0.25 }); };
+  const m = manifest(['t-one']);
+  const first = await runMatrix(cellsOf(m, { variant: 'A' }), m, { outDir: out, capUsd: 5, reservation: 2, deps });
+  assert.match(first.stopped, /^infra: t-one\.A\.1/);
+  assert.equal(first.spentUsd, 0.25);
+});

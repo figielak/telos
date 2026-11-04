@@ -491,3 +491,24 @@ test('ensureMirrors: one closed bare mirror per repository next to the work dir,
   assert.equal(execFileSync('git', ['-C', c.dir, 'remote'], { encoding: 'utf8' }).trim(), '');
   assert.equal(execFileSync('git', ['-C', c.dir, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), w.start1);
 });
+
+test('sandbox stub paths are excluded in every variant, so git status and telos accept do not read them as the agent\'s', (t) => {
+  const w = world(t);
+  const telosDir = plugin(t);
+  const calls = [];
+  for (const v of ['A', 'B', 'C', 'D']) {
+    const profile = v === 'D' ? 'standard' : 'deep';
+    const c = cell('t1', v, w.start1);
+    let snapshot;
+    if (v === 'C' || v === 'D') {
+      snapshot = ensureSnapshot(`r1.${w.start1}.${profile}`, { workDir: w.workDir, telosDir, build: stubBuild(calls) }).dir;
+    }
+    const { dir } = prepareCopy(c, w.manifest, { workDir: w.workDir, snapshot });
+    for (const p of ['.gitconfig', '.zshrc', '.mcp.json', '.ripgreprc', '.claude/workflows/x', '.claude/settings.json']) put(dir, p, '');
+    const status = git(dir, '-c', `safe.directory=${dir}`, 'status', '--porcelain');
+    assert.doesNotMatch(status, /gitconfig|zshrc|mcp\.json|ripgreprc|\.claude/, `variant ${v}: ${status}`);
+    put(dir, 'nested/.zshrc', 'agent file\n');
+    assert.match(git(dir, '-c', `safe.directory=${dir}`, 'status', '--porcelain'), /nested\//, 'only the copy root is excluded');
+    rmSync(join(dir, 'nested'), { recursive: true, force: true });
+  }
+});

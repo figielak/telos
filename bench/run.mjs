@@ -126,13 +126,14 @@ function realDeps(manifest, config) {
       handBack(session, config.launcher); // the host copies the untracked overlay below
       revokeSession([...session, plugin]);
     }
-    if (map.exit !== 0) throw new Error(`setup ${key}: /telos:map exit ${map.exit}`);
+    const costUsd = map.attempts.reduce((s, a) => s + (a.costUsd ?? config.setupUsd), 0);
+    if (map.exit !== 0) throw Object.assign(new Error(`setup ${key}: /telos:map exit ${map.exit}`), { costUsd, usageLimit: map.json?.api_error_status === 429 });
     // the overlay is what init + map added: untracked `.telos/` and CLAUDE.md, ignored ones included (a repo may ignore
     // dotfiles: lazygit's `.*`); placeSnapshot refuses tracked paths, so init's tracked .gitignore edit is not carried
     const added = execFileSync('git', ['-C', copy, '-c', `safe.directory=${copy}`, 'ls-files', '--others', '-z', '--', '.telos', 'CLAUDE.md'],
       { encoding: 'utf8' }).split('\0').filter(Boolean);
     for (const p of added) { mkdirSync(dirname(join(dir, p)), { recursive: true }); cpSync(join(copy, p), join(dir, p)); }
-    return { costUsd: map.attempts.reduce((s, a) => s + (a.costUsd ?? config.setupUsd), 0), sessionId: map.sessionId, usage: map.usage };
+    return { costUsd, sessionId: map.sessionId, usage: map.usage };
   }
 
   return {

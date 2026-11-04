@@ -147,8 +147,11 @@ export async function runMatrix(cells, manifest, { outDir, gradeRoot, capUsd, re
     try { ws = await deps.prepare(cell, manifest); } catch (err) {
       if (err instanceof UsageError) throw err;
       if (!(err instanceof WorkspaceError)) {
-        // no session of this cell ran (a clone or setup step failed): not a refusal and not an abandoned attempt
-        stopped = `infra: ${cell.id}: ${String(err.message).split('\n').slice(0, 3).join(' ')}`;
+        // no session of this cell ran (a clone or setup step failed): not a refusal and not an abandoned attempt.
+        // A setup session that did run reports its cost on the error, and that cost counts.
+        if (err.costUsd > 0) charge({ cell: cell.id, attempt, kind: 'setup', usd: err.costUsd });
+        const why = String(err.message).split('\n').slice(0, 3).join(' ');
+        stopped = err.usageLimit ? `usage-limit: ${cell.id}: ${why}` : `infra: ${cell.id}: ${why}`;
         rmSync(markerPath(cell.id), { force: true });
         result.skipped.push(cell.id);
         return null;
