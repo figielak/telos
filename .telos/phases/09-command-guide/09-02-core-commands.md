@@ -2,7 +2,7 @@
 id: 09-02
 title: Explain everyday Telos commands and model variants
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [09-01]    # task IDs, e.g. [01-01]
@@ -47,11 +47,15 @@ Explain everyday Telos skills so a reader can choose a command, supply a useful 
 - Compare syntax, profile gates and state/git effects with repository sources and run website checks.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm --prefix website test` → exit 0
-- [ ] `node --test --test-reporter=dot test/*.test.mjs` → exit 0
-- [ ] All ten base skills and five variants have source-backed examples, use/avoid advice and working links.
-- [ ] Examples identify placeholders and expected outcomes; none implies that an unapproved task can run.
+- [x] all listed tests pass
+- [x] `npm --prefix website test` → exit 0
+- [x] `node --test --test-reporter=dot test/*.test.mjs` → exit 0
+- [x] All ten base skills and five variants have source-backed examples, use/avoid advice and working links.
+- [x] Examples identify placeholders and expected outcomes; none implies that an unapproved task can run.
 
 ## Result
-
+Filled core.mjs with nine base skill records (init, profile, map, plan, approve, revise, do, quick, status) and five variants (map-hard, plan-lite, revise-lite, do-hard, quick-hard) with examples, outcomes, use/avoid, linked alternatives and sources checked against the skill, shared and bundle files.
+New docs-core tests (14) cover coverage, record fields, variant anchors, no cost or quality claims and the plan/revise, quick/do, approve/do and map/refresh distinctions; website suite 122/122 pass.
+Variants render under the 09-01 template; the index needed links to their anchors.
+Note: the acceptance line says ten base skills; the Constraints list names nine, and all nine are covered.
+Deviations: website/src/pages/docs/index.astro — a Variants row under each card links the #variant-<id> anchors ("indexed links"); bench/results/RUNLOG.md — pre-existing phase 07-09 work, not touched and not staged
