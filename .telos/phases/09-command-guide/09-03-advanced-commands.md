@@ -2,7 +2,7 @@
 id: 09-03
 title: Explain profile-gated commands and complete skill coverage
 type: code          # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [09-02]    # task IDs, e.g. [01-01]
@@ -49,11 +49,16 @@ Explain the standard/deep commands and prove that every shipped user-invoked ski
 - Audit the complete skill inventory, source-backed state effects and profile restrictions.
 
 ## Acceptance
-- [ ] all listed tests pass
-- [ ] `npm --prefix website test` → exit 0
-- [ ] `node --test --test-reporter=dot test/*.test.mjs` → exit 0
-- [ ] Every shipped skill, including variants, has a discoverable detail page or anchored variant section.
-- [ ] Reading check, done, review and undo makes their prerequisites, effects and alternatives clear.
+- [x] all listed tests pass
+- [x] `npm --prefix website test` → exit 0
+- [x] `node --test --test-reporter=dot test/*.test.mjs` → exit 0
+- [x] Every shipped skill, including variants, has a discoverable detail page or anchored variant section.
+- [x] Reading check, done, review and undo makes their prerequisites, effects and alternatives clear.
 
 ## Result
 
+RED: node --test test/docs-skills.test.mjs → exit 1: shipped skills missing from the guide (check, discuss, docs, done, lesson, research, research-hard, review, review-hard, undo).
+Added advanced.mjs with eight records (discuss, lesson, check, done, undo, review, research, docs) and the review-hard and research-hard variants; registered them in commands.mjs.
+docs-skills.test.mjs (9 tests) proves the inventory equals skills/, every page and variant anchor is built and indexed, profile gates, and the check/done, review/fix and undo distinctions.
+Website suite 133 pass; root suite exit 0. No README row needed: no new command or skill.
+Deviations: bench/results/RUNLOG.md — untracked before this task, not changed or committed by it; flagged by the scope check only
