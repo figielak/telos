@@ -24,7 +24,8 @@ const log = (s) => { const line = `${new Date().toISOString()} ${s}`; console.lo
 const spent = () => (existsSync(join(OUT, 'spend.jsonl'))
   ? readFileSync(join(OUT, 'spend.jsonl'), 'utf8').split('\n').filter(Boolean).reduce((s, l) => s + (JSON.parse(l).usd ?? 0), 0) : 0);
 const done = () => (existsSync(join(OUT, 'records')) ? readdirSync(join(OUT, 'records')).filter((f) => f.endsWith('.json')).length : 0);
-const sleep = (ms) => new Promise((r) => { setTimeout(r, ms); });
+// polls the wall clock: a timer alone stops counting while the host is suspended (RUNLOG, 2026-11-05 11:37)
+const sleep = async (ms) => { const until = Date.now() + ms; while (Date.now() < until) await new Promise((r) => { setTimeout(r, Math.min(30_000, until - Date.now())); }); };
 
 for (let batch = 1; ; batch++) {
   if (existsSync(`${OUT}.stop`)) { log(`stop file found before batch ${batch}; ${done()} of ${CELLS} cells, $${spent().toFixed(2)}`); process.exit(0); }
