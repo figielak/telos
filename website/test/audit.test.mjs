@@ -41,6 +41,7 @@ describe('structure', () => {
     const text = strip(section);
     assert.match(text, /Telos is not the cheapest way to use Claude Code/);
     assert.match(text, /cost more than bare Claude Code/);
+    assert.match(section, /CLAUDE\.md<\/code>\s+on every task/, 'space after the code element');
     assert.match(text, /We did not measure that long-term value/);
     assert.match(text, /Measured by the Telos author on two repositories, 120 runs/);
     assert.ok(!/\b(saves?|saving|cheaper)\b/i.test(text));
