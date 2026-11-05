@@ -118,6 +118,7 @@ Times are UTC.
 | 2026-11-05 05:22 | `lazygit-scenario.C.4` | Usage limit, 30 of 120 cells, $30.30 spent. The attempt's $1.96 counts and it is kept in `interrupted/`. The cell runs again from a fresh copy on resume. This splits block `lazygit-scenario.4`: A and D ran before the limit, C and B after it. |
 | 2026-11-05 05:33 | driver | The driver's 5 h 05 min wait would have run to 10:04, past the reset the limit message gave (06:20). It was stopped and set to restart at 06:21. |
 | 2026-11-05 07:25 | `lazygit-scenario.B.4` | Graded with the marker still present, because the first `clearWriteMarkers` was too narrow. Rule tightened and this cell regraded; see below. No model session ran. |
+| 2026-11-05 07:32–07:49 | `lazygit-single2.1`, `.4` | Owner's decision: two extra blocks in the remaining usage window, run by direct runner calls, each capped to one block, so no block was skipped. Seed order kept. Both next in the queue; stopped before `lazygit-scenario.1`, which would not fit. 8 cells, $1.42, no setup rebuilt. Deviates from "one batch per 5-hour usage window" (amendment change 6). The waiting driver was left as it was. |
 
 ## Rerun defects and deviations
 
