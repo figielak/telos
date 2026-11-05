@@ -15,6 +15,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 07-09 done: 120 of 120 benchmark cells, $63.22; H1 inconclusive, H2 supported, H3 contradicted, H4 supported, H5 inconclusive
 - 09-06 done: guide audited at 390/768/1440 px, links, keyboard and no-JS; no material findings
 - 09-05 done: five workflow recipes with /docs/workflows/ routes
-- 09-04 done: CLI reference with subsections for actions and ctx bundles
