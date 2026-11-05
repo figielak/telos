@@ -7,7 +7,8 @@ import { loadManifest } from '../lib/manifest.mjs';
 import { clearWriteMarkers, grade } from '../lib/orchestrate.mjs';
 import { clearUserFiles, handBack, reclaim, revokeSession } from '../lib/sandbox.mjs';
 
-const [outDir, configFile, manifestDir = 'bench/corpus'] = process.argv.slice(2);
+const [outDir, configFile, ...only] = process.argv.slice(2); // named cells only, when given
+const manifestDir = 'bench/corpus';
 const config = JSON.parse(readFileSync(configFile, 'utf8'));
 const manifest = loadManifest(resolve(manifestDir));
 const target = join(outDir, 'regrade');
@@ -16,6 +17,7 @@ const graderArgv = [...config.launcher, config.node ?? 'node'];
 for (const file of readdirSync(join(outDir, 'records')).filter((f) => f.endsWith('.json')).sort()) {
   const id = file.slice(0, -5);
   if (existsSync(join(target, file))) continue;
+  if (only.length && !only.includes(id)) continue;
   const record = JSON.parse(readFileSync(join(outDir, 'records', file), 'utf8'));
   if (record.status !== 'completed' && record.status !== 'blocked') continue;
   const task = manifest.tasks.find((t) => t.id === record.task);

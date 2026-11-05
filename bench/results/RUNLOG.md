@@ -117,6 +117,7 @@ Times are UTC.
 | 2026-11-05 05:00 | driver | Owner's decision: the waiting driver was stopped and restarted about 1 h 15 min before its next window, with 33 % of the usage window left (the owner's figure) and a reset due during the batch. Deviates from "one batch per 5-hour usage window" (amendment change 6). No cell was in progress. |
 | 2026-11-05 05:22 | `lazygit-scenario.C.4` | Usage limit, 30 of 120 cells, $30.30 spent. The attempt's $1.96 counts and it is kept in `interrupted/`. The cell runs again from a fresh copy on resume. This splits block `lazygit-scenario.4`: A and D ran before the limit, C and B after it. |
 | 2026-11-05 05:33 | driver | The driver's 5 h 05 min wait would have run to 10:04, past the reset the limit message gave (06:20). It was stopped and set to restart at 06:21. |
+| 2026-11-05 07:25 | `lazygit-scenario.B.4` | Graded with the marker still present, because the first `clearWriteMarkers` was too narrow. Rule tightened and this cell regraded; see below. No model session ran. |
 
 ## Rerun defects and deviations
 
@@ -150,3 +151,20 @@ Changed records keep the first result as `firstAcceptance` and name the defect i
 **Known driver detail.** A block needing setup reserves $31.68 while the driver's batch cap assumes $27.68, so such a block starts mid-batch only while the batch has spent at most $4, not $8. This can only end a batch earlier; blocks stay whole.
 
 Spend at this point: $14.04 of the $216 cap.
+
+## Defect 6, second finding (2026-11-05)
+
+**The first fix was too narrow.** `lazygit-scenario.B.4` still failed on the marker. Its agent had met the bad import in the session and ran `cd pkg/integration/tests/.claude`. The likely cause, inferred and not directly observed: the sandbox puts empty stubs in a session's working directory, so that `.claude` held more than `.cc-writes` when grading began. The marker dir's mtime falls at the start of grading, and only `.cc-writes` was left afterwards.
+
+**Change.** `clearWriteMarkers` now removes a `.claude` dir that holds an empty `.cc-writes` and otherwise no file with content. The campaign tree carries this version (blob `27b37a97cff820dca03480200e53d4c2c1845c09`), and HEAD is still `55d37c4`. This replaces the blob named above.
+
+**Regrade under the same rule.** `lazygit-scenario.B.4`: first exit 1, regrade exit 0, now accepted. The first result is kept in `firstAcceptance`.
+
+**Markers inside sessions, measured.** This replaces the "not measured" limit above. Cells whose transcripts mention `tests/.claude`, as of 48 cells:
+
+| Unit | A | B | C | D |
+|---|---|---|---|---|
+| `lazygit-scenario` | 2 of 4 (`.2`, `.4`) | 3 of 4 (`.2`, `.3`, `.4`) | 1 of 4 (`.3`) | 1 of 4 (`.3`) |
+| All other units | 0 of 8 | 0 of 8 | 0 of 8 | 0 of 8 |
+
+A mention shows the session saw the problem, not what it cost. At least `lazygit-scenario.B.4` spent commands on it. The difference between variants is uneven (5 of 8 against 2 of 8), so this friction may raise A and B's cost on this unit and may favour Telos. The sample is too small to size that. The markers cannot be removed from sessions without changing the frozen environment, so the report must state this next to `lazygit-scenario` costs and recount it at the end.

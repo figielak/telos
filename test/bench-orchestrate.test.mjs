@@ -421,7 +421,13 @@ test('clearWriteMarkers removes only marker-only .claude dirs, at any depth, and
   for (const d of dirs) mkdirSync(join(root, d), { recursive: true });
   writeFileSync(join(root, 'pkg/kept/.claude/settings.json'), '{}\n');
   writeFileSync(join(root, 'pkg/full/.claude/.cc-writes/note'), 'x\n');
-  assert.deepEqual(clearWriteMarkers(root), ['.claude', 'pkg/tests/.claude']);
+  mkdirSync(join(root, 'pkg/stubbed/.claude/.cc-writes'), { recursive: true });
+  mkdirSync(join(root, 'pkg/stubbed/.claude/.claude'), { recursive: true });
+  writeFileSync(join(root, 'pkg/stubbed/.claude/.bashrc'), '');
+  mkdirSync(join(root, 'pkg/plain/.claude'), { recursive: true });
+  writeFileSync(join(root, 'pkg/plain/.claude/.bashrc'), '');
+  assert.deepEqual(clearWriteMarkers(root), ['.claude', 'pkg/stubbed/.claude', 'pkg/tests/.claude']);
+  assert.ok(existsSync(join(root, 'pkg/plain/.claude/.bashrc')));
   assert.ok(existsSync(join(root, 'pkg/kept/.claude/settings.json')));
   assert.ok(existsSync(join(root, 'pkg/full/.claude/.cc-writes/note')));
   assert.ok(existsSync(join(root, '.git/x/.claude/.cc-writes')));

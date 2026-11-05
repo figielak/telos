@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { appendFileSync, chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, copyFileSync, existsSync, mkdirSync, lstatSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join, relative } from 'node:path';
 
@@ -47,19 +47,25 @@ function capturePatch(dir, start) {
 }
 
 /**
- * Remove the write markers the session sandbox leaves in the copy: a `.claude` dir at any depth whose only entry is an
- * empty `.cc-writes` dir. They are not the agent's work, but a generator that lists directories reads them as packages
- * (RUNLOG defect 6). Anything else in a `.claude` dir is kept. → the paths removed, relative to `root`.
+ * Remove the write markers the session sandbox leaves in the copy: a `.claude` dir at any depth holding an empty
+ * `.cc-writes` dir and otherwise nothing with content (a session whose cwd was that dir also leaves empty stubs there).
+ * They are not the agent's work, but a generator that lists directories reads them as packages (RUNLOG defect 6).
+ * A `.claude` dir with any non-empty file is kept. → the paths removed, relative to `root`.
  */
 export function clearWriteMarkers(root) {
   const removed = [];
+  const hollow = (dir) => readdirSync(dir, { withFileTypes: true }).every((e) => {
+    const p = join(dir, e.name);
+    if (e.isDirectory()) return hollow(p);
+    return e.isFile() && statSync(p).size === 0;
+  });
   const walk = (dir) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       if (!entry.isDirectory() || entry.name === '.git' || entry.name === 'node_modules') continue;
       const path = join(dir, entry.name);
       if (entry.name === '.claude') {
-        const inside = readdirSync(path, { withFileTypes: true });
-        if (inside.length === 1 && inside[0].name === '.cc-writes' && inside[0].isDirectory() && !readdirSync(join(path, '.cc-writes')).length) {
+        const marker = join(path, '.cc-writes');
+        if (existsSync(marker) && lstatSync(marker).isDirectory() && !readdirSync(marker).length && hollow(path)) {
           rmSync(path, { recursive: true });
           removed.push(relative(root, path));
           continue;
