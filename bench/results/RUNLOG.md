@@ -114,6 +114,7 @@ Times are UTC.
 | 2026-11-04 21:52 | driver | Driver defect: `run-batches.mjs` read that stop as a failure and exited, so no later batch started. No cell was affected. |
 | 2026-11-05 01:11 | `lazygit-scenario.A.2`, `.B.2` | Records regraded after defect 6; see below. No model session ran. |
 | 2026-11-05 | driver | Driver fixed and campaign resumed by the agent, on the owner's standing instruction to decide while they were away. Later batches: `campaign2-out.batches.log`. |
+| 2026-11-05 05:00 | driver | Owner's decision: the waiting driver was stopped and restarted about 1 h 15 min before its next window, with 33 % of the usage window left (the owner's figure) and a reset due during the batch. Deviates from "one batch per 5-hour usage window" (amendment change 6). No cell was in progress. |
 
 ## Rerun defects and deviations
 
