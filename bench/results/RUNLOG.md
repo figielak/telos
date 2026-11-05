@@ -202,4 +202,21 @@ Two cells have a second cause:
 - `lazygit-scenario.C.3`: the sandbox marker of defect 6 made `telos accept`'s generator re-add the bad import. This is a benchmark artifact.
 - `lazygit-scenario.C.5`: a planned grep expects `expandAll: '='`, while the generator writes `expandAll: =`.
 
-Whether a normal interactive session would hit the same TTY failure has not been tested. If it would, this is a Telos weakness and not only a benchmark artifact: planning can write a check the agent cannot run. The block also ended `lazygit-scenario.D.4` early. Of the 8 blocked runs, 6 still passed hidden acceptance.
+**TTY test (2026-11-05, pristine lazygit at the start commit, no model session, no sandbox, existing test `file/dir_with_untracked_file`).**
+
+| Run | Result |
+|---|---|
+| `go run cmd/integration_test/main.go cli …`, no TTY | Exit 1: `open /dev/tty: no such device or address` |
+| Same command under a pty, `TERM=xterm-256color` | Exit 0 |
+| `go test ./pkg/integration/clients/ -run …`, no TTY | Passes |
+
+The Bash tool of an ordinary Claude Code session has no terminal either: in the agent's own session, opening `/dev/tty` fails with the same error. So this is not a sandbox artifact. An ordinary session would be expected to hit the same failure, although no live Telos session was run outside the sandbox. This is a Telos weakness: planning can write a check the agent cannot run, while a headless command for the same tests exists. The block also ended `lazygit-scenario.D.4` early. Of the 8 blocked runs, 6 still passed hidden acceptance.
+
+### Evidence and report
+
+`node bench/results/build-evidence.mjs <raw out> <config>` wrote `rows/`, `runs/`, `protocol.json` and `redaction-hits.json`; see `REDACTION.md`. `node bench/report.mjs --rows bench/results/rows --manifest bench/corpus --out bench/results --protocol bench/results/protocol.json` wrote `tables.md` and `runs.csv`. It also exits 0 without `--protocol`, but then C and D lose their setup figures, so use the command above.
+
+Open for the report:
+- **B preparation minutes are missing.** No minutes were recorded for the B files, so `tables.md` shows `n/a` and break-even treats B's preparation as 0, which favours B. The figure must not be invented.
+- **Interrupted attempt.** `lazygit-scenario.C.4` carries the $1.96 attempt in its row, as §7.2 requires.
+- **Do not publish before 07-10.** `runs/` includes grading output, and §10 keeps hidden acceptance material private until the report is published.
