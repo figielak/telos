@@ -172,3 +172,34 @@ Spend at this point: $14.04 of the $216 cap.
 | All other units | 0 of 8 | 0 of 8 | 0 of 8 | 0 of 8 |
 
 A mention shows the session saw the problem, not what it cost. At least `lazygit-scenario.B.4` spent commands on it. The difference between variants is uneven (5 of 8 against 2 of 8), so this friction may raise A and B's cost on this unit and may favour Telos. The sample is too small to size that. The markers cannot be removed from sessions without changing the frozen environment, so the report must state this next to `lazygit-scenario` costs and recount it at the end.
+
+## End of campaign (2026-11-05)
+
+120 of 120 cells, $63.22 including the interrupted `lazygit-scenario.C.4` attempt ($1.96). Statuses: 112 completed, 8 blocked. No session timed out, no spend is unverified, and the host was not suspended during any cell. Total against the $300 cap: $83.58 before this run + $63.22 = $146.80.
+
+### Causes of the 6 non-accepted cells
+
+From grading output, patches and transcripts, read after the campaign. These notes do not change any record.
+
+| Cell | Cause | Reading |
+|---|---|---|
+| `anything-llm-single1.A.2` | Imports `parseUserContent`, which the module exports only inside `OpenAICompatibleChat`, so the call throws and the route returns 500. | Agent's bug; the hidden test is right. |
+| `anything-llm-single1.D.2` | Calls `parseUserContent` with no import; same 500. | Agent's bug; the hidden test is right. |
+| `lazygit-single1.A.5` | `cd` failed because the shell was already in that directory, so `&&` skipped the edit script. `go test` still ran on unchanged code and passed. Empty patch, and the final message reports the change as made. | Agent's error, with a false success report. |
+| `lazygit-scenario.D.4` | Blocked at task 01-02, so later work on the commit-files view never ran; 2 hidden tests fail. | Real failure, caused by the workflow stopping. |
+| `lazygit-scenario.B.2` | Flat view raises an error popup (`errors.New`). The hidden test requires a toast (`ExpectToast`), while the task says only "shows the message". | Possibly a false failure: the patch arguably meets the task text and the test is narrower. |
+| `lazygit-scenario.C.5` | Flaky `TestNewCmdTaskInstantStop` (defect 7). | False failure; regrade passed. |
+
+The two possible false failures fall on B and C. The records stay as they are, because changing hidden tests after seeing results is not allowed; the report must state both.
+
+### Causes of the 8 blocked runs
+
+All 8 are `lazygit-scenario`: 3 of 5 in C and 5 of 5 in D. `anything-llm-scenario` has none.
+
+All 8 include the same cause: an acceptance line written during planning, `go run cmd/integration_test/main.go cli …`, exits 1 in the session. Agents attribute this to the missing TTY. `lazygit-scenario.D.5` ran the same command through a pty wrapper and it exited 0, which supports that for that cell. The cause was not tested in the other cells.
+
+Two cells have a second cause:
+- `lazygit-scenario.C.3`: the sandbox marker of defect 6 made `telos accept`'s generator re-add the bad import. This is a benchmark artifact.
+- `lazygit-scenario.C.5`: a planned grep expects `expandAll: '='`, while the generator writes `expandAll: =`.
+
+Whether a normal interactive session would hit the same TTY failure has not been tested. If it would, this is a Telos weakness and not only a benchmark artifact: planning can write a check the agent cannot run. The block also ended `lazygit-scenario.D.4` early. Of the 8 blocked runs, 6 still passed hidden acceptance.
