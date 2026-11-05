@@ -4,7 +4,7 @@
 
 ## Purpose
 <!-- line 1: one sentence ≤ 100 chars (shown at session start); line 2 optional -->
-Claude Code plugin for cheap, phase-based project memory, backed by a deterministic Node CLI.
+Claude Code plugin for phase-based project memory, backed by a deterministic Node CLI.
 Skills inject one `telos ctx` bundle each; the CLI owns all state changes in `.telos/`.
 
 ## Rules

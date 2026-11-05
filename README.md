@@ -1,6 +1,6 @@
 # Telos
 
-A lean, token-economical workflow plugin for Claude Code:
+A lean workflow plugin for Claude Code:
 plan → test → implement → verify, with durable project memory in `.telos/`.
 
 Status: **pre-alpha**. Minimal, standard and deep workflows are available: deep adds research and
@@ -147,7 +147,23 @@ dirty source, out-of-scope task commits and wrong selectors still fail, and a re
 
 ## Benchmark
 
-We compared Telos with bare Claude Code and a static `CLAUDE.md` on two real repositories (120 runs, shipped default workflows). Telos cost more in every measured unit and did not reduce exploration, while acceptance stayed about level. Results and limitations are in [bench/RESULTS.md](bench/RESULTS.md); the harness is described in [bench/README.md](bench/README.md).
+Telos adds structure and project memory, and that costs tokens. We ran 120 sessions
+of the shipped default workflows on two open-source repositories (lazygit and
+anything-llm), against bare Claude Code and a static `CLAUDE.md`.
+
+| | Telos | Without Telos |
+|---|---|---|
+| USD per accepted multi-session scenario | $1.24–$4.16 | $0.37–$0.81 |
+| USD per accepted single task | $0.30–$0.49 | $0.11–$0.24 |
+| Accepted runs | 29/30 deep, 28/30 standard | 29/30 `CLAUDE.md`, 28/30 bare |
+
+- Telos cost more in every measured task and did not reduce exploration.
+- Acceptance stayed about level.
+- For small one-off tasks, plain Claude Code or a short `CLAUDE.md` is the better choice.
+- Long-running projects, where project memory should matter most, were not measured.
+
+The Telos author ran this benchmark. It covers two repositories, one Claude Code version
+and one model set, with five runs per case, so it does not generalise beyond them.
 
 ## CLI
 

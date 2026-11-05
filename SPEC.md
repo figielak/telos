@@ -1,6 +1,6 @@
 # Telos — Specification v0
 
-> A lean, token-economical workflow plugin for Claude Code.
+> A lean workflow plugin for Claude Code.
 > Plan → test → implement → verify, with durable project memory in the repo.
 > Inspired by GSD (structure, phases) and ECC (hooks, review rules, living docs), without their token cost.
 
@@ -517,7 +517,7 @@ Measurement tools: `claude plugin details telos` (always-on tokens), `/context`,
 | `map` | build 46–65K fresh; refresh refused (Astro) or full fallback (Python) | missed |
 | `review` (deep) | 8.6–22.3K fresh, coverage incomplete (diff permission) | unverified |
 
-**Measured in the 07 benchmark** (whole-session usage of shipped default workflows, not Telos-attributable tokens; targets above unchanged): [bench/RESULTS.md](bench/RESULTS.md).
+**Measured in the 07 benchmark** (whole-session usage of shipped default workflows, not Telos-attributable tokens; targets above unchanged): see README §Benchmark.
 
 ## 13. Packaging and installation
 

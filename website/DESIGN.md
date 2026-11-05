@@ -7,8 +7,9 @@ metal accent and restrained Greek references: a tau monogram, thin lines and a t
 
 ## Content rule
 
-The page states only what the repository can back (README, SPEC, code). It shows no benchmark
-result, no token or cost saving and no comparison with other tools. Illustrative content, such
+The page states only what the repository can back (README, SPEC, code). It claims no token or
+cost saving. The one comparison it makes is the `#tradeoffs` section, which states that Telos cost
+more in our benchmark (README §Benchmark); it never presents Telos as cheaper. Illustrative content, such
 as the terminal session, is labelled as illustrative.
 
 ## Color

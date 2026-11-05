@@ -30,10 +30,23 @@ describe('structure', () => {
     assert.equal(new Set(navs.map((n) => n.match(/aria-label="([^"]+)"/)[1])).size, navs.length, 'nav labels are distinct');
   });
 
-  test('sections appear in order: hero, workflow, features, memory, profiles, getting-started, final-cta', () => {
+  test('sections appear in order: hero, workflow, features, memory, profiles, tradeoffs, getting-started, final-cta', () => {
     const main = html().match(/<main\b[\s\S]*?<\/main>/)[0];
     const ids = [...main.matchAll(/<section\b([^>]*)>/g)].map((m) => m[1].match(/\bid="([^"]+)"/)?.[1] ?? 'hero');
-    assert.deepEqual(ids, ['hero', 'workflow', 'features', 'memory', 'profiles', 'getting-started', 'final-cta']);
+    assert.deepEqual(ids, ['hero', 'workflow', 'features', 'memory', 'profiles', 'tradeoffs', 'getting-started', 'final-cta']);
+  });
+
+  test('tradeoffs says Telos costs more, never that it saves, and matches README', () => {
+    const section = html().match(/<section id="tradeoffs"[\s\S]*?<\/section>/)[0];
+    const text = strip(section);
+    assert.match(text, /Telos is not the cheapest way to use Claude Code/);
+    assert.match(text, /cost more than bare Claude Code/);
+    assert.match(text, /We did not measure that long-term value/);
+    assert.match(text, /Measured by the Telos author on two repositories, 120 runs/);
+    assert.ok(!/\b(saves?|saving|cheaper)\b/i.test(text));
+    const readme = readFileSync(join(siteRoot, '..', 'README.md'), 'utf8');
+    assert.match(readme, /Telos cost more in every measured task/);
+    assert.match(readme, /120 sessions/);
   });
 
   test('ids are unique and every anchor resolves', () => {

@@ -2,7 +2,7 @@
   "name": "telos",
   "displayName": "Telos",
   "version": "0.1.0",
-  "description": "Lean, token-economical plan → test → implement → verify workflow with durable project memory in the repo",
+  "description": "Lean plan → test → implement → verify workflow with durable project memory in the repo",
   "author": { "name": "Krystian" },
   "license": "MIT",
   "keywords": ["workflow", "planning", "tdd", "project-memory"]
