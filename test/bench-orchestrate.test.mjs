@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { expandMatrix } from '../bench/lib/matrix.mjs';
-import { runMatrix } from '../bench/lib/orchestrate.mjs';
+import { clearWriteMarkers, runMatrix } from '../bench/lib/orchestrate.mjs';
 
 const FIX = fileURLToPath(new URL('./fixtures/bench/orchestrate/', import.meta.url));
 const RUN = fileURLToPath(new URL('../bench/run.mjs', import.meta.url));
@@ -413,4 +413,31 @@ test('a blocked trajectory is graded and fully costed; a failed one is not grade
     assert.equal(r.accepted, graded, status);
     assert.equal(r.spentUsd, 0.5);
   }
+});
+
+test('clearWriteMarkers removes only marker-only .claude dirs, at any depth, and never the agent\'s files', (t) => {
+  const root = tmp(t);
+  const dirs = ['.claude/.cc-writes', 'pkg/tests/.claude/.cc-writes', 'pkg/kept/.claude/.cc-writes', 'pkg/full/.claude/.cc-writes', '.git/x/.claude/.cc-writes', 'node_modules/y/.claude/.cc-writes'];
+  for (const d of dirs) mkdirSync(join(root, d), { recursive: true });
+  writeFileSync(join(root, 'pkg/kept/.claude/settings.json'), '{}\n');
+  writeFileSync(join(root, 'pkg/full/.claude/.cc-writes/note'), 'x\n');
+  assert.deepEqual(clearWriteMarkers(root), ['.claude', 'pkg/tests/.claude']);
+  assert.ok(existsSync(join(root, 'pkg/kept/.claude/settings.json')));
+  assert.ok(existsSync(join(root, 'pkg/full/.claude/.cc-writes/note')));
+  assert.ok(existsSync(join(root, '.git/x/.claude/.cc-writes')));
+  assert.ok(existsSync(join(root, 'node_modules/y/.claude/.cc-writes')));
+});
+
+test('grading runs after the sandbox write markers are gone', async (t) => {
+  const work = tmp(t);
+  const m = manifest(['t-one']);
+  const script = join(work, 'see-marker.mjs');
+  writeFileSync(script, "import { existsSync } from 'node:fs';\nprocess.exit(existsSync('pkg/.claude') ? 1 : 0);\n");
+  m.dir = '/';
+  m.tasks[0].acceptance = script.slice(1);
+  const deps = fakeDeps(work);
+  const run = deps.runTrajectory;
+  deps.runTrajectory = async (cell, ctx) => { mkdirSync(join(ctx.cwd, 'pkg/.claude/.cc-writes'), { recursive: true }); return run(cell, ctx); };
+  const res = await runMatrix(cellsOf(m), m, { outDir: join(work, 'out'), capUsd: 100, reservation: 1, deps });
+  assert.equal(res.records[0].accepted, true);
 });

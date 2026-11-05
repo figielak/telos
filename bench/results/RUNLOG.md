@@ -80,3 +80,70 @@ Found after 14 cells. No cell has been rerun.
 **Diagnostic grading (not a measurement).** On 2026-11-04 the hidden acceptance scripts were run on duplicates of these 5 cells, outside the sandbox and with no model session. All 5 exited 0: `lazygit-scenario.C.5`, `.D.5`, `.C.2`, `.D.2` and `anything-llm-scenario.D.5`. The records stay `accepted: false`, and these results do not enter any table. They show that the failures came from the block, and that the 0 of 5 says nothing about the agents' code. One limit: `lazygit-scenario.D.5` left a sandbox workaround in `pkg/integration/components/runner.go` and `env.go`, so its patch is not clean even though it passes.
 
 Spend including defect 5: $15.89. Total against the $300 cap: pilot $57.62 + preflight $0.37 + campaign $15.89 = $73.88.
+
+# Campaign rerun
+
+Second final preregistration: `PROTOCOL.md` §14 and the amendment of 2026-11-04.
+
+| Item | Value |
+|---|---|
+| Claude Code | 2.1.316 |
+| Starting model | `claude-sonnet-5-5` |
+| Telos commit (detached worktree for the whole campaign) | `55d37c4` |
+| Second final preregistration commit | `c86ff34` |
+| Node | v24.18.0 |
+| Go | go1.27.3 |
+| Seed | 709 |
+| Cap | `--cap-usd 216` |
+| Cell reservation | `--cell-usd 6.92` |
+| Batches | a new block starts while the batch has spent at most $8, one batch per 5-hour window |
+| Driver | `bench/results/run-batches.mjs` |
+
+## Preflight canaries (§5.2), 2026-11-04
+
+Run at `55d37c4` with the campaign's sandbox and `PATH` settings, in all four variants on `lazygit-single1`, with fresh code words. Same canaries and same limits as the first preflight, including that `mintplex-labs-anything-llm` was not covered. Results match the first table: all 12 ancestor instruction files refused, no code word in any transcript, the previous cell's trace removed, and every access denied or blocked except the plugin export in C and D. Spend $0.34.
+
+## Timeline
+
+Times are UTC.
+
+| Time | Cell | Event |
+|---|---|---|
+| 2026-11-04 20:01 | batch 1 | Start: `--cap-usd 35.68`. |
+| 2026-11-04 21:52 | batch 1 | End after 3 blocks, 12 cells, $14.04: `cap: 14.040533 spent + 31.68 reserved for block anything-llm-scenario.5 > 35.68`. This is the normal end of a batch. |
+| 2026-11-04 21:52 | driver | Driver defect: `run-batches.mjs` read that stop as a failure and exited, so no later batch started. No cell was affected. |
+| 2026-11-05 01:11 | `lazygit-scenario.A.2`, `.B.2` | Records regraded after defect 6; see below. No model session ran. |
+| 2026-11-05 | driver | Driver fixed and campaign resumed by the agent, on the owner's standing instruction to decide while they were away. Later batches: `campaign2-out.batches.log`. |
+
+## Rerun defects and deviations
+
+Owner's instruction, 2026-11-05: the owner delegated these decisions to the agent for the night. The owner has not yet reviewed them.
+
+| # | Defect | Cells | Evidence |
+|---|---|---|---|
+| 6 | The session sandbox leaves a write marker, an empty `.claude/.cc-writes/`, in directories it writes to, at any depth. Amendment change 3 covered only the copy's root. lazygit's `go generate ./pkg/integration/tests/` reads a marker under `pkg/integration/tests/` as a test package, so the grader's `pre` step produces an import that does not compile. | `lazygit-scenario.A.2`, `.B.2` | Grading output: `cannot find module providing package …/pkg/integration/tests/.claude`. Of the 8 scenario copies, only these two have that marker. Neither recorded patch contains `.claude`. |
+| 7 | `TestNewCmdTaskInstantStop` in lazygit's `pkg/tasks` is flaky, and it is part of the regression suite the grader runs. | `lazygit-scenario.C.5` | First grading: exit 2 on this test, and the patch does not touch `pkg/tasks`. Measured on `lazygit-single2.A.3`, where `pkg/tasks` is also unchanged: 3 failures in 900 runs (1, 2, 0 of 300 each). |
+
+**Deviation for defect 6.** The grader now removes marker-only `.claude` dirs before each grading (`clearWriteMarkers` in `bench/lib/orchestrate.mjs`), for every remaining cell. All 12 recorded cells were graded again by `bench/results/regrade-markers.mjs`, with no model session. The rule: the new result replaces the first only where the first grading failed on the marker.
+
+| Cell | First exit | Regrade exit | Recorded result |
+|---|---|---|---|
+| `lazygit-scenario.A.2` | 1 | 0 | accepted (changed by the rule) |
+| `lazygit-scenario.B.2` | 1 | 1 | not accepted: fails hidden test `acceptance_collapse_in_flat_view` |
+| `lazygit-scenario.C.5` | 2 | 0 | not accepted: first result stands (defect 7) |
+| the other 9 cells | 0 | 0 | accepted (unchanged) |
+
+Changed records keep the first result as `firstAcceptance` and name the defect in `regraded`. Unmodified records are in `campaign2-out/records-first-grading/`, and all regrades are in `campaign2-out/regrade/`.
+
+**Limits of this deviation.**
+- It was made after 12 cells had been seen. It raises A's acceptance, which works against Telos, but a reader should weigh that timing.
+- Regrading ran on copies an earlier grading had already changed. The grader restores tests and regenerates the list on each run, and the 9 cells that passed the first time passed again.
+- Markers are still present during sessions. A session that runs the generator can meet the same error, in any variant. This has not been measured.
+
+**Decision on defect 7.** No retry rule is added and C.5 stays not accepted. The test failed before any defect 6 fix, the flake rate was measured only afterwards, and accepting C.5 on a second roll would favour Telos with no rule fixed in advance. The report lists C.5 as a known false failure, and the same risk applies to every lazygit cell in every variant.
+
+**Campaign tree.** HEAD stays at `55d37c4`, because the snapshot hash and the recorded Telos commit depend on it and moving it would rebuild the C/D setups mid-run. The tree carries one uncommitted change, `bench/lib/orchestrate.mjs` (blob `b639b8fcf3f67df675d92902d635f58d97d7a7c8`), identical to the file in this commit. The plugin runtime is unchanged. Cells graded from now on use it, while their `versions.telos` still reads `55d37c4`.
+
+**Known driver detail.** A block needing setup reserves $31.68 while the driver's batch cap assumes $27.68, so such a block starts mid-batch only while the batch has spent at most $4, not $8. This can only end a batch earlier; blocks stay whole.
+
+Spend at this point: $14.04 of the $216 cap.

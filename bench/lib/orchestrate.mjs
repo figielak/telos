@@ -1,7 +1,7 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { appendFileSync, chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, join } from 'node:path';
+import { basename, join, relative } from 'node:path';
 
 import { UsageError } from '../../lib/errors.mjs';
 import { toolEnv } from './sandbox.mjs';
@@ -47,10 +47,37 @@ function capturePatch(dir, start) {
 }
 
 /**
+ * Remove the write markers the session sandbox leaves in the copy: a `.claude` dir at any depth whose only entry is an
+ * empty `.cc-writes` dir. They are not the agent's work, but a generator that lists directories reads them as packages
+ * (RUNLOG defect 6). Anything else in a `.claude` dir is kept. → the paths removed, relative to `root`.
+ */
+export function clearWriteMarkers(root) {
+  const removed = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isDirectory() || entry.name === '.git' || entry.name === 'node_modules') continue;
+      const path = join(dir, entry.name);
+      if (entry.name === '.claude') {
+        const inside = readdirSync(path, { withFileTypes: true });
+        if (inside.length === 1 && inside[0].name === '.cc-writes' && inside[0].isDirectory() && !readdirSync(join(path, '.cc-writes')).length) {
+          rmSync(path, { recursive: true });
+          removed.push(relative(root, path));
+          continue;
+        }
+      }
+      walk(path);
+    }
+  };
+  walk(root);
+  return removed.sort();
+}
+
+/**
  * Copy the grading script into a fresh dir under `root` (default `outDir/grading`), run it with `graderArgv` (the benchmark user's
  * launcher + node in a real run, so agent code never runs as the host user) and cwd = copy, then delete the dir (D-06).
  */
-function grade(script, cwd, root, id, graderArgv) {
+export function grade(script, cwd, root, id, graderArgv) {
+  clearWriteMarkers(cwd);
   mkdirSync(root, { recursive: true });
   const dir = mkdtempSync(join(root, `${id}-`));
   const started = Date.now();
