@@ -517,6 +517,7 @@ Measurement tools: `claude plugin details telos` (always-on tokens), `/context`,
 | `map` | build 46–65K fresh; refresh refused (Astro) or full fallback (Python) | missed |
 | `review` (deep) | 8.6–22.3K fresh, coverage incomplete (diff permission) | unverified |
 
+**Measured in the 07 benchmark** (whole-session usage of shipped default workflows, not Telos-attributable tokens; targets above unchanged): [bench/RESULTS.md](bench/RESULTS.md).
 
 ## 13. Packaging and installation
 

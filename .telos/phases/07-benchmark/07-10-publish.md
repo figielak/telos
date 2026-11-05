@@ -2,7 +2,7 @@
 id: 07-10
 title: Publish benchmark results
 type: doc           # code | doc | audit
-status: approved    # draft | approved | in-progress | done | blocked | reverted
+status: done        # draft | approved | in-progress | done | blocked | reverted
 critical: false
 effort: normal      # normal | hard
 depends: [07-09]
@@ -41,11 +41,14 @@ Write the public results page source: when Telos pays off and when it does not, 
 - Cross-check each number against tables.md.
 
 ## Acceptance
-- [ ] each hypothesis H1–H5 has a verdict backed by a tables.md row, with deep (C) and standard (D) reported side by side
-- [ ] RESULTS.md contains the limitations, disclosure and reproduce sections
-- [ ] `grep -q "bench/RESULTS.md" README.md` → exit 0
-- [ ] `npm test` → exit 0
+- [x] each hypothesis H1–H5 has a verdict backed by a tables.md row, with deep (C) and standard (D) reported side by side
+- [x] RESULTS.md contains the limitations, disclosure and reproduce sections
+- [x] `grep -q "bench/RESULTS.md" README.md` → exit 0
+- [x] `npm test` → exit 0
 
 ## Result
-<!-- filled by do: 3–5 lines (audit: ≤ 10, findings + proposed follow-ups)
-     last line always: "Deviations: none" or "Deviations: path — why" -->
+bench/RESULTS.md reports all H1-H5 verdicts for C and D, limitations, deviations, disclosure and how to reproduce; README and SPEC 12 link it.
+Telos cost more per accepted run in all 6 units and explored more; acceptance held against B (29/30 C, 28/30 D, 29/30 B). The summary says so first.
+Numbers cross-checked by script: all 24 result rows and 6 exploration rows match tables.md; cost per model comes from rows/ and wall time from runs.csv.
+Open: B preparation minutes were never recorded; no independent review of redaction or report; not pushed.
+Deviations: none

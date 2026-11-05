@@ -145,6 +145,10 @@ smoke run is claimed. After doc-sync the proof reruns the close bundle's own
 dirty source, out-of-scope task commits and wrong selectors still fail, and a retry with
 `git.auto_commit` false closes without an intermediate commit.
 
+## Benchmark
+
+We compared Telos with bare Claude Code and a static `CLAUDE.md` on two real repositories (120 runs, shipped default workflows). Telos cost more in every measured unit and did not reduce exploration, while acceptance stayed about level. Results and limitations are in [bench/RESULTS.md](bench/RESULTS.md); the harness is described in [bench/README.md](bench/README.md).
+
 ## CLI
 
 `map-scan` reads repository evidence without executing source files or manifests. Its tree
