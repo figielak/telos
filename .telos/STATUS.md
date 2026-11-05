@@ -15,6 +15,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 07 closed: benchmark removed by owner's decision; results kept in README Benchmark
 - 07-10 done: bench/RESULTS.md published in repo; Telos cost more in all 6 units, acceptance held
 - 07-09 done: 120 of 120 benchmark cells, $63.22; H1 inconclusive, H2 supported, H3 contradicted, H4 supported, H5 inconclusive
-- 09-06 done: guide audited at 390/768/1440 px, links, keyboard and no-JS; no material findings
