@@ -121,6 +121,7 @@ Times are UTC.
 | 2026-11-05 07:32–07:49 | `lazygit-single2.1`, `.4` | Owner's decision: two extra blocks in the remaining usage window, run by direct runner calls, each capped to one block, so no block was skipped. Seed order kept. Both next in the queue; stopped before `lazygit-scenario.1`, which would not fit. 8 cells, $1.42, no setup rebuilt. Deviates from "one batch per 5-hour usage window" (amendment change 6). The waiting driver was left as it was. |
 | 2026-11-05 11:37 | driver | The driver had not started at 11:26 as planned; the host was suspended from 10:41 to 12:35 CET (kernel log), which stops the wait timer. Restarted by hand after the owner reported the window had reset. No cell was in progress. |
 | 2026-11-05 12:55 | driver | Owner's decision: the next batch starts at 17:33 CET, 3 minutes after the reset time the owner gave (17:30), and not at the driver's computed 17:42. A detached script waits on the wall clock, then restarts the driver once it is idle. The driver's wait now also polls the wall clock. |
+| 2026-11-05 13:10 | extra blocks | Owner's decision: after the current batch, further blocks run in seed order, one at a time, while this window's spend plus the block's estimate stays within an estimated $16. The script stops at the first block that does not fit and skips none. Deviates from "one batch per 5-hour usage window" (amendment change 6). Per-block log: `campaign2-out.batches.log`, lines `extras:`. |
 
 ## Rerun defects and deviations
 
