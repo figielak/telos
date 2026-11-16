@@ -49,7 +49,7 @@ reset or skip hooks.
      `next="/telos:do-hard <next id>"` when that task has `effort: hard`.
    - no task left: minimal profile → `telos roadmap set <NN> done` and
      `telos status set task=none next="/telos:plan"`; standard/deep → the phase stays active,
-     `telos status set task=none next="close phase <NN> (/telos:done)"`.
+     `telos status set task=none next="close phase <NN> (/telos:close)"`.
 6. a. **Commit** (one per task) with explicit paths only:
       `git add <each Files path> <task file> .telos/STATUS.md` (+ `.telos/ROADMAP.md` when the
       phase ended, + each Deviations path); never a directory wildcard or the whole tree.

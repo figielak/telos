@@ -49,7 +49,7 @@ Note: the ROADMAP line says "every removed path". Read it as above: individual `
     of the gate modules outside the bundles.
   - Accept: `test/manifest.test.mjs` asserts exactly three hook entries; SessionStart output ≤ 1200 chars.
 
-- [ ] **10-03 Close replaces done**
+- [x] **10-03 Close replaces done**
   - Rename skill `done` → `close`; `lib/ctx/done.mjs` (a thin wrapper over
     `lib/ctx/check.mjs`) → a standalone `lib/ctx/close.mjs`: phase state, unfinished work,
     configured check commands, `Auto-commit`, exact closing commands (`roadmap set`,

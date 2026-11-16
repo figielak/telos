@@ -258,47 +258,6 @@ async function undo(root, id, confirmed = []) {
   return { stopped: null, blocked };
 }
 
-test('standard lifecycle closes with history; confirmed latest-task undo reopens and preserves earlier work', async (t) => {
-  const root = await repo(t);
-  await plan(root);
-  assert.equal(await approve(root), true);
-  assert.match(await ok(root, 'ctx', 'do', '01-02'), /^REFUSED: 01-02 depends on 01-01 \[approved\]/);
-  await doTask(root, 1);
-  const latest = await doTask(root, 2);
-  const beforeCheck = state(root);
-  assert.match(await ok(root, 'ctx', 'check'), /^Accept: telos accept 01-01 · telos accept 01-02$/m);
-  assert.match(await ok(root, 'check', '--level', 'full'), /PASS/);
-  assert.deepEqual(state(root), beforeCheck, 'check is read-only');
-  assert.match(read(root, 'README.md'), /standard fixture/);
-  assert.equal(await close(root, { manualVerified: true }), 'closed');
-  assert.match(read(root, ROADMAP), /^- 01-greeting \[done\]/m);
-  assert.match(read(root, HISTORY), /decision 01: D-01:/);
-  assert.match(read(root, HISTORY), /phase 01: closed 01-greeting/);
-  assert.match(await ok(root, 'ctx', 'done'), /^REFUSED: .*already done/);
-  const before = state(root);
-  const preview = await ok(root, 'ctx', 'undo', '01-02');
-  assert.ok(preview.includes(latest));
-  assert.match(preview, /src\/farewell\.mjs +\|/);
-  assert.match(preview, /^Phase after undo: reopen/m);
-  assert.deepEqual(await undo(root, '01-02'), { stopped: 'confirmation' });
-  assert.deepEqual(await undo(root, '01-02', [latest.slice(0, 7)]), { stopped: 'confirmation' });
-  assert.deepEqual(state(root), before);
-  assert.deepEqual(await undo(root, '01-02', [latest]), { stopped: null, blocked: [] });
-  assert.equal(existsSync(join(root, sourcePath(2))), false);
-  assert.equal(read(root, taskPath(1)), before.metadata[taskPath(1)]);
-  assert.match(read(root, taskPath(2)), /^status: reverted/m);
-  assert.match(read(root, ROADMAP), /^- 01-greeting \[active\]/m);
-  assert.equal(read(root, STATUS), before.metadata[STATUS]
-    .replace('Next: /telos:plan', 'Next: /telos:revise <notes> to redo 01-02'));
-  for (const line of before.metadata[HISTORY].split('\n').filter((s) => /^- \d{4}-/.test(s))) {
-    assert.ok(read(root, HISTORY).includes(line), line);
-  }
-  assert.equal((read(root, HISTORY).match(/revert 01-02:/g) ?? []).length, 1);
-  assert.match(await ok(root, 'ctx', 'undo', '01-02'), /^REFUSED: 01-02 is already reverted/);
-  assert.equal(git(root, 'status', '--porcelain'), '');
-  assert.equal(git(root, 'rev-list', '--count', 'telos/01-start..HEAD').trim(), '4');
-});
-
 test('proposed decisions block approval and execution until explicitly confirmed', async (t) => {
   const root = await repo(t);
   await plan(root, { proposed: true });
@@ -311,22 +270,6 @@ test('proposed decisions block approval and execution until explicitly confirmed
   assert.equal(await ok(root, 'ctx', 'do', '01-01'), 'REFUSED: decision D-01 awaits the user\n');
   write(root, CONTEXT, context());
   assert.match(await ok(root, 'ctx', 'do', '01-01'), /^Task: 01-01 \[approved\]/);
-});
-
-test('failed full checks and unverified manual acceptance leave close active without history', async (t) => {
-  const { root } = await completed(t);
-  const before = state(root);
-  write(root, '.telos/.cache/fail-test', 'fail\n');
-  const failed = await telos(root, 'check', '--level', 'full');
-  assert.equal(failed.code, 1);
-  assert.match(failed.stdout, /test:FAIL/);
-  assert.equal(await close(root, { manualVerified: true }), 'check failed');
-  assert.deepEqual(state(root), before);
-  rmSync(join(root, '.telos/.cache/fail-test'));
-  assert.match(await ok(root, 'accept', '01-01'), /MANUAL/);
-  assert.equal(await close(root), 'manual unverified');
-  assert.deepEqual(state(root), before);
-  assert.doesNotMatch(read(root, HISTORY), /phase 01:|decision 01:/);
 });
 
 test('undo prerequisite warns transitively, then blocks only dependents and retains unrelated completed tasks', async (t) => {

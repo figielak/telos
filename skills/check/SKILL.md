@@ -29,4 +29,4 @@ no edits, no task, STATUS or ROADMAP changes, no commit.
    code, docs). Mark each `verified` with its evidence or `unverified` with what is missing.
 5. **Reply** in ≤ 10 lines: full-check verdict, accept verdict per task, manual items
    unverified, `Unresolved:` items, tasks under `Not done`; last line
-   `Next: /telos:done` when everything passed and every task is done, else what to fix first.
+   `Next: /telos:close` when everything passed and every task is done, else what to fix first.

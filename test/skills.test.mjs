@@ -53,7 +53,7 @@ test('init injects telos ctx init and stays short', () => {
 // Variants (SPEC §5.0): same body as the base skill, which injects the shared instructions via
 // `telos ctx shared <name>` (cat of plugin files is blocked outside the session's working dirs).
 const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do', 'quick-hard': 'quick', 'map-hard': 'map' };
-const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet', discuss: 'opus', lesson: 'sonnet', check: 'sonnet', done: 'sonnet', undo: 'sonnet' };
+const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet', discuss: 'opus', lesson: 'sonnet', check: 'sonnet', close: 'sonnet', undo: 'sonnet' };
 const SHARED = fileURLToPath(new URL('../shared/', import.meta.url));
 const FIELDS = ['disable-model-invocation', 'allowed-tools', 'argument-hint', 'context'];
 
@@ -391,72 +391,19 @@ test('the do instructions gate deep critical code on real RED, targeted checks a
   assert.match(body, /`Auto-commit: no`/);
 });
 
-test('check and done inject one fixed bundle and keep the phase argument under Request', () => {
-  for (const name of ['check', 'done']) {
-    const { field, body } = read(name);
-    assert.match(body, new RegExp(`^## Context\\n!\`telos ctx ${name}\`$`, 'm'), name);
-    assert.match(body, /^## Request\n\$ARGUMENTS$/m, name);
-    assert.equal(body.split('$ARGUMENTS').length - 1, 1, name);
-    assert.equal((body.match(/!`/g) ?? []).length, 1, name);
-    assert.ok(body.includes(`\`telos ctx ${name} <NN>\``), name);
-    for (const s of ['telos check --level full', 'telos accept <id>', 'Requires standard', 'REFUSED:']) assert.ok(body.includes(s), `${name}: ${s}`);
-    assert.match(body, /never proves/i, name);
-    assert.doesNotMatch(field('allowed-tools'), /push|reset|tag|Write/, name);
-    assert.ok(body.trim().split('\n').length <= 60, name);
-  }
-  assert.doesNotMatch(read('check').field('allowed-tools'), /git|Edit/);
-  assert.doesNotMatch(read('check').body, /telos (task|status|roadmap|history) /);
-});
-
-test('done verifies before any state change, promotes once, records via telos and honors auto_commit', () => {
-  const { field, body } = read('done');
+test('close injects one fixed bundle, runs the checks before the closing commands and honors auto_commit', () => {
+  const { field, body } = read('close');
+  assert.match(body, /^## Context\n!`telos ctx close`$/m);
+  assert.match(body, /^## Request\n\$ARGUMENTS$/m);
+  assert.equal((body.match(/!`/g) ?? []).length, 1);
+  assert.ok(body.includes('`telos ctx close <NN>`'));
   const at = (s) => { const i = body.indexOf(s); assert.ok(i >= 0, s); return i; };
-  assert.ok(at('telos check --level full') < at('telos history add decision'));
-  assert.ok(at('telos accept <id>') < at('telos history add phase'));
-  assert.ok(at('telos history add phase') < at('telos roadmap set <NN> done'));
-  assert.ok(at('telos roadmap set <NN> done') < at('telos status set task=none'));
-  for (const s of ['Close: blocked', '[candidate]', '[promoted]', '→ HISTORY', 'History: phase entry missing',
-    'Auto-commit: yes', 'Auto-commit: no', 'docs(telos): close phase', '/compact', 'Next: /telos:plan']) {
-    assert.ok(body.includes(s), s);
-  }
-  assert.match(body, /never mark tasks done/i);
-  assert.match(body, /stays active, no history/i);
-  for (const t of ['Bash(git add *)', 'Bash(git commit *)', 'Edit(.telos/phases/**)']) assert.ok(field('allowed-tools').includes(t), t);
-  assert.doesNotMatch(body, /git add (-A|--all|\.\/?)(?=[\s`]|$)|git commit[^\n]*--no-verify|git push|git tag /m);
-});
-
-test('deep done reviews critical work and syncs docs after verification and before promotion, standard skips it', () => {
-  const { field, body } = read('done');
-  const at = (s) => { const i = body.indexOf(s); assert.ok(i >= 0, s); return i; };
-  assert.ok(at('telos accept <id>') < at('Deep only'));
-  assert.ok(at('Deep only') < at('`Review:` line'));
-  assert.ok(at('`Review:` line') < at('telos docs-scan <NN>'));
-  assert.ok(at('telos docs-scan <NN>') < at('telos changelog <NN>'));
-  assert.ok(at('telos changelog <NN>') < at('telos check --level full --phase <NN>'));
-  assert.ok(at('telos check --level full --phase <NN>') < at('telos history add decision'));
-  assert.ok(at('--close <NN>') < at('Deep only'));
-  assert.match(body, /any FAIL, SCOPE included → stop/);
-  for (const s of ['Critical evidence', 'Review: reuse', 'no re-review', 'HIGH or CRITICAL', 'UNVERIFIED', 'telos:reviewer-hard',
-    '≤ 10', 'never invent', 'no duplicate', 'Sync: NOT VERIFIED', 'behavior-neutral', 'standard profile skips',
-    'each changed doc path']) assert.ok(body.includes(s), s);
-  assert.match(body, /never (invoke|run) \/telos:review|not the user-only/i);
-  const tools = field('allowed-tools').split(/,\s*/);
-  assert.deepEqual(tools.filter((t) => /^(Agent|Task)\b/.test(t)), ['Agent(telos:reviewer-hard)']);
-  assert.ok(tools.includes('Edit'));
-});
-
-test('deep done promotes through ADRs in a resumable order and adds a retro without memory edits', () => {
-  const { body } = read('done');
-  const at = (s) => { const i = body.indexOf(s); assert.ok(i >= 0, s); return i; };
-  assert.ok(at('telos check --level full --phase <NN>') < at('telos adr new'));
-  assert.ok(at('telos adr new') < at('≤ 30 lines'));
-  assert.ok(at('≤ 30 lines') < at('telos history add decision "ADR <NNN>"'));
-  assert.ok(at('telos history add decision "ADR <NNN>"') < at('→ ADR <NNN>'));
-  assert.ok(at('→ ADR <NNN>') < at('rerun `telos ctx done`'));
-  assert.ok(at('rerun `telos ctx done`') < at('telos history add phase'));
-  for (const s of ['[inconsistent]', '[conflict]', 'retro:', '/telos:lesson', 'never edit LESSONS.md or PROJECT.md',
-    'each ADR path', 'telos history add decision <NN>']) assert.ok(body.includes(s), s);
-  assert.ok(body.trim().split('\n').length <= 60);
+  assert.ok(at('REFUSED:') < at('Close: blocked'));
+  assert.ok(at('Close: blocked') < at('`Checks:`'));
+  assert.ok(at('`Checks:`') < at('`Closing commands`'));
+  assert.ok(at('`Closing commands`') < at('Auto-commit: yes'));
+  assert.doesNotMatch(field('allowed-tools'), /push|reset|tag|Write|Edit|Agent/);
+  assert.ok(body.trim().split('\n').length <= 40);
 });
 
 test('undo injects a fixed bundle, validates the id from Request and confirms before any git revert', () => {
