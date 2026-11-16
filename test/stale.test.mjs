@@ -96,3 +96,11 @@ test('no git work tree or no HEAD: an error, no areas judged', (t) => {
   assert.match(r.error, /No git work tree/);
   assert.deepEqual(r.areas, []);
 });
+
+// 14-06: the smoke run reported AGENTS.md, CLAUDE.md and .gitignore as unmapped after init.
+test('init-managed root files are never unmapped; the same names deeper are', (t) => {
+  const { root } = areasRepo(t);
+  for (const f of ['AGENTS.md', 'CLAUDE.md', '.gitignore', 'docs/AGENTS.md']) write(root, f, 'x\n');
+  commitAll(root, 'rules');
+  assert.deepEqual(unmappedFiles(loadAreas(root), staleAreas(root).changed), ['docs/AGENTS.md']);
+});

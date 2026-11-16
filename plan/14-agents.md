@@ -58,7 +58,7 @@ in its sandbox.
     `ctx plan` lists Delete-zone entries).
   - Accept: `test/e2e-memory.test.mjs` passes with hooks never invoked.
 
-- [ ] **14-06 Live smoke run in both agents**
+- [x] **14-06 Live smoke run in both agents**
   - On a copy of the `areas` fixture: init, plan a two-task phase, do the work, close;
     then two commits by hand and a catch-up. Once in Claude Code, once in Codex.
   - Record per agent in Notes: date, version, what passed, what needed a manual nudge.
@@ -120,3 +120,26 @@ others at 2379–3560. On this repo `ctx plan` is 8354 chars in total.
 `ctx plan` without `--area` now fits the roadmap to the budget (rows nearest the target, then a
 count line) instead of letting `cap()` cut it: the removed-paths line pushed this repo's plan
 bundle past 6000 chars.
+
+### 14-06 Live smoke runs (2026-11-16)
+
+Driver: a copy of `test/fixtures/areas`, `telos init` with `git.auto_commit=false` (Codex's
+sandbox keeps `.git/` read-only), areas anchored at the fixture commit; steps plan (two tasks:
+`/version` route, `pageTitle` helper, node:test each) → work → close; then two commits by hand
+(`lib/util.mjs` edit, new `src/jobs/`) → catch-up. Every commit between steps was made by hand.
+
+| | Claude Code 2.1.325 (plugin via `--plugin-dir`) | Codex CLI 0.164.0 (gpt-6-astra, `exec --sandbox workspace-write`) |
+|---|---|---|
+| Prompts | `/telos:plan …`, plain "do the tasks", `/telos:close`, `/telos:catchup` | plain language only ("Using Telos, plan…/close…/catch up…") |
+| Plan | phase file, 2 tasks, ROADMAP active, STATUS next | ran `telos status`, then `telos ctx plan` unprompted; also `cat` of all memory files |
+| Work | both tasks, boxes ticked, tests pass | same; also set `next=/telos:close` and a Recent line |
+| Close | checks, notes, new area `test`, anchors, roadmap/history/status | checks, notes, test paths added to `api`/`web`, anchors, roadmap/history/status |
+| Catch-up | `util` note, new area `jobs`, anchors | ran `telos ctx catchup`; `util` note, new area `jobs`, anchors |
+| Result | `telos stale --check` exit 0; STATUS phase none, Recent `01 closed` | same |
+| Cost | $0.84 over 4 sessions, 22 turns | 887K input tokens (799K cached), 6.5K output |
+| Manual nudge | none | none |
+
+Found and fixed: both closes listed `AGENTS.md`, `CLAUDE.md` and `.gitignore` as unmapped
+(written by `telos init` after the anchor). `unmappedFiles` now skips them at the repo root, as
+`ctx map` already did. Seen, left as is: STATUS `Next: /telos:plan` names the Claude Code
+command; the AGENTS.md block maps `/telos:<step>` to `telos ctx <step>` and Codex followed it.
