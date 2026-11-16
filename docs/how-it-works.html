@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jak działa Telos</title>
+<style>
+  /* Layout: one reading column (max 46rem); the work cycle is the only wide, stepped element. */
+  :root {
+    --bg: #f3f6f5;
+    --surface: #ffffff;
+    --ink: #16201e;
+    --muted: #55625f;
+    --line: #d3dcd9;
+    --accent: #0d6b5d;
+    --accent-soft: #dcefea;
+    --warn: #8f5200;
+    --code-bg: #e7eeec;
+    --term-bg: #12201d;
+    --term-fg: #d7e6e1;
+    --term-dim: #8fa8a1;
+    --font-text: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1514;
+      --surface: #161e1c;
+      --ink: #e2eae7;
+      --muted: #97a6a2;
+      --line: #2a3633;
+      --accent: #5fc7b1;
+      --accent-soft: #17302b;
+      --warn: #e0a44a;
+      --code-bg: #1c2624;
+      --term-bg: #0a100f;
+      --term-fg: #cfe0da;
+      --term-dim: #7f968f;
+      color-scheme: dark;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 1rem/1.65 var(--font-text);
+  }
+  main {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: 3rem 1rem 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+  section, header { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+  h1, h2, h3, p, ol, ul, dl, dd, pre { margin: 0; }
+  h1 { font-size: 2.4rem; line-height: 1.1; letter-spacing: -0.02em; text-wrap: balance; }
+  h2 { font-size: 1.4rem; line-height: 1.25; letter-spacing: -0.01em; text-wrap: balance; }
+  h3 { font-size: 1rem; }
+  .eyebrow {
+    font: 600 0.75rem/1 var(--font-mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .lead { font-size: 1.15rem; color: var(--muted); }
+  .muted { color: var(--muted); }
+  a { color: var(--accent); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  code {
+    font: 0.9em var(--font-mono);
+    background: var(--code-bg);
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    overflow-wrap: anywhere;
+  }
+  pre {
+    font: 0.85rem/1.6 var(--font-mono);
+    background: var(--term-bg);
+    color: var(--term-fg);
+    padding: 1rem 1.1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+  pre .dim { color: var(--term-dim); }
+  pre code { background: none; padding: 0; font-size: 1em; overflow-wrap: normal; }
+
+  /* three parts */
+  .parts { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 1.5rem; }
+  .parts div { border-top: 2px solid var(--accent); padding-top: 0.75rem; min-width: 0; }
+  .parts dt { font-weight: 650; }
+  .parts dd { color: var(--muted); font-size: 0.95rem; }
+
+  /* work cycle */
+  .cycle { list-style: none; padding: 0; display: flex; flex-direction: column; counter-reset: step; }
+  .cycle li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    column-gap: 1rem;
+    padding-bottom: 1.5rem;
+    position: relative;
+  }
+  .cycle li::before {
+    content: counter(step);
+    width: 2.25rem; height: 2.25rem;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font: 600 0.9rem var(--font-mono);
+    position: relative; z-index: 1;
+  }
+  .cycle li::after {
+    content: "";
+    position: absolute;
+    left: calc(1.125rem - 1px); top: 2.25rem; bottom: 0;
+    width: 2px; background: var(--line);
+  }
+  .cycle li:last-child { padding-bottom: 0; }
+  .cycle li:last-child::after { display: none; }
+  .cycle .body { display: flex; flex-direction: column; gap: 0.3rem; padding-top: 0.2rem; }
+  .cycle .when { font: 0.75rem var(--font-mono); color: var(--muted); letter-spacing: 0.04em; }
+  .cycle p { color: var(--muted); font-size: 0.95rem; }
+
+  .note {
+    border-left: 3px solid var(--warn);
+    padding: 0.2rem 0 0.2rem 1rem;
+    font-size: 0.95rem;
+  }
+  .note strong { color: var(--warn); }
+
+  /* tables */
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+  th, td { text-align: left; vertical-align: top; padding: 0.6rem 0.9rem 0.6rem 0; border-bottom: 1px solid var(--line); }
+  th { font: 600 0.72rem var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  td:first-child { white-space: nowrap; }
+  td:first-child code { overflow-wrap: normal; }
+
+  ul.plain { padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.4rem; }
+
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.5rem; }
+  .two > div { display: flex; flex-direction: column; gap: 0.6rem; min-width: 0; }
+
+  footer { color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--line); padding-top: 1.25rem; }
+</style>
+</head>
+<body>
+<main>
+
+  <header>
+    <span class="eyebrow">Telos 0.2 · pre-alpha</span>
+    <h1>Jak działa Telos</h1>
+    <p class="lead">Telos to pamięć projektu dla agentów kodujących. Kilka małych plików markdown
+      w&nbsp;<code>.telos/</code> i&nbsp;proste narzędzie <code>telos</code>, które o nie dba.</p>
+  </header>
+
+  <section>
+    <h2>Jaki problem rozwiązuje</h2>
+    <p>Każda nowa sesja agenta zaczyna od zera. Agent nie wie, do czego służy projekt, gdzie co
+      leży, co jest następne ani dlaczego coś zostało zrobione tak, a nie inaczej. Musi to za każdym
+      razem odtwarzać z kodu albo pytać ciebie.</p>
+    <p>Telos zapisuje te odpowiedzi w repozytorium i podaje agentowi krótki status na początku
+      każdej sesji. Planowanie, pisanie kodu i testy pozostają zwykłą pracą agenta. Telos tylko
+      zapisuje stan, nie narzuca procesu.</p>
+  </section>
+
+  <section>
+    <h2>Z czego się składa</h2>
+    <dl class="parts">
+      <div>
+        <dt>Pliki pamięci</dt>
+        <dd>Zwykły markdown w <code>.telos/</code>, commitowany razem z kodem. Każdy plik ma
+          limit rozmiaru, więc pamięć nie puchnie.</dd>
+      </div>
+      <div>
+        <dt>CLI <code>telos</code></dt>
+        <dd>Czyta i aktualizuje pliki. Nie wywołuje żadnego modelu, więc działa przewidywalnie.
+          Nigdy nie zapisuje nic do gita.</dd>
+      </div>
+      <div>
+        <dt>Wtyczka Claude Code</dt>
+        <dd>Pięć poleceń <code>/telos:…</code> i trzy hooki: status na starcie sesji, strażnik
+          gita i ostrzeżenie przed odtwarzaniem usuniętych rzeczy.</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section>
+    <h2>Cykl pracy</h2>
+    <p class="muted">Dwa pierwsze kroki robisz raz. Potem powtarzasz plan, pracę i zamknięcie dla
+      każdej fazy.</p>
+    <ol class="cycle">
+      <li><div class="body">
+        <span class="when">RAZ</span>
+        <h3><code>telos init</code></h3>
+        <p>Wykrywa stack i polecenia sprawdzające (testy, lint, build), tworzy <code>.telos/</code>
+          i dopisuje krótki blok zasad do <code>AGENTS.md</code>. Można uruchomić ponownie:
+          istniejące pliki zostają.</p>
+      </div></li>
+      <li><div class="body">
+        <span class="when">RAZ, W ISTNIEJĄCYM KODZIE</span>
+        <h3><code>/telos:map</code></h3>
+        <p>Tworzy mapę: krótki indeks <code>MAP.md</code> i po jednej notatce na obszar kodu
+          w&nbsp;<code>.telos/areas/</code> (punkty wejścia, niezmienniki, decyzje). Proponuje też
+          treść <code>PROJECT.md</code> do twojego potwierdzenia.</p>
+      </div></li>
+      <li><div class="body">
+        <span class="when">NA POCZĄTKU FAZY</span>
+        <h3><code>/telos:plan dodaj logowanie linkiem z maila</code></h3>
+        <p>Dodaje fazę do <code>ROADMAP.md</code> i zapisuje jeden plik planu: cel, kryterium
+          ukończenia i listę zadań z polami do odhaczenia. Zadaje najwyżej jedną rundę pytań.</p>
+      </div></li>
+      <li><div class="body">
+        <span class="when">W TRAKCIE</span>
+        <h3>Zwykła praca</h3>
+        <p>Pracujesz z agentem jak zawsze. Gdy zadanie jest gotowe, agent odhacza je w pliku fazy.
+          Przed edycją kodu czyta tylko notatkę obszaru, którego dotyka, a nie całe repozytorium.</p>
+      </div></li>
+      <li><div class="body">
+        <span class="when">NA KOŃCU FAZY</span>
+        <h3><code>/telos:close</code></h3>
+        <p>Nieodhaczone zadania blokują zamknięcie. Agent uruchamia sprawdzenia, aktualizuje
+          notatki obszarów, które się zmieniły, zapisuje wpis w <code>HISTORY.md</code> i ustawia
+          status na następną fazę. Gdy sprawdzenie nie przejdzie, faza zostaje otwarta.</p>
+      </div></li>
+      <li><div class="body">
+        <span class="when">NASTĘPNA SESJA</span>
+        <h3>Status na starcie</h3>
+        <p>Nowa sesja dostaje automatycznie krótki status (do 1200 znaków) i od razu wie, na czym
+          stanęło. To samo pokazuje <code>/telos:status</code>.</p>
+      </div></li>
+    </ol>
+    <p class="note"><strong>Pracowałeś bez Telosa?</strong> Uruchom <code>/telos:catchup</code>.
+      Porówna gita z notatkami i zaktualizuje obszary, których dotyczyły zmiany. Status i listę
+      zadań fazy poprawiasz wtedy sam.</p>
+  </section>
+
+  <section>
+    <h2>Co agent widzi na starcie sesji</h2>
+    <p>Prawdziwy status z repozytorium Telosa. Tyle wystarcza, żeby wiedzieć, co robić dalej
+      i gdzie szukać reszty.</p>
+<pre><code>Project: Project memory for coding agents, backed by a deterministic CLI.
+Stack: javascript · node >=20.10
+Phase: 15-resume-test [active] · Task: none
+Next: close phase 15 (/telos:close)
+Blockers: none
+Carry-over: 0
+Recent: 14 closed: AGENTS.md block, telos ctx steps for any agent, Codex smoke run
+Areas: 5
+Stale areas: 2 (run telos stale)
+<span class="dim">Files: .telos/STATUS.md · .telos/ROADMAP.md · .telos/PROJECT.md</span></code></pre>
+  </section>
+
+  <section>
+    <h2>Pliki pamięci</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Plik</th><th>Odpowiada na pytanie</th></tr></thead>
+        <tbody>
+          <tr><td><code>PROJECT.md</code></td><td>Po co jest projekt i jakie ma twarde zasady, konwencje oraz rzeczy poza zakresem.</td></tr>
+          <tr><td><code>MAP.md</code></td><td>Gdzie co leży. Krótki indeks: struktura, lista obszarów, podpowiedzi „gdzie szukać”.</td></tr>
+          <tr><td><code>areas/&lt;nazwa&gt;.md</code></td><td>Jak działa jeden obszar kodu: punkty wejścia, niezmienniki, decyzje, odrzucone podejścia, pułapki. Czytany tylko wtedy, gdy praca go dotyczy.</td></tr>
+          <tr><td><code>ROADMAP.md</code></td><td>Jakie są fazy. Jedna linia na fazę ze statusem i kryterium ukończenia.</td></tr>
+          <tr><td><code>phases/NN-nazwa.md</code></td><td>Co dokładnie robimy w tej fazie: cel, kryterium, lista zadań.</td></tr>
+          <tr><td><code>STATUS.md</code></td><td>Co teraz i co dalej: faza, zadanie, następny krok, blokery.</td></tr>
+          <tr><td><code>HISTORY.md</code></td><td>Dlaczego. Datowany dziennik decyzji i Delete-zone, czyli lista usuniętych ścieżek i podejść, których nie wolno odtwarzać.</td></tr>
+          <tr><td><code>config.json</code></td><td>Ustawienia: stack, polecenia sprawdzające, limity, opcje gita.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted"><code>STATUS</code>, <code>ROADMAP</code> i <code>HISTORY</code> zmienia tylko
+      CLI (<code>telos status set</code>, <code>telos roadmap set</code>,
+      <code>telos history add</code>). Dzięki temu format plików się nie rozjeżdża.</p>
+  </section>
+
+  <section>
+    <h2>Skąd wiadomo, że notatki są aktualne</h2>
+    <p>Każda notatka obszaru zapisuje w nagłówku commit, względem którego była ostatnio
+      sprawdzona (kotwicę), oraz ścieżki, które opisuje. <code>telos stale</code> porównuje kotwicę
+      z gitem i bez udziału modelu wypisuje:</p>
+    <ul class="plain">
+      <li>obszary, których pliki zmieniły się od kotwicy,</li>
+      <li>odwołania w notatkach do plików, które już nie istnieją,</li>
+      <li>zmienione pliki, które nie należą do żadnego obszaru.</li>
+    </ul>
+    <p>Liczba nieaktualnych obszarów pojawia się też w statusie na starcie sesji.
+      <code>/telos:close</code> i <code>/telos:catchup</code> aktualizują notatki i przesuwają
+      kotwice.</p>
+  </section>
+
+  <section>
+    <h2>Bezpieczniki w Claude Code</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Hook</th><th>Co robi</th></tr></thead>
+        <tbody>
+          <tr><td>Start sesji</td><td>Wstrzykuje status. Działa też po wznowieniu, <code>/clear</code> i kompaktowaniu kontekstu.</td></tr>
+          <tr><td>Strażnik gita</td><td>Blokuje <code>git push</code>, <code>--no-verify</code>, <code>git add -A</code> i <code>git add .</code>, <code>git reset --hard</code> oraz <code>--amend</code> wypchniętego commita.</td></tr>
+          <tr><td>Delete-zone</td><td>Ostrzega, gdy agent edytuje ścieżkę wpisaną jako usunięta, i podaje powód usunięcia. Nie blokuje.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Instalacja</h2>
+    <p>Wymagane: Git i Node.js w wersji 20.10 lub nowszej. Telos nie ma żadnych zależności.</p>
+    <div class="two">
+      <div>
+        <h3>Claude Code</h3>
+<pre><code>/plugin marketplace add figielak/telos
+/plugin install telos@telos</code></pre>
+      </div>
+      <div>
+        <h3>Codex i inne agenty</h3>
+<pre><code>git clone https://github.com/figielak/telos
+npm install -g ./telos</code></pre>
+      </div>
+    </div>
+    <p>Potem w swoim repozytorium: <code>telos init</code>.</p>
+    <p>W agentach innych niż Claude Code nie ma poleceń <code>/telos:…</code> ani hooków. Zamiast
+      tego prosisz agenta: „uruchom <code>telos ctx plan</code> i wykonaj to, co wypisze”. Zasady
+      gita są wtedy tylko opisane w <code>AGENTS.md</code>, nic ich nie wymusza.</p>
+  </section>
+
+  <section>
+    <h2>Kiedy warto, a kiedy nie</h2>
+    <div class="two">
+      <div>
+        <h3>Warto</h3>
+        <ul class="plain">
+          <li>Projekt trwa tygodnie i wraca się do niego po przerwach.</li>
+          <li>Decyzje i ich powody nie wynikają z samego kodu.</li>
+          <li>Pracuje nad nim kilka sesji lub kilku agentów.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Nie warto</h3>
+        <ul class="plain">
+          <li>Małe, jednorazowe zadania. Zwykły Claude Code albo krótki <code>CLAUDE.md</code> wyjdzie taniej.</li>
+          <li>Repozytorium, w którym ta sama wiedza jest już spisana w dokumentacji.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="muted">Pamięć kosztuje tokeny. W benchmarku wersji 0.1 Telos był droższy w każdym
+      mierzonym zadaniu przy podobnej skuteczności, dlatego wersja 0.2 zostawiła samą pamięć.
+      Wersja 0.2 nie była jeszcze mierzona w ten sposób. Czy pamięć pomaga w twoim projekcie,
+      sprawdzisz poleceniem <code>telos resume-test</code>: zadaje ono twoje pytania świeżym sesjom
+      z pamięcią i bez niej i porównuje wyniki oraz koszt. Uwaga: to płatne sesje, po dwie na każde
+      pytanie.</p>
+  </section>
+
+  <section>
+    <h2>Ściąga</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Polecenie</th><th>Kiedy</th></tr></thead>
+        <tbody>
+          <tr><td><code>telos init</code></td><td>Raz, na początku.</td></tr>
+          <tr><td><code>/telos:map</code></td><td>Raz w istniejącym kodzie. Z <code>--refresh</code> po większych zmianach struktury.</td></tr>
+          <tr><td><code>/telos:plan</code></td><td>Gdy zaczynasz nową fazę pracy.</td></tr>
+          <tr><td><code>/telos:status</code></td><td>Gdy chcesz wiedzieć, na czym stoisz.</td></tr>
+          <tr><td><code>/telos:close</code></td><td>Gdy zadania fazy są odhaczone.</td></tr>
+          <tr><td><code>/telos:catchup</code></td><td>Po pracy wykonanej bez Telosa.</td></tr>
+          <tr><td><code>telos stale</code></td><td>Gdy status pokazuje nieaktualne obszary.</td></tr>
+          <tr><td><code>telos resume-test</code></td><td>Gdy chcesz sprawdzić, czy pamięć faktycznie pomaga.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>Pełny opis poleceń, opcji i limitów znajduje się w pliku <a href="../README.md">README.md</a>.</footer>
+
+</main>
+</body>
+</html>

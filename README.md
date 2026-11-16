@@ -2,15 +2,37 @@
 
 Project memory for coding agents, backed by a deterministic CLI.
 
-Telos keeps a few small markdown files in `.telos/` — what the project is, where things are,
-what is next and why things were decided — and puts a short status into every new Claude Code
-session. Planning, testing and implementing stay ordinary agent work: Telos records, it does not
-run a process.
+A new agent session knows nothing about your project: what it is for, where things are, what
+is next, why things were decided. Telos keeps those answers in a few small markdown files in
+`.telos/` and puts a short status into every new Claude Code session. Planning, testing and
+implementing stay ordinary agent work: Telos records, it does not run a process.
 
 Status: **pre-alpha**, version 0.2.0. Version 0.1 was a full workflow plugin (profiles, gated
 plan/approve/do/check/done, review agents); the [Benchmark](#benchmark) showed that ceremony cost
 2–5× more without better results, so 0.2 keeps only the memory core. The old state is tagged
 `pre-memory-core`.
+
+## How it works
+
+Telos has three parts:
+
+- **Memory files** in `.telos/`: plain markdown, committed with your code, each with a size limit.
+- **The `telos` CLI**: reads and updates those files. It calls no model, so the same input gives
+  the same output, and it never writes to git.
+- **A Claude Code plugin**: five skills (`/telos:status`, `map`, `plan`, `close`, `catchup`) and
+  three hooks (status at session start, a git guard, a Delete-zone warning). Other agents use
+  the CLI directly.
+
+```text
+telos init → /telos:map → /telos:plan → work as usual → /telos:close → next phase
+ (once)       (once)       (per phase)                   (per phase)
+
+worked without Telos? → /telos:catchup
+```
+
+Memory is written at three points only: `plan`, `close` and `catchup`. Between them the agent
+reads what the step needs (the status, the map index, the notes of the area it edits) and never
+the whole repository.
 
 ## Install
 
@@ -31,30 +53,30 @@ git clone https://github.com/figielak/telos && npm install -g ./telos   # or: cd
 telos --version
 ```
 
+Then, in your repository: `telos init`.
+
 Codex reads the rules block from `AGENTS.md` by itself. Ask it to run a step, e.g. "run
-`telos ctx plan` and follow its output"; there are no Telos hooks in Codex, so the block tells it
+`telos ctx plan` and follow its output". There are no Telos hooks in Codex, so the block tells it
 to run `telos status` first and states the git rules the Claude Code guard enforces. In Codex's
 `workspace-write` sandbox `.git/` is read-only, so commits need your approval.
 
-Then, in the repository: `telos init`.
-
 ## Five-minute walkthrough
 
-1. `telos init` — detects the stack and check commands, creates `.telos/` (PROJECT, MAP,
-   ROADMAP, STATUS, HISTORY, `config.json`), adds a short Telos rules block to `AGENTS.md`
+1. `telos init` detects the stack and check commands and creates `.telos/` (PROJECT, MAP,
+   ROADMAP, STATUS, HISTORY, `config.json`). It adds a short Telos rules block to `AGENTS.md`
    (read by Codex and other agents), an `@AGENTS.md` import to `CLAUDE.md` (an old Telos block
    there is removed) and `.telos/.cache/` to `.gitignore`. Rerun-safe: existing files are kept.
-2. `/telos:map` — on an existing codebase, writes `.telos/MAP.md`, a short index (structure,
+2. `/telos:map`, on an existing codebase, writes `.telos/MAP.md`, a short index (structure,
    one row per area, where to find things), and one `.telos/areas/<name>.md` per area (entry
-   points, invariants, decisions) from a deterministic scan and a few targeted reads, and
-   drafts empty PROJECT sections for you to confirm.
-3. `/telos:plan add login with magic links` — adds a ROADMAP phase and writes one file,
+   points, invariants, decisions). It works from a deterministic scan and a few targeted reads,
+   and drafts empty PROJECT sections for you to confirm.
+3. `/telos:plan add login with magic links` adds a ROADMAP phase and writes one file,
    `.telos/phases/NN-name.md`: goal, done-when, a checklist of `- [ ] **NN-MM Title**` tasks,
    notes. The phase becomes `active` and STATUS points at the first task.
 4. Work as usual. Tick a task's box when it lands; `telos status set task=NN-MM next="…"`
    keeps the pointer current.
-5. `/telos:close` — lists unchecked tasks (they block the close) and the configured check
-   commands; the agent runs them, then records `phase` in HISTORY, sets the phase `done` and
+5. `/telos:close` lists unchecked tasks (they block the close) and the configured check
+   commands. The agent runs them, then records `phase` in HISTORY, sets the phase `done` and
    points STATUS at the next phase. On the way it updates the area notes the changes touched
    and re-anchors them.
 6. A new session starts with the status (≤ 1200 chars): project purpose, stack, phase and task,
@@ -73,64 +95,113 @@ Then, in the repository: `telos init`.
 | `HISTORY.md` | Why: a dated Log and the Delete-zone of removed paths and approaches |
 | `config.json` | Version 2: `stack`, `checks`, `limits`, `git`, `files_language` |
 
-## Commands
+Each area file records the commit it was last checked against (its anchor) and the paths it
+covers. `telos stale` compares that anchor with git, so it reports without a model which notes
+no longer match the code.
+
+## Steps
 
 In Claude Code, `/telos:<step>` runs a step; in any other agent, `telos ctx <step>` prints the
-same context and instructions to follow. Skills are user-invoked only, so they cost nothing until called. Each is one injection,
-`telos ctx <name>`, which prints the step's context and then its instructions; the skill never
-reads the whole repository.
+same context and instructions to follow. Skills are user-invoked only, so they cost nothing
+until called. Each is one injection, `telos ctx <name>`, which prints the step's context and
+then its instructions; the skill never reads the whole repository.
 
-| Command | Purpose |
+| Step | Purpose |
 |---|---|
 | `/telos:status` | Phase, task, blockers, latest Recent line and the next step in ≤ 10 lines; reads and changes nothing |
-| `/telos:map [--refresh]` | Write the `.telos/MAP.md` index and the `.telos/areas/` files from `telos ctx map` and 3–8 suggested files; requires `Map validation: PASS` for MAP, every area and the row ↔ file match (at most two repairs, else the old files are restored) and drafts empty PROJECT sections, unconfirmed. `--refresh` edits only the index blocks and area files whose paths a diff since the MAP commit touches; authored area sections are kept. With `git.auto_commit` it asks once, then commits `docs(telos): map` with explicit paths |
-| `/telos:plan [NN\|description]` | Plan the STATUS phase, phase `NN` or a new phase in one file (≤ 80 lines). At most one round of questions; `telos roadmap add` for a new phase, then `telos roadmap set NN active` and `telos status set`; places carry-over items. Commits `docs(NN): plan phase NN-name` only when `git.auto_commit` is true |
-| `/telos:close [NN]` | Close an active phase: stops on `REFUSED:` or `Close: blocked` (unchecked tasks, unreadable HISTORY), runs every configured check (a failure leaves the phase active, nothing recorded), confirms the done-when, updates only the area notes the delta lists (decisions, rejected approaches, invariants, pitfalls, entry points; no diff retelling), fixes broken refs, places every unmapped path in an area or names it in the reply, passes `telos area lint`, then runs the bundle's closing commands in order; a retry skips a recorded phase entry. Commits `docs(telos): close NN-name` only when `git.auto_commit` is true |
-| `/telos:catchup` | After work done without Telos: the same area update as `/telos:close` from `telos ctx catchup` (the delta since each area's anchor), with no checks and no phase bookkeeping; stops on `Nothing to catch up`. Re-anchors the updated areas, adds one `quick` HISTORY line only for a recorded decision, commits `docs(telos): catch up` only when `git.auto_commit` is true |
+| `/telos:map [--refresh]` | Write the `.telos/MAP.md` index and the `.telos/areas/` files; draft empty PROJECT sections |
+| `/telos:plan [NN\|description]` | Plan the STATUS phase, phase `NN` or a new phase in one file (≤ 80 lines) and set it active |
+| `/telos:close [NN]` | Close an active phase: run the checks, update the touched area notes, record HISTORY, ROADMAP and STATUS |
+| `/telos:catchup` | After work done without Telos: the same area update as `close`, with no checks and no phase bookkeeping |
+
+Details:
+
+- **`/telos:map`** works from `telos ctx map` and 3–8 suggested files. It requires
+  `Map validation: PASS` for MAP, every area and the row ↔ file match (at most two repairs, else
+  the old files are restored); the PROJECT draft stays unconfirmed until you confirm it.
+  `--refresh` edits only the index blocks and area files whose paths a diff since the MAP commit
+  touches; authored area sections are kept. With `git.auto_commit` it asks once, then commits
+  `docs(telos): map` with explicit paths.
+- **`/telos:plan`** asks at most one round of questions. It runs `telos roadmap add` for a new
+  phase, then `telos roadmap set NN active` and `telos status set`, and places carry-over items.
+  It commits `docs(NN): plan phase NN-name` only when `git.auto_commit` is true.
+- **`/telos:close`** stops on `REFUSED:` or `Close: blocked` (unchecked tasks, unreadable
+  HISTORY). It runs every configured check (a failure leaves the phase active, nothing recorded)
+  and confirms the done-when. It updates only the area notes the delta lists (decisions, rejected
+  approaches, invariants, pitfalls, entry points; no diff retelling), fixes broken refs, places
+  every unmapped path in an area or names it in the reply, and passes `telos area lint`. Then it
+  runs the bundle's closing commands in order; a retry skips a recorded phase entry. It commits
+  `docs(telos): close NN-name` only when `git.auto_commit` is true.
+- **`/telos:catchup`** works from `telos ctx catchup` (the delta since each area's anchor) and
+  stops on `Nothing to catch up`. It re-anchors the updated areas, adds one `quick` HISTORY line
+  only for a recorded decision, and commits `docs(telos): catch up` only when `git.auto_commit`
+  is true.
 
 ## CLI
 
 Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error. The CLI never writes to git.
+
+### Setup and status
 
 | Command | Purpose |
 |---|---|
 | `telos --help` / `--version` | List commands / print the version |
 | `telos init [--stack a,b] [--checks '<json>'] [--force]` | Create the memory files, sync the rules block into `AGENTS.md` and the `@AGENTS.md` import into `CLAUDE.md` (an old CLAUDE.md block is removed; a symlink between CLAUDE.md and AGENTS.md is left alone; a block ending past the 32 KiB Codex reads is reported; a start marker without an end marker exits 1, writing nothing), add `.telos/.cache/` to `.gitignore`. Stack and checks default to detection (check keys: `build`, `types`, `lint`, `test`, `e2e`). Existing files are kept; `--force` rewrites `config.json` as version 2, keeping its values (a version 1 file loses `profile`, `docs`, `protected_configs`, `strict_scope` and the `format`/`test_related` checks) |
 | `telos status` | Compact status: phase with its ROADMAP state, task with its checklist state (`open`/`done`), Next, Blockers, carry-over count, latest Recent line, `Areas: N` and `Stale areas: N` (the SessionStart lines, for agents without hooks); Awaiting user first |
+
+### State
+
+STATUS, ROADMAP and HISTORY change only through these commands, never by hand.
+
+| Command | Purpose |
+|---|---|
 | `telos status set <key>=<value>…` | Set STATUS lines: `phase`, `task`, `next`, `blockers`, `awaiting`; empty value → `none` |
 | `telos status add recent\|carry "<line>"` / `rm carry <n>` | Prepend to Recent (3 newest kept); append to Carry-over (max 5); remove item `n` |
 | `telos roadmap add <name> "<goal>" "<done when>"` | Append a `[planned]` phase with the next free NN |
 | `telos roadmap set <NN> <status>` | Set a phase's status: `planned`, `drafted`, `active`, `done`, `dropped` |
 | `telos history add <kind> <ref> "<text>" [--path <p> \| --approach "<text>"]` | Prepend a dated Log entry (`decision`, `phase`, `revert`, `remove`, `quick`, `init`; refs `NN`, `NN-MM`, `quick`, `telos`). `remove` with a selector adds a Delete-zone entry; `revert` clears exactly that selector. Over `limits.history_entries` the oldest rows move to `HISTORY-archive.md` |
+
+### Areas and staleness
+
+| Command | Purpose |
+|---|---|
 | `telos area new <name> --paths a,b` | Create `.telos/areas/<name>.md` from the template, anchored at HEAD (name: `a-z0-9-`, ≤ 30 chars; paths repo-relative, directories end in `/`); prints the `## Areas` row to add to MAP |
 | `telos area list` / `show <name>` | One line per area: `name · paths · tokens/limit` / print one area file |
 | `telos area for <path>…` | Names of the areas whose paths cover the given paths, or lie under a given directory (`src/a` never matches `src/ab/`); `none` when no area does |
 | `telos area lint` | Check every area: header, the six sections in order, name and `limits.area_tokens`; no sub-directories in `.telos/areas/`; with a built MAP, `## Areas` rows and area files match one to one; one line per problem, exit 1 when any |
 | `telos area anchor <name>…` / `--all` | Set the area header commit and date to HEAD, keeping every other byte; run after checking the note against its files. Refuses, writing nothing, when a covered path is uncommitted |
 | `telos stale [--area <name>]… [--check]` / `--unmapped` | Without a model: one line per area whose header paths changed between its anchor commit and HEAD or are dirty (`<area>: stale · N files since <sha7> (a, b, +K more)`), whose anchor commit is gone (`unanchored`) or whose body has a backticked `path[:line]` to a missing file or past its end (`broken ref`); then `fresh: N areas` and changed files under no area (`unmapped: N files (top dirs)`; `.telos/` and the root `AGENTS.md`, `CLAUDE.md`, `.gitignore` never count). ≤ 6000 chars, omitted lines counted. Exit 0; `--check` exits 1 when anything is stale, broken or unanchored. `--unmapped` prints only the unmapped paths, one per line (`unmapped: none` when empty), and takes no other option |
-| `telos resume-test [--variant memory\|bare] [--json] [--agent-cmd '<cmd>'] [--timeout <s>]` | Ask the 5–10 questions in `.telos/resume-test.md`, each in a fresh headless session with and without the memory; prints per question ✓/✗, then correct/total, tokens, cost and tool calls per variant and the missing facts (see [Does the memory work?](#does-the-memory-work)). `--timeout` is per session (default 300, at most 2147483). Exit 1 when the file is missing or invalid, or every run failed; 130 when interrupted |
-| `telos map-scan` | Deterministic repository inventory for `/telos:map` (≤ 2000 estimated tokens); works before init, never executes repository code |
-| `telos ctx <bundle> [args]` | Print one self-contained step: the context (≤ 6000 chars, comments stripped), then `## Instructions` from `shared/<name>.md` (≤ 5600 chars), for `status`, `map [--refresh]`, `plan [NN\|description] [--area <path>]…`, `close [NN]` and `catchup`; a `REFUSED: …` or `Nothing to catch up` line comes alone. `shared <name>` prints only an instruction file |
-| `telos budget [--ctx <bundle> [args]]` | Read-only size report: `.telos/` files, the AGENTS.md block, the SessionStart output and optionally one bundle, in bytes, chars and ~tokens (chars / 4) |
 
-`ctx plan` gives the target phase and its file (or the template skeleton), carry-over, PROJECT
-Purpose and Rules, stack, checks, Delete-zone approaches and removed paths, the MAP index and
-the roadmap rows that fit, nearest the target phase first. Each
-`--area <path>` adds the area files covering that path, whole while the bundle stays under
-6000 chars, else as `Read .telos/areas/<name>.md` pointers; the roadmap then keeps the rows that
-still fit, nearest the target phase first.
-`ctx close` gives the plan's checklist state, unchecked items, the check commands,
-`Auto-commit` with the commit subject, `Stale areas: N` when any (never blocking), `Close: ready|blocked` and the exact
-closing commands (`telos area anchor …` first when an area changed). The anchor command leaves
-out areas with uncommitted covered files and names them in a `not anchored` row; while files are
-unmapped it also names the fresh areas anchored behind HEAD, so an unmapped file is listed in one
-close or catch-up, not until an unrelated anchor moves. Last comes the delta: per
-area that needs review, the commits since its own anchor (≤ 10 subjects, newest first, quoted as
-data), the changed files with kind and `+added -deleted`, broken refs, then changed files under no
-area (`Unmapped`, 15 shown; `telos stale --unmapped` prints all). Over 6000 chars, file rows shrink to kind counts first, then subjects go.
-`ctx catchup` gives the same delta without phase bookkeeping, for work done without Telos: the
-closing commands are `telos area anchor …` and, only when a decision was recorded, one
-`telos history add quick quick "…"`; an empty delta prints `Nothing to catch up`.
+### Steps and measurement
+
+| Command | Purpose |
+|---|---|
+| `telos ctx <bundle> [args]` | Print one self-contained step: the context (≤ 6000 chars, comments stripped), then `## Instructions` from `shared/<name>.md` (≤ 5600 chars), for `status`, `map [--refresh]`, `plan [NN\|description] [--area <path>]…`, `close [NN]` and `catchup`; a `REFUSED: …` or `Nothing to catch up` line comes alone. `shared <name>` prints only an instruction file |
+| `telos map-scan` | Deterministic repository inventory for `/telos:map` (≤ 2000 estimated tokens); works before init, never executes repository code |
+| `telos budget [--ctx <bundle> [args]]` | Read-only size report: `.telos/` files, the AGENTS.md block, the SessionStart output and optionally one bundle, in bytes, chars and ~tokens (chars / 4) |
+| `telos resume-test [--variant memory\|bare] [--json] [--agent-cmd '<cmd>'] [--timeout <s>]` | Ask the 5–10 questions in `.telos/resume-test.md`, each in a fresh headless session with and without the memory; prints per question ✓/✗, then correct/total, tokens, cost and tool calls per variant and the missing facts (see [Does the memory work?](#does-the-memory-work)). `--timeout` is per session (default 300, at most 2147483). Exit 1 when the file is missing or invalid, or every run failed; 130 when interrupted |
+
+### What the bundles contain
+
+- **`ctx plan`** gives the target phase and its file (or the template skeleton), carry-over,
+  PROJECT Purpose and Rules, stack, checks, Delete-zone approaches and removed paths, the MAP
+  index and the roadmap rows that fit, nearest the target phase first. Each `--area <path>` adds
+  the area files covering that path, whole while the bundle stays under 6000 chars, else as
+  `Read .telos/areas/<name>.md` pointers; the roadmap then keeps the rows that still fit.
+- **`ctx close`** gives the plan's checklist state, unchecked items, the check commands,
+  `Auto-commit` with the commit subject, `Stale areas: N` when any (never blocking),
+  `Close: ready|blocked` and the exact closing commands (`telos area anchor …` first when an area
+  changed). The anchor command leaves out areas with uncommitted covered files and names them in
+  a `not anchored` row; while files are unmapped it also names the fresh areas anchored behind
+  HEAD, so an unmapped file is listed in one close or catch-up, not until an unrelated anchor
+  moves. Last comes the delta: per area that needs review, the commits since its own anchor
+  (≤ 10 subjects, newest first, quoted as data), the changed files with kind and
+  `+added -deleted`, broken refs, then changed files under no area (`Unmapped`, 15 shown;
+  `telos stale --unmapped` prints all). Over 6000 chars, file rows shrink to kind counts first,
+  then subjects go.
+- **`ctx catchup`** gives the same delta without phase bookkeeping, for work done without Telos:
+  the closing commands are `telos area anchor …` and, only when a decision was recorded, one
+  `telos history add quick quick "…"`; an empty delta prints `Nothing to catch up`.
 
 ## Hooks
 
@@ -170,9 +241,10 @@ sessions found the same facts. The test is meant for projects whose decisions li
 
 **Cost:** 2 × N paid sessions (16 for eight questions), one at a time. `--variant` runs one
 side; `--agent-cmd` gets the prompt on stdin in the copy. Each variant uses one copy of the repo
-(without `node_modules` and `.claude/settings.local.json`) for the whole run; Ctrl-C stops the running session and removes the
-copies. The copies keep `.git`, where the removed memory and the questions file are still in
-history, so the default sessions get no git commands; do not grant them in your own `--agent-cmd`.
+(without `node_modules` and `.claude/settings.local.json`) for the whole run; Ctrl-C stops the
+running session and removes the copies. The copies keep `.git`, where the removed memory and the
+questions file are still in history, so the default sessions get no git commands; do not grant
+them in your own `--agent-cmd`.
 
 ## Benchmark
 
@@ -204,8 +276,9 @@ generalise beyond them. Version 0.2 has not been benchmarked.
 - The hooks (SessionStart status, git guard, Delete-zone warning) are Claude Code plugin
   features. Elsewhere the same rules are only stated in the `AGENTS.md` block, which is weaker:
   nothing blocks a `git push`.
-- Size targets: bundle context ≤ 6000 chars plus instructions ≤ 5600, SessionStart ≤ 1200 chars, MAP ≤ `limits.map_tokens` and
-  each area ≤ `limits.area_tokens` estimated tokens. `telos budget` measures sizes, not host token usage.
+- Size targets: bundle context ≤ 6000 chars plus instructions ≤ 5600, SessionStart ≤ 1200 chars,
+  MAP ≤ `limits.map_tokens` and each area ≤ `limits.area_tokens` estimated tokens.
+  `telos budget` measures sizes, not host token usage.
 
 ## Development
 
