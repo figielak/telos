@@ -19,7 +19,7 @@ const LINE_LIMITS = {
 };
 
 test('all expected templates exist', () => {
-  const expected = ['PROJECT.md', 'MAP.md', 'ROADMAP.md', 'STATUS.md', 'HISTORY.md', 'phase.md', 'agents-block.md', 'area.md'];
+  const expected = ['PROJECT.md', 'MAP.md', 'ROADMAP.md', 'STATUS.md', 'HISTORY.md', 'phase.md', 'agents-block.md', 'area.md', 'resume-test.md'];
   assert.deepEqual([...names].sort(), [...expected].sort());
 });
 

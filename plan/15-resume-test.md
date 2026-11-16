@@ -23,7 +23,7 @@ session know the project better, and more cheaply, with the memory than without 
 
 ## Tasks
 
-- [ ] **15-01 Question file**
+- [x] **15-01 Question file**
   - `templates/resume-test.md` with three commented examples; `lib/resume-test.mjs`:
     parse and validate (5–10 questions, each with at least one fact).
   - Accept: parser tests for valid, too few, missing `expect`.
