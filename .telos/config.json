@@ -9,7 +9,8 @@
   },
   "limits": {
     "status_lines": 40,
-    "map_tokens": 1500,
+    "map_tokens": 600,
+    "area_tokens": 800,
     "history_entries": 30
   },
   "git": {

@@ -53,7 +53,7 @@ a task bundle loads only the areas matching its paths; `npm test` passes.
   - SessionStart adds nothing but `Areas: N`.
   - Accept: a test with three areas shows only the matching one in the bundle.
 
-- [ ] **11-05 Migrate this repository**
+- [x] **11-05 Migrate this repository**
   - Split the current MAP into areas: `cli`, `bundles`, `map`, `hooks-guards`, `state`.
     Fill Decisions, Rejected and Pitfalls from HISTORY, LESSONS and the phase 10 notes.
   - Accept: `telos area lint` exits 0; `telos budget` shows MAP ≤ 600 est. tokens.
@@ -64,4 +64,6 @@ a task bundle loads only the areas matching its paths; `npm test` passes.
   and is always incremental; full mode remains for a missing, invalid or unanchored MAP.
 - 11-03: Areas index rows are `- <name> — text`; their backticked paths are informational. Area
   ownership for refresh and `telos area for` comes from the area file headers only.
-- 11-03: this repository's own MAP stays in the old layout (invalid under the new rules) until 11-05.
+- 11-05: this repository: MAP index 286/600 est. tokens, five areas 373–434/800, `telos area lint`
+  exits 0; `.telos/config.json` sets `map_tokens` 600. `ctx plan NN --area <path>` here usually
+  yields `Read` pointers: the 16-line roadmap and the phase skeleton leave little of the 6000 chars.
