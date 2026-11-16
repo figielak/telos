@@ -43,7 +43,8 @@ test('area new creates a valid file anchored at HEAD; a second new of the same n
   const head = git(root, 'rev-parse', 'HEAD');
   const r = await area(root, ['new', 'auth', '--paths', 'src/a/, ./lib/x.mjs']);
   assert.equal(r.code, 0, r.err);
-  assert.equal(r.out, 'Created .telos/areas/auth.md · paths: src/a/, lib/x.mjs\n');
+  assert.equal(r.out, 'Created .telos/areas/auth.md · paths: src/a/, lib/x.mjs\n'
+    + 'Add its row to ## Areas in .telos/MAP.md: - auth — <one line> · `src/a/`, `lib/x.mjs`\n');
   const text = read(root, '.telos/areas/auth.md');
   assert.match(text.split('\n')[0], new RegExp(`^<!-- telos-area: commit ${head} · \\d{4}-\\d{2}-\\d{2} · paths: src/a/, lib/x\\.mjs -->$`));
   assert.deepEqual(lintArea(text, { name: 'auth', limit: 800 }), []);
@@ -126,6 +127,32 @@ test('area lint exits 0 when all areas are valid and 1 with one line per problem
   assert.ok(lines.every((l, i) => i === lines.length - 1 || l.startsWith('.telos/areas/')));
   assert.match(lines.at(-1), /^Areas: 3 · \d+ problems$/);
   assert.equal((await area(root, ['lint', 'x'])).code, 2);
+});
+
+test('area lint reports a nested directory and Areas rows that do not match the files', async (t) => {
+  const root = repo(t);
+  await area(root, ['new', 'good', '--paths', 'src/a/']);
+  mkdirSync(join(root, '.telos/areas/sub'));
+  writeFileSync(join(root, '.telos/areas/sub/inner.md'), 'ignored\n');
+  const nested = await area(root, ['lint']);
+  assert.equal(nested.code, 1);
+  assert.match(nested.out, /^\.telos\/areas\/sub\/: areas do not nest; /m);
+  assert.match(nested.out, /^Areas: 1 · 1 problem$/m);
+  rmSync(join(root, '.telos/areas/sub'), { recursive: true });
+
+  // A built MAP must list every area file and nothing else; a not-built MAP is not checked.
+  assert.equal((await area(root, ['lint'])).code, 0);
+  const head = git(root, 'rev-parse', 'HEAD');
+  const map = (rows) => writeFileSync(join(root, '.telos/MAP.md'),
+    `<!-- telos-map: commit ${head} · 2026-11-16 · files 1 -->\n# Map\n\n## Structure\n- \`src/\` — code\n\n## Areas\n${rows}\n\n## Find\n`);
+  map('- ghost — gone · `src/g/`');
+  const r = await area(root, ['lint']);
+  assert.equal(r.code, 1);
+  const lines = r.out.trimEnd().split('\n');
+  assert.ok(lines.includes('.telos/MAP.md: Areas row ghost has no file .telos/areas/ghost.md; create it with telos area new ghost --paths <a,b>.'));
+  assert.ok(lines.includes('.telos/MAP.md: Area file .telos/areas/good.md has no row in ## Areas.'));
+  map('- good — fine · `src/a/`');
+  assert.deepEqual(await area(root, ['lint']), { code: 0, out: 'Areas: 1 · all valid\n', err: '' });
 });
 
 test('area without a subcommand or with an unknown one is a usage error; outside telos it is 1', async (t) => {

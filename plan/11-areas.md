@@ -65,5 +65,8 @@ a task bundle loads only the areas matching its paths; `npm test` passes.
 - 11-03: Areas index rows are `- <name> — text`; their backticked paths are informational. Area
   ownership for refresh and `telos area for` comes from the area file headers only.
 - 11-05: this repository: MAP index 286/600 est. tokens, five areas 373–434/800, `telos area lint`
-  exits 0; `.telos/config.json` sets `map_tokens` 600. `ctx plan NN --area <path>` here usually
-  yields `Read` pointers: the 16-line roadmap and the phase skeleton leave little of the 6000 chars.
+  exits 0; `.telos/config.json` sets `map_tokens` 600. With `--area` the selected
+  areas outrank the roadmap: they are added whole first and the roadmap keeps the rows nearest the
+  target phase plus a `(N more in .telos/ROADMAP.md)` line, so one area fits here (review fix).
+- Review fixes: `telos area lint` also fails on a sub-directory of `.telos/areas/` (D4) and, with a
+  built MAP, on `## Areas` rows that do not match the area files; `area new` prints the row to add.

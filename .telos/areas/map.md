@@ -5,10 +5,10 @@
 MAP index validation, repo scan, refresh planning and the area files.
 
 ## Entry points
-- `lib/map.mjs:155` — `inspectMap` (header, Structure/Areas/Find, rows ↔ area files)
+- `lib/map.mjs:167` — `inspectMap` (header, Structure/Areas/Find, rows ↔ area files)
 - `lib/map-scan.mjs:147` — `scanRepo`; `lib/map-scan.mjs:209` — `renderScan`
 - `lib/map-refresh.mjs:66` — `planRefresh` (noop / incremental / full / refused)
-- `lib/areas.mjs:110` — `lintArea`; `:138` `loadAreas`; `:158` `areasFor`; `:242` `telos area`
+- `lib/areas.mjs:110` — `lintArea`; `:138` `loadAreas`; `:184` `areasFor`; `:273` `telos area`
 
 ## Invariants
 - MAP ≤ `limits.map_tokens` (600), each area ≤ `limits.area_tokens` (800); over the limit is an

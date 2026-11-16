@@ -6,7 +6,7 @@ Context bundles (`telos ctx <name>`) and the four skills that inject them.
 
 ## Entry points
 - `lib/ctx/index.mjs:20-26` — bundle registry; `:29` `cap()`; `:39` `stripComments`
-- `lib/ctx/plan.mjs:103` — plan bundle, `--area` selectors; `lib/ctx/close.mjs:24` — close
+- `lib/ctx/plan.mjs:124` — plan bundle, `--area` selectors; `lib/ctx/close.mjs:24` — close
 - `lib/ctx/map.mjs:105` — map bundle; `lib/ctx/status.mjs:12`; `lib/ctx/shared.mjs:12`
 - `skills/<name>/SKILL.md` — `!`telos ctx …`` injection; `shared/<name>.md` — long instructions
 
@@ -18,7 +18,8 @@ Context bundles (`telos ctx <name>`) and the four skills that inject them.
 
 ## Decisions
 - Four skills: status, map, plan, close, one model each (10) — the user picks a model in the host.
-- Area files go into `ctx plan` whole while they fit, else as `Read …` pointers (11-04).
+- Area files go into `ctx plan` whole while they fit, else as `Read …` pointers (11-04); with
+  `--area` they outrank the roadmap, which keeps the rows nearest the target phase.
 - `ctx map --refresh` lists affected area files as pointers, index blocks inline (11-03).
 
 ## Rejected

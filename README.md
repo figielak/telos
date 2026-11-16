@@ -81,10 +81,10 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error. The C
 | `telos roadmap add <name> "<goal>" "<done when>"` | Append a `[planned]` phase with the next free NN |
 | `telos roadmap set <NN> <status>` | Set a phase's status: `planned`, `drafted`, `active`, `done`, `dropped` |
 | `telos history add <kind> <ref> "<text>" [--path <p> \| --approach "<text>"]` | Prepend a dated Log entry (`decision`, `phase`, `revert`, `remove`, `quick`, `init`; refs `NN`, `NN-MM`, `quick`, `telos`). `remove` with a selector adds a Delete-zone entry; `revert` clears exactly that selector. Over `limits.history_entries` the oldest rows move to `HISTORY-archive.md` |
-| `telos area new <name> --paths a,b` | Create `.telos/areas/<name>.md` from the template, anchored at HEAD (name: `a-z0-9-`, ≤ 30 chars; paths repo-relative, directories end in `/`) |
+| `telos area new <name> --paths a,b` | Create `.telos/areas/<name>.md` from the template, anchored at HEAD (name: `a-z0-9-`, ≤ 30 chars; paths repo-relative, directories end in `/`); prints the `## Areas` row to add to MAP |
 | `telos area list` / `show <name>` | One line per area: `name · paths · tokens/limit` / print one area file |
 | `telos area for <path>…` | Names of the areas whose paths cover the given paths, or lie under a given directory (`src/a` never matches `src/ab/`); `none` when no area does |
-| `telos area lint` | Check every area: header, the six sections in order, name and `limits.area_tokens`; one line per problem, exit 1 when any |
+| `telos area lint` | Check every area: header, the six sections in order, name and `limits.area_tokens`; no sub-directories in `.telos/areas/`; with a built MAP, `## Areas` rows and area files match one to one; one line per problem, exit 1 when any |
 | `telos map-scan` | Deterministic repository inventory for `/telos:map` (≤ 2000 estimated tokens); works before init, never executes repository code |
 | `telos ctx <bundle> [args]` | Print a skill's context (≤ 6000 chars, comments stripped): `status`, `map [--refresh]`, `plan [NN\|description] [--area <path>]…`, `close [NN]`, `shared <name>` |
 | `telos budget [--ctx <bundle> [args]]` | Read-only size report: `.telos/` files, the CLAUDE.md block, the SessionStart output and optionally one bundle, in bytes, chars and ~tokens (chars / 4) |
@@ -92,7 +92,8 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error. The C
 `ctx plan` gives the target phase and its file (or the template skeleton), carry-over, PROJECT
 Purpose and Rules, stack, checks, Delete-zone approaches, the MAP index and the roadmap. Each
 `--area <path>` adds the area files covering that path, whole while the bundle stays under
-6000 chars, else as `Read .telos/areas/<name>.md` pointers.
+6000 chars, else as `Read .telos/areas/<name>.md` pointers; the roadmap then keeps the rows that
+still fit, nearest the target phase first.
 `ctx close` gives the plan's checklist state, unchecked items, the check commands,
 `Auto-commit`, `Close: ready|blocked` and the exact closing commands.
 

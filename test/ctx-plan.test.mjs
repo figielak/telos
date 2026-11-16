@@ -135,6 +135,28 @@ test('ctx plan without selectors shows the index only; over the cap areas become
   }
 });
 
+test('selected areas outrank the roadmap: a long roadmap keeps the rows nearest the target', async () => {
+  const root = repo();
+  withAreas(root, 60);
+  const file = join(root, '.telos', 'ROADMAP.md');
+  const rows = Array.from({ length: 40 }, (_, i) => `- ${String(i + 3).padStart(2, '0')}-later [planned] ${'goal text '.repeat(14)}· done when: it works`);
+  writeFileSync(file, `${readFileSync(file, 'utf8').trimEnd()}\n${rows.join('\n')}\n`);
+  const plain = (await ctx(root, 'plan', '01')).stdout;
+  assert.match(plain, /truncated by telos ctx/, 'without --area the roadmap is cut by the cap');
+  const r = await ctx(root, 'plan', '01', '--area', 'src/api/x.ts');
+  assert.ok(r.stdout.length <= CAP + 1, String(r.stdout.length));
+  assert.doesNotMatch(r.stdout, /truncated by telos ctx/);
+  assert.match(r.stdout, /^--- area api /m);
+  assert.match(r.stdout, /^--- end api\nRoadmap:\n- 01-demo \[active\] demo phase\n- 02-next /m);
+  assert.doesNotMatch(r.stdout, /^- 42-later /m);
+  assert.match(r.stdout, /^\(\d+ more in \.telos\/ROADMAP\.md\)$/m);
+  // A later target keeps its own neighbourhood instead of the head of the list.
+  const late = (await ctx(root, 'plan', '30', '--area', 'src/api/x.ts')).stdout;
+  assert.match(late, /^--- area api /m);
+  assert.match(late, /^- 30-later /m);
+  assert.doesNotMatch(late, /^- 01-demo /m);
+});
+
 test('a broken HISTORY is reported in the bundle instead of failing it', async () => {
   const root = repo();
   writeFileSync(join(root, '.telos', 'HISTORY.md'), '# History\n## Delete-zone\n- garbage\n## Log\n');

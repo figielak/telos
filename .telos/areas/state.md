@@ -7,7 +7,7 @@ Memory files and their writers: STATUS, ROADMAP, HISTORY, phase files, config, g
 ## Entry points
 - `lib/status.mjs:146` — `telos status`; `:114` `view`; `:39` `setLines`
 - `lib/roadmap.mjs:87` — `telos roadmap`; `:41` `phaseLine`
-- `lib/history.mjs:278` — `telos history`; `:196` `deleteZoneEntries`; `:249` `addHistory`
+- `lib/history.mjs:281` — `telos history`; `:199` `deleteZoneEntries`; `:252` `addHistory`
 - `lib/phases.mjs:68` — `checklist`; `:81` `phaseSkeleton`; `lib/config.mjs:96` — `load`
 
 ## Invariants
