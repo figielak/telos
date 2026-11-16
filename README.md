@@ -12,15 +12,31 @@ plan/approve/do/check/done, review agents); the [Benchmark](#benchmark) showed t
 2–5× more without better results, so 0.2 keeps only the memory core. The old state is tagged
 `pre-memory-core`.
 
-## Install (per repository)
+## Install
+
+Requires Git and Node.js ≥ 20.10. No dependencies. The CLI is the product; the Claude Code
+plugin adds skills and hooks around it.
+
+**Claude Code** (the plugin puts `telos` on the Bash PATH):
 
 ```text
 /plugin marketplace add figielak/telos
 /plugin install telos@telos
 ```
 
-Then, in the repository: `telos init` (the plugin puts `telos` on the Bash PATH).
-Requires Claude Code with plugin support, Git and Node.js ≥ 20.10. No dependencies.
+**Codex, other agents, or by hand** (install the CLI on your PATH, outside the agent's sandbox):
+
+```sh
+git clone https://github.com/figielak/telos && npm install -g ./telos   # or: cd telos && npm link
+telos --version
+```
+
+Codex reads the rules block from `AGENTS.md` by itself. Ask it to run a step, e.g. "run
+`telos ctx plan` and follow its output"; there are no Telos hooks in Codex, so the block tells it
+to run `telos status` first and states the git rules the Claude Code guard enforces. In Codex's
+`workspace-write` sandbox `.git/` is read-only, so commits need your approval.
+
+Then, in the repository: `telos init`.
 
 ## Five-minute walkthrough
 
@@ -57,9 +73,10 @@ Requires Claude Code with plugin support, Git and Node.js ≥ 20.10. No dependen
 | `HISTORY.md` | Why: a dated Log and the Delete-zone of removed paths and approaches |
 | `config.json` | Version 2: `stack`, `checks`, `limits`, `git`, `files_language` |
 
-## Commands (in Claude Code)
+## Commands
 
-Skills are user-invoked only, so they cost nothing until called. Each is one injection,
+In Claude Code, `/telos:<step>` runs a step; in any other agent, `telos ctx <step>` prints the
+same context and instructions to follow. Skills are user-invoked only, so they cost nothing until called. Each is one injection,
 `telos ctx <name>`, which prints the step's context and then its instructions; the skill never
 reads the whole repository.
 
@@ -150,8 +167,9 @@ generalise beyond them. Version 0.2 has not been benchmarked.
   which area notes no longer match the code, but nothing checks MAP or PROJECT.
 - `/telos:catchup` updates area notes only; after work done without the skills, update STATUS
   and the phase checklist yourself.
-- Claude Code only for now: the hooks and skills are plugin features. The files are plain
-  markdown and the CLI runs anywhere Node does.
+- The hooks (SessionStart status, git guard, Delete-zone warning) are Claude Code plugin
+  features. Elsewhere the same rules are only stated in the `AGENTS.md` block, which is weaker:
+  nothing blocks a `git push`.
 - Size targets: bundle context ≤ 6000 chars plus instructions ≤ 5600, SessionStart ≤ 1200 chars, MAP ≤ `limits.map_tokens` and
   each area ≤ `limits.area_tokens` estimated tokens. `telos budget` measures sizes, not host token usage.
 

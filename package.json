@@ -1,7 +1,7 @@
 {
   "name": "telos",
   "version": "0.2.0",
-  "description": "CLI and hooks for the Telos Claude Code plugin",
+  "description": "Project memory for coding agents: the telos CLI, plus a thin Claude Code plugin",
   "private": true,
   "type": "module",
   "engines": { "node": ">=20.10" },

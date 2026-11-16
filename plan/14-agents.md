@@ -45,7 +45,7 @@ in its sandbox.
     a broken block exits 1 without writing.
   - Accept: init tests for fresh repo, existing AGENTS.md, old CLAUDE.md block, broken markers.
 
-- [ ] **14-04 CLI outside the plugin**
+- [x] **14-04 CLI outside the plugin**
   - Document and test installation without the plugin (`npm install -g` from the repo or
     `npm link`); `telos --version` works from any directory; `bin/telos` resolves `lib/`
     through symlinks.
