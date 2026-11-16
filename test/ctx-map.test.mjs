@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { main } from '../lib/cli.mjs';
-import { CAP, MARKER } from '../lib/ctx/index.mjs';
+import { CAP, MARKER, contextOf } from '../lib/ctx/index.mjs';
 import { mapBundle } from '../lib/ctx/map.mjs';
 import { init } from '../lib/init.mjs';
 import { estimateTokens } from '../lib/map-budget.mjs';
@@ -43,7 +43,7 @@ async function ctxMap(root, ...args) {
   const out = { text: '', write(s) { out.text += s; } };
   const err = { text: '', write(s) { err.text += s; } };
   const code = await main(['ctx', 'map', ...args], { cwd: root, stdout: out, stderr: err });
-  return { code, text: out.text, err: err.text };
+  return { code, text: contextOf(out.text), err: err.text };
 }
 
 const setLimit = (root, n) => {

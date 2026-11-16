@@ -29,7 +29,7 @@ in its sandbox.
   - Record findings with dated sources in Notes; revise D1–D4 and the tasks below if needed.
   - Accept: each open question has an answer or an explicit "unavailable".
 
-- [ ] **14-02 Self-contained bundles**
+- [x] **14-02 Self-contained bundles**
   - `telos ctx plan|close|catchup|map|status` print `shared/<name>.md` followed by the
     context, within the cap (raise the cap only with a measured reason). Skills shrink to
     the single injection.
@@ -100,3 +100,11 @@ learn.chatgpt.com/docs/agent-configuration/agents-md · /docs/build-skills ·
   `--full-auto` removed); JSONL events, `turn.completed.usage` has `input_tokens`,
   `cached_input_tokens`, `output_tokens`, `reasoning_output_tokens`; `-o` writes the last
   message. Useful for phase 15.
+
+### 14-02 Bundle order and cap
+
+Context first, then `## Instructions`: every `shared/*.md` says "the context above", and the
+`REFUSED:` and first-line contracts (`Map validation:` on line 1) stay intact. `REFUSED:` and
+`Nothing to catch up` print alone. The context keeps its 6000-char cap; the instructions get a
+separate 5600-char cap (`INSTRUCTIONS_CAP`), measured: `shared/map.md` renders at 5239 chars, the
+others at 2379–3560. On this repo `ctx plan` is 8354 chars in total.

@@ -6,6 +6,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { contextOf } from '../lib/ctx/index.mjs';
+
 
 // Offline CLI proof: known MAP/PROJECT text stands in for model output. Real-repository
 // navigation quality and actual headless model runs remain a separate gate (03-09).
@@ -47,10 +49,11 @@ function cli(root, ...args) {
   assert.equal(result.status, 0, `telos ${args.join(' ')}:\n${result.stdout}${result.stderr}`);
   assert.equal(result.stderr, '');
   assert.ok(result.stdout.endsWith('\n'));
-  if (args[0] === 'ctx') assert.ok(result.stdout.length - 1 <= 6000, `context payload ${result.stdout.length - 1} > 6000`);
+  const out = args[0] === 'ctx' ? contextOf(result.stdout) : result.stdout;
+  if (args[0] === 'ctx') assert.ok(out.length - 1 <= 6000, `context payload ${out.length - 1} > 6000`);
   if (args[0] === 'map-scan') assert.ok(result.stdout.length <= 8000, `scan stdout ${result.stdout.length} > 8000`);
   if (readonly) assert.deepEqual(snapshot(root), before, `telos ${args.join(' ')} mutated git or working files`);
-  return result.stdout;
+  return out;
 }
 function commit(root, paths, message = 'fixture source change') {
   git(root, 'add', '--', ...paths);

@@ -11,6 +11,3 @@ allowed-tools: Bash(telos *), Bash(git status*), Bash(git diff *), Bash(git log 
 
 ## Request
 $ARGUMENTS
-
-## Instructions
-!`telos ctx shared close`

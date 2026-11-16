@@ -5,6 +5,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { contextOf } from '../lib/ctx/index.mjs';
 import { areasRepo, commitAll, git, write } from './areas-repo.mjs';
 
 // 13-06: one write point, end to end. The harness plays the model: scripted area edits stand in
@@ -22,7 +23,7 @@ function telos(root, ...args) {
 function ok(root, ...args) {
   const r = telos(root, ...args);
   assert.equal(r.code, 0, `telos ${args.join(' ')}:\n${r.stdout}${r.stderr}`);
-  return r.stdout;
+  return args[0] === 'ctx' ? contextOf(r.stdout) : r.stdout;
 }
 
 /** Split a backticked bundle command into argv: whitespace-separated, "…" JSON strings kept whole. */

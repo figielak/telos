@@ -10,9 +10,9 @@ Claude Code plugin (five skills, three hooks). User-facing commands are in
 | Path | What lives there |
 |---|---|
 | `bin/telos` | CLI entry point (on the Bash PATH when the plugin is installed) |
-| `lib/` | CLI modules; `lib/cli.mjs` dispatches commands, `lib/ctx/` builds skill context bundles |
-| `skills/<name>/SKILL.md` | Plugin skills: `status`, `map`, `plan`, `close` |
-| `shared/<name>.md` | Long skill instructions, injected with `telos ctx shared <name>` |
+| `lib/` | CLI modules; `lib/cli.mjs` dispatches commands, `lib/ctx/` builds the `telos ctx` bundles |
+| `skills/<name>/SKILL.md` | Plugin skills: `status`, `map`, `plan`, `close`, `catchup` |
+| `shared/<name>.md` | Step instructions, printed after the context by `telos ctx <name>` |
 | `hooks/` | SessionStart status, Bash git guard, Edit/Write Delete-zone warning |
 | `templates/` | Files `telos init` renders into a target repo's `.telos/` |
 | `test/` | `node:test` suites (`*.test.mjs`), `test/memory-repo.mjs` helper, `test/fixtures/` |
@@ -33,14 +33,15 @@ Claude Code plugin (five skills, three hooks). User-facing commands are in
 - Phase plans are read only through `lib/phases.mjs`; frontmatter only through
   `lib/frontmatter.mjs`. Do not add ad-hoc parsers.
 - The CLI never writes to git; it only reads (`status`, `log`, `diff`, `rev-parse`).
-- Context bundles stay ≤ 6000 chars (`cap()`); SessionStart output ≤ 1200 chars.
+- Bundle context stays ≤ 6000 chars (`cap()`), instructions ≤ 5600; SessionStart ≤ 1200 chars.
 - Match the surrounding code: short JSDoc on exports, small pure functions, no comments
   that restate the code.
 
 ## Skills
 
-- Every skill is user-invoked only (`disable-model-invocation: true`) and gets its context
-  from one injection, `` !`telos ctx <bundle>` ``; it never reads the whole repo.
+- Every skill is user-invoked only (`disable-model-invocation: true`) and is one injection,
+  `` !`telos ctx <name>` ``, which carries both context and instructions, so any agent can run
+  the same step as "run `telos ctx <name>` and follow its output"; it never reads the whole repo.
 - Never put free user text into a `` !`…` `` injection: `$ARGUMENTS` is pasted unquoted into
   the shell. Show it in a body section (`## Request`) instead.
 - State changes go through the CLI (`telos roadmap set`, `telos status set`,

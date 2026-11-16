@@ -11,6 +11,3 @@ allowed-tools: Bash(telos *), Bash(git add *), Bash(git commit *), Read, Grep, G
 
 ## Request
 $ARGUMENTS
-
-## Instructions
-!`telos ctx shared plan`

@@ -1,4 +1,4 @@
-<!-- Injected into /telos:plan via `telos ctx shared plan`. -->
+<!-- Printed after the context by `telos ctx plan` (/telos:plan in Claude Code). -->
 Work from the context above. For the paths the phase touches, `telos ctx plan <NN> --area <path>`
 adds their area files. Look at code only where a task needs it (Grep/Glob, then read just
 the ranges you cite); never read the whole repo. Write only the phase file under
@@ -8,7 +8,7 @@ the ranges you cite); never read the whole repo. Write only the phase file under
    Target → run `telos ctx plan NN` and use that bundle instead; any other text → a new phase with
    the `New phase:` number. **Stop** when there is no target (ask for a phase number or a
    description) or the target is `[done]` or `[dropped]` (suggest a new phase).
-2. **Ask once, only if you must**: one AskUserQuestion call, at most 4 multiple-choice questions,
+2. **Ask once, only if you must**: one question round (AskUserQuestion in Claude Code), at most 4 multiple-choice questions,
    recommended option first, and only when the answer changes the plan and neither the context
    nor a quick look at the code settles it. Otherwise pick the conventional option and note it
    as `Assumed: …` under Notes. No second round.

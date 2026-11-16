@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { main } from '../lib/cli.mjs';
-import { CAP } from '../lib/ctx/index.mjs';
+import { CAP, contextOf } from '../lib/ctx/index.mjs';
 import { areasRepo, commitAll, setAnchor, write } from './areas-repo.mjs';
 
 async function telos(root, ...args) {
@@ -18,7 +18,7 @@ async function telos(root, ...args) {
 async function ok(root, ...args) {
   const r = await telos(root, ...args);
   assert.equal(r.code, 0, `${args.join(' ')}: ${r.stderr}`);
-  return r.stdout;
+  return args[0] === 'ctx' ? contextOf(r.stdout) : r.stdout;
 }
 
 /** Initialized repo with phases 01-demo [active] and 02-next [planned]; checks test=npm test. */

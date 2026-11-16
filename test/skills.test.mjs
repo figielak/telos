@@ -4,6 +4,8 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { INSTRUCTIONS } from '../lib/ctx/index.mjs';
+
 // SKILL.md frontmatter exceeds the D-03 subset (quoted brackets, parens), so it is read with regexes.
 const SKILLS = fileURLToPath(new URL('../skills/', import.meta.url));
 const skills = readdirSync(SKILLS).filter((d) => existsSync(join(SKILLS, d, 'SKILL.md')));
@@ -47,20 +49,23 @@ test('every skill runs on its model', () => {
   for (const [name, model] of Object.entries(MODELS)) assert.equal(read(name).field('model'), model, name);
 });
 
-test('plan injects the plan bundle and the shared plan body', () => {
-  assert.match(read('plan').body, /^!`telos ctx plan`$/m);
+// 14-02: a skill is one injection; `telos ctx <name>` carries the context and the instructions.
+test('every skill is a single telos ctx injection named after it', () => {
+  for (const name of skills) {
+    const { body } = read(name);
+    assert.deepEqual([...body.matchAll(/!`([^`]*)`/g)].map((m) => m[1]), [`telos ctx ${name}`], name);
+    assert.match(body, new RegExp(`^## Context\\n!\`telos ctx ${name}\`$`, 'm'), name);
+  }
   assert.match(read('plan').body, /^## Request\n\$ARGUMENTS$/m);
-  assert.match(read('plan').body, /^!`telos ctx shared plan`$/m);
 });
 
-test('every shared body a skill injects exists and stays short', () => {
+test('every bundle\'s instruction file exists and stays short', () => {
   for (const name of skills) {
-    for (const [, shared] of read(name).body.matchAll(/!`telos ctx shared ([a-z-]+)`/g)) {
-      const path = join(SHARED, `${shared}.md`);
-      assert.ok(existsSync(path), `${name}: shared/${shared}.md`);
-      const max = shared === 'do' ? 70 : 60;
-      assert.ok(readFileSync(path, 'utf8').trim().split('\n').length <= max, `shared/${shared}.md too long`);
-    }
+    const shared = INSTRUCTIONS[name];
+    assert.ok(shared, `${name}: no instructions mapped`);
+    const path = join(SHARED, `${shared}.md`);
+    assert.ok(existsSync(path), `${name}: shared/${shared}.md`);
+    assert.ok(readFileSync(path, 'utf8').trim().split('\n').length <= 60, `shared/${shared}.md too long`);
   }
 });
 
@@ -125,7 +130,6 @@ test('the map skill injects the fixed bundle and shared body; arguments only app
     const { field, body } = read(name);
     assert.match(body, /^## Context\n!`telos ctx map`$/m, name);
     assert.match(body, /^## Request\n\$ARGUMENTS$/m, name);
-    assert.match(body, /^## Instructions\n!`telos ctx shared map`$/m, name);
     assert.equal(body.split('$ARGUMENTS').length - 1, 1, name);
     const tools = field('allowed-tools');
     for (const t of ['Bash(telos *)', 'Read', 'Grep', 'Glob', 'Edit(.telos/MAP.md)', 'Edit(.telos/PROJECT.md)', 'Edit(.telos/areas/*)', 'Write(.telos/MAP.md)', 'Write(.telos/PROJECT.md)', 'Write(.telos/areas/*)']) {
@@ -197,8 +201,7 @@ test('close injects its bundle and the shared close body; arguments only appear 
   const { field, body } = read('close');
   assert.match(body, /^## Context\n!`telos ctx close`$/m);
   assert.match(body, /^## Request\n\$ARGUMENTS$/m);
-  assert.match(body, /^## Instructions\n!`telos ctx shared close`$/m);
-  assert.equal((body.match(/!`/g) ?? []).length, 2);
+  assert.equal((body.match(/!`/g) ?? []).length, 1);
   const tools = field('allowed-tools').split(/,\s*/);
   assert.deepEqual(tools.filter((t) => /^(Edit|Write)\(/.test(t)).sort(), ['Edit(.telos/MAP.md)', 'Edit(.telos/areas/*)', 'Write(.telos/areas/*)']);
   assert.doesNotMatch(field('allowed-tools'), /push|reset|tag|stash|Agent|ROADMAP|STATUS|HISTORY/);
@@ -209,15 +212,14 @@ test('close injects its bundle and the shared close body; arguments only appear 
 test('catchup injects only its fixed bundle and the shared close body, with the close tools', () => {
   const { field, body } = read('catchup');
   assert.match(body, /^## Context\n!`telos ctx catchup`$/m);
-  assert.match(body, /^## Instructions\n!`telos ctx shared close`$/m);
-  assert.equal((body.match(/!`/g) ?? []).length, 2);
+  assert.equal((body.match(/!`/g) ?? []).length, 1);
   assert.doesNotMatch(body, /\$ARGUMENTS/);
   assert.equal(field('allowed-tools'), read('close').field('allowed-tools'));
   assert.equal(field('argument-hint'), undefined);
 });
 
-test('the shared close instructions are referenced by every skill that closes work', () => {
-  for (const name of CLOSE_USERS) assert.match(read(name).body, /^!`telos ctx shared close`$/m, name);
+test('the shared close instructions are carried by every bundle that closes work', () => {
+  for (const name of CLOSE_USERS) assert.equal(INSTRUCTIONS[name], 'close', name);
 });
 
 test('the shared close instructions keep the gates in order and the D2-D4 rules', () => {

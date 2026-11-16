@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import { main } from '../lib/cli.mjs';
 import { DEFAULTS, write as writeConfig } from '../lib/config.mjs';
-import { CAP, MARKER, cap, excerpt } from '../lib/ctx/index.mjs';
+import { CAP, MARKER, cap, contextOf, excerpt } from '../lib/ctx/index.mjs';
 import { stackLine } from '../lib/ctx/stack.mjs';
 import { render } from '../lib/template.mjs';
 
@@ -31,7 +31,7 @@ async function ctx(root, ...args) {
   const out = { text: '', write(s) { out.text += s; } };
   const err = { text: '', write(s) { err.text += s; } };
   const code = await main(['ctx', ...args], { cwd: root, stdout: out, stderr: err });
-  return { code, stdout: out.text, stderr: err.text };
+  return { code, stdout: contextOf(out.text), stderr: err.text };
 }
 
 test('oversized bundles are truncated with the marker', () => {

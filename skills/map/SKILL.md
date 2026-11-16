@@ -11,6 +11,3 @@ allowed-tools: Bash(telos *), Read, Grep, Glob, Edit(.telos/MAP.md), Edit(.telos
 
 ## Request
 $ARGUMENTS
-
-## Instructions
-!`telos ctx shared map`

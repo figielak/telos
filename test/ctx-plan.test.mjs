@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { main } from '../lib/cli.mjs';
-import { CAP } from '../lib/ctx/index.mjs';
+import { CAP, contextOf } from '../lib/ctx/index.mjs';
 import { render } from '../lib/template.mjs';
 import { checklist, createPhase } from '../lib/phases.mjs';
 import { memoryRepo } from './memory-repo.mjs';
@@ -27,7 +27,7 @@ async function ctx(root, ...args) {
   const out = { text: '', write(s) { out.text += s; } };
   const err = { text: '', write(s) { err.text += s; } };
   const code = await main(['ctx', ...args], { cwd: root, stdout: out, stderr: err });
-  return { code, stdout: out.text, stderr: err.text };
+  return { code, stdout: contextOf(out.text), stderr: err.text };
 }
 
 const SELF = fileURLToPath(new URL('../', import.meta.url));

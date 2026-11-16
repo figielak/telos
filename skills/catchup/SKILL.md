@@ -7,6 +7,3 @@ allowed-tools: Bash(telos *), Bash(git status*), Bash(git diff *), Bash(git log 
 ---
 ## Context
 !`telos ctx catchup`
-
-## Instructions
-!`telos ctx shared close`

@@ -8,13 +8,15 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { contextOf } from '../lib/ctx/index.mjs';
+
 const BIN = fileURLToPath(new URL('../bin/telos', import.meta.url));
 const HOOK = fileURLToPath(new URL('../hooks/session-start.mjs', import.meta.url));
 
 function cli(root, ...args) {
   const r = spawnSync(process.execPath, [BIN, ...args], { cwd: root, encoding: 'utf8' });
   assert.equal(r.status, 0, `telos ${args.join(' ')}: ${r.stderr}`);
-  return r.stdout;
+  return args[0] === 'ctx' ? contextOf(r.stdout) : r.stdout;
 }
 
 /** Run each backticked command of a bundle section with its placeholders filled. */

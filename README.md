@@ -58,8 +58,9 @@ Requires Claude Code with plugin support, Git and Node.js ≥ 20.10. No dependen
 
 ## Commands (in Claude Code)
 
-Skills are user-invoked only, so they cost nothing until called. Each injects one
-`telos ctx <bundle>` and never reads the whole repository.
+Skills are user-invoked only, so they cost nothing until called. Each is one injection,
+`telos ctx <name>`, which prints the step's context and then its instructions; the skill never
+reads the whole repository.
 
 | Command | Purpose |
 |---|---|
@@ -90,7 +91,7 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error. The C
 | `telos area anchor <name>…` / `--all` | Set the area header commit and date to HEAD, keeping every other byte; run after checking the note against its files. Refuses, writing nothing, when a covered path is uncommitted |
 | `telos stale [--area <name>]… [--check]` / `--unmapped` | Without a model: one line per area whose header paths changed between its anchor commit and HEAD or are dirty (`<area>: stale · N files since <sha7> (a, b, +K more)`), whose anchor commit is gone (`unanchored`) or whose body has a backticked `path[:line]` to a missing file or past its end (`broken ref`); then `fresh: N areas` and changed files under no area (`unmapped: N files (top dirs)`). ≤ 6000 chars, omitted lines counted. Exit 0; `--check` exits 1 when anything is stale, broken or unanchored. `--unmapped` prints only the unmapped paths, one per line (`unmapped: none` when empty), and takes no other option |
 | `telos map-scan` | Deterministic repository inventory for `/telos:map` (≤ 2000 estimated tokens); works before init, never executes repository code |
-| `telos ctx <bundle> [args]` | Print a skill's context (≤ 6000 chars, comments stripped): `status`, `map [--refresh]`, `plan [NN\|description] [--area <path>]…`, `close [NN]`, `catchup`, `shared <name>` |
+| `telos ctx <bundle> [args]` | Print one self-contained step: the context (≤ 6000 chars, comments stripped), then `## Instructions` from `shared/<name>.md` (≤ 5600 chars), for `status`, `map [--refresh]`, `plan [NN\|description] [--area <path>]…`, `close [NN]` and `catchup`; a `REFUSED: …` or `Nothing to catch up` line comes alone. `shared <name>` prints only an instruction file |
 | `telos budget [--ctx <bundle> [args]]` | Read-only size report: `.telos/` files, the CLAUDE.md block, the SessionStart output and optionally one bundle, in bytes, chars and ~tokens (chars / 4) |
 
 `ctx plan` gives the target phase and its file (or the template skeleton), carry-over, PROJECT
@@ -150,7 +151,7 @@ generalise beyond them. Version 0.2 has not been benchmarked.
   and the phase checklist yourself.
 - Claude Code only for now: the hooks and skills are plugin features. The files are plain
   markdown and the CLI runs anywhere Node does.
-- Size targets: bundles ≤ 6000 chars, SessionStart ≤ 1200 chars, MAP ≤ `limits.map_tokens` and
+- Size targets: bundle context ≤ 6000 chars plus instructions ≤ 5600, SessionStart ≤ 1200 chars, MAP ≤ `limits.map_tokens` and
   each area ≤ `limits.area_tokens` estimated tokens. `telos budget` measures sizes, not host token usage.
 
 ## Development

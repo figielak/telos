@@ -1,4 +1,4 @@
-<!-- Injected into /telos:map via `telos ctx shared map`. -->
+<!-- Printed after the context by `telos ctx map` (/telos:map in Claude Code). -->
 Work from the context above. Write only `.telos/MAP.md`, `.telos/areas/*.md` and `.telos/PROJECT.md`.
 Git only in step 10; never edit ROADMAP, STATUS or config. Never read or enumerate `.telos/` beyond
 the `Existing MAP`, `Project` and `Areas` pointers; never read the whole repo.
@@ -52,7 +52,7 @@ the `Existing MAP`, `Project` and `Areas` pointers; never read the whole repo.
    Last line: `Next: review .telos/MAP.md and .telos/areas/` (+ `, then commit docs(telos): map` when
    not committed).
 10. **Commit after PASS** only (`Map validation: PASS …`, nothing restored) and only with
-   `Auto-commit: yes`: ask once with AskUserQuestion `Commit docs(telos): map` / `Leave uncommitted`.
+   `Auto-commit: yes`: ask once (AskUserQuestion in Claude Code) `Commit docs(telos): map` / `Leave uncommitted`.
    A declined question, headless or `Auto-commit: no` → no git writes. On yes: `git diff --cached --name-only`;
    any staged path other than `.telos/MAP.md`, `.telos/areas/*` or `.telos/PROJECT.md` → no commit, say
    so. Else `git add .telos/MAP.md .telos/areas/` (+ `.telos/PROJECT.md` when changed), then
