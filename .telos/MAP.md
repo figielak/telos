@@ -15,6 +15,7 @@
 - bundles — `telos ctx` steps, the git delta and the skills · `lib/ctx/`, `lib/delta.mjs`, `skills/`, `shared/`
 - map — MAP index, scan, refresh, area files, staleness · `lib/map.mjs`, `lib/areas.mjs`
 - hooks-guards — SessionStart, git guard, Delete-zone warning · `hooks/`, `lib/session.mjs`
+- resume-test — memory acceptance test: questions, runner, scoring · `lib/resume-test.mjs`, `lib/resume-run.mjs`
 - state — STATUS, ROADMAP, HISTORY, phases, config · `lib/status.mjs`, `lib/history.mjs`
 
 ## Find

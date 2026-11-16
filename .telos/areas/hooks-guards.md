@@ -1,4 +1,4 @@
-<!-- telos-area: commit 27b0d07d0fd8970db052d63d2d0bdb87f3400d07 · 2026-11-16 · paths: hooks/, lib/git-guard.mjs, lib/edit-guard.mjs, lib/delete-guard.mjs, lib/session.mjs -->
+<!-- telos-area: commit 81b817107d4b937b98e44b11816c113d8891bfb8 · 2026-11-16 · paths: hooks/, lib/git-guard.mjs, lib/edit-guard.mjs, lib/delete-guard.mjs, lib/session.mjs -->
 # hooks-guards
 
 ## Purpose

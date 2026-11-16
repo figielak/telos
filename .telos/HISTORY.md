@@ -41,6 +41,7 @@
      kinds: decision | phase | revert | remove | quick | init
      ref: NN, NN-MM, quick, telos
      Archive is installed first; after an interrupted write it may duplicate live Log rows. -->
+- 2026-11-16 phase 15: closed 15-resume-test: telos resume-test prints correct/total, tokens, cost and tool calls for memory and bare (first run on Telos 6/8 vs 6/8, $2.14 vs $1.71); npm test passes (361)
 - 2026-11-16 phase 14: closed 14-agents: live smoke runs passed in Claude Code and Codex (stale --check 0, no nudge); AGENTS.md block, self-contained telos ctx steps, npm test 330/330
 - 2026-11-16 phase 13: One write point: ctx close and ctx catchup share a per-area git delta and shared/close.md; e2e catch-up proven without a model
 - 2026-11-16 phase 12: closed 12-anchors: telos stale finds changed covered files, unanchored areas and broken refs from git alone; fixture tests pass, SessionStart shows the count
@@ -70,4 +71,3 @@
 - 2026-11-16 remove 10: Separate discuss gate removed; /telos:plan asks at most one round of questions
 - 2026-11-16 remove 10: Design spec removed; the design lives in README.md and plan/
 - 2026-11-16 remove 10: Reviewer and researcher agents removed; review and research are ordinary agent work
-- 2026-11-16 remove 10: Landing page removed with the memory-core prune; kept in tag pre-memory-core
