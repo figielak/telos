@@ -65,6 +65,20 @@ test('score: alternatives match any one; a partial match lists what is missing',
     { correct: false, missing: ['stale reads|stale data', 'Postgres', 'lib/x.mjs'] });
 });
 
+test('score: a fact that starts or ends with a digit never matches inside a longer number', () => {
+  assert.deepEqual(score('The cap is 6000 chars, 5800 lines.', [['600'], ['800']]), { correct: false, missing: ['600', '800'] });
+  assert.equal(score('It cost $0.07 in 2007.', [['07']]).correct, false);
+  assert.equal(score('Limits are 600 and 800.', [['600'], ['800']]).correct, true);
+  assert.equal(score('Removed in phase 07, task 15-05 (15%).', [['07'], ['15-05'], ['15%']]).correct, true);
+  assert.equal(score('Wrong one first: 6000. Right one later: 600', [['600']]).correct, true);
+});
+
+test('parse: CRLF line endings are accepted', () => {
+  const { questions, errors } = parseQuestions(file(5).replace(/\n/g, '\r\n'));
+  assert.deepEqual(errors, []);
+  assert.deepEqual(questions[0].facts, [['fact 1'], ['a', 'b']]);
+});
+
 const run = (answer, extra = {}) => ({ answer, tokens: 1500, cost: 0.1, toolCalls: 2, error: null, ms: 10, ...extra });
 
 test('summarize and report: marks, D4 totals and missing facts per incorrect answer', () => {
@@ -154,7 +168,7 @@ test('command: missing or invalid questions file exits 1; bad flags are usage er
   write(root, '.telos/resume-test.md', '- Q: Only one?\n');
   assert.deepEqual(await command(root), { code: 1, out: '', err:
     '.telos/resume-test.md: line 1: question without an expect line\n.telos/resume-test.md: 0 questions; 5–10 needed\n' });
-  for (const args of [['--variant', 'both'], ['--timeout', '0'], ['--agent-cmd', ' '], ['extra'], ['--bogus']]) {
+  for (const args of [['--variant', 'both'], ['--timeout', '0'], ['--timeout', '3000000'], ['--agent-cmd', ' '], ['extra'], ['--bogus']]) {
     await assert.rejects(command(root, ...args), UsageError, args.join(' '));
   }
 });

@@ -95,7 +95,7 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error. The C
 | Command | Purpose |
 |---|---|
 | `telos --help` / `--version` | List commands / print the version |
-| `telos init [--stack a,b] [--checks '<json>'] [--force]` | Create the memory files, sync the rules block into `AGENTS.md` and the `@AGENTS.md` import into `CLAUDE.md` (an old CLAUDE.md block is removed; a CLAUDE.md symlink to AGENTS.md is left alone; a start marker without an end marker exits 1, writing nothing), add `.telos/.cache/` to `.gitignore`. Stack and checks default to detection (check keys: `build`, `types`, `lint`, `test`, `e2e`). Existing files are kept; `--force` rewrites `config.json` as version 2, keeping its values (a version 1 file loses `profile`, `docs`, `protected_configs`, `strict_scope` and the `format`/`test_related` checks) |
+| `telos init [--stack a,b] [--checks '<json>'] [--force]` | Create the memory files, sync the rules block into `AGENTS.md` and the `@AGENTS.md` import into `CLAUDE.md` (an old CLAUDE.md block is removed; a symlink between CLAUDE.md and AGENTS.md is left alone; a block ending past the 32 KiB Codex reads is reported; a start marker without an end marker exits 1, writing nothing), add `.telos/.cache/` to `.gitignore`. Stack and checks default to detection (check keys: `build`, `types`, `lint`, `test`, `e2e`). Existing files are kept; `--force` rewrites `config.json` as version 2, keeping its values (a version 1 file loses `profile`, `docs`, `protected_configs`, `strict_scope` and the `format`/`test_related` checks) |
 | `telos status` | Compact status: phase with its ROADMAP state, task with its checklist state (`open`/`done`), Next, Blockers, carry-over count, latest Recent line, `Areas: N` and `Stale areas: N` (the SessionStart lines, for agents without hooks); Awaiting user first |
 | `telos status set <key>=<value>…` | Set STATUS lines: `phase`, `task`, `next`, `blockers`, `awaiting`; empty value → `none` |
 | `telos status add recent\|carry "<line>"` / `rm carry <n>` | Prepend to Recent (3 newest kept); append to Carry-over (max 5); remove item `n` |
@@ -108,7 +108,7 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error. The C
 | `telos area lint` | Check every area: header, the six sections in order, name and `limits.area_tokens`; no sub-directories in `.telos/areas/`; with a built MAP, `## Areas` rows and area files match one to one; one line per problem, exit 1 when any |
 | `telos area anchor <name>…` / `--all` | Set the area header commit and date to HEAD, keeping every other byte; run after checking the note against its files. Refuses, writing nothing, when a covered path is uncommitted |
 | `telos stale [--area <name>]… [--check]` / `--unmapped` | Without a model: one line per area whose header paths changed between its anchor commit and HEAD or are dirty (`<area>: stale · N files since <sha7> (a, b, +K more)`), whose anchor commit is gone (`unanchored`) or whose body has a backticked `path[:line]` to a missing file or past its end (`broken ref`); then `fresh: N areas` and changed files under no area (`unmapped: N files (top dirs)`; `.telos/` and the root `AGENTS.md`, `CLAUDE.md`, `.gitignore` never count). ≤ 6000 chars, omitted lines counted. Exit 0; `--check` exits 1 when anything is stale, broken or unanchored. `--unmapped` prints only the unmapped paths, one per line (`unmapped: none` when empty), and takes no other option |
-| `telos resume-test [--variant memory\|bare] [--json] [--agent-cmd '<cmd>'] [--timeout <s>]` | Ask the 5–10 questions in `.telos/resume-test.md`, each in a fresh headless session with and without the memory; prints per question ✓/✗, then correct/total, tokens, cost and tool calls per variant and the missing facts (see [Does the memory work?](#does-the-memory-work)). Exit 1 when the file is missing or invalid, or every run failed |
+| `telos resume-test [--variant memory\|bare] [--json] [--agent-cmd '<cmd>'] [--timeout <s>]` | Ask the 5–10 questions in `.telos/resume-test.md`, each in a fresh headless session with and without the memory; prints per question ✓/✗, then correct/total, tokens, cost and tool calls per variant and the missing facts (see [Does the memory work?](#does-the-memory-work)). `--timeout` is per session (default 300, at most 2147483). Exit 1 when the file is missing or invalid, or every run failed; 130 when interrupted |
 | `telos map-scan` | Deterministic repository inventory for `/telos:map` (≤ 2000 estimated tokens); works before init, never executes repository code |
 | `telos ctx <bundle> [args]` | Print one self-contained step: the context (≤ 6000 chars, comments stripped), then `## Instructions` from `shared/<name>.md` (≤ 5600 chars), for `status`, `map [--refresh]`, `plan [NN\|description] [--area <path>]…`, `close [NN]` and `catchup`; a `REFUSED: …` or `Nothing to catch up` line comes alone. `shared <name>` prints only an instruction file |
 | `telos budget [--ctx <bundle> [args]]` | Read-only size report: `.telos/` files, the AGENTS.md block, the SessionStart output and optionally one bundle, in bytes, chars and ~tokens (chars / 4) |
@@ -147,20 +147,32 @@ Node scripts in `hooks/`, no model calls; each is silent when `.telos/` is missi
 `telos resume-test` asks the 5–10 questions in `.telos/resume-test.md` (format and examples in
 `templates/resume-test.md`), each in two fresh headless Claude Code sessions in temporary copies
 of the repo: **memory** (as is) and **bare** (no `.telos/`, no Telos block). An answer is correct
-when it contains every expected fact, case-insensitive; `a|b` accepts either. No model judges.
+when it contains every expected fact, case-insensitive; `a|b` accepts either, and a number never
+matches inside a longer one (`600` is not in `6000`). No model judges.
+
+The first real run, on this repository (2026-11-16, eight questions):
 
 ```text
-#  Question                                     memory  bare
-1  What is the next task of the current phase?  ✓       ✗
-             memory  bare
-Correct      7/8     3/8
-Cost         $1.10   $2.05
-Tool calls   21      64
+#  Question                                          memory  bare
+1  What is the current phase of this project and i…  ✓       ✓
+…
+             memory   bare
+Correct      6/8      6/8
+Tokens       1717.8K  1709.2K
+Cost         $2.14    $1.71
+Tool calls   20       22
+Failed runs  0        0
 ```
 
+No advantage here: this repository repeats its memory in `plan/` and this README, so the bare
+sessions found the same facts. The test is meant for projects whose decisions live only in
+`.telos/`.
+
 **Cost:** 2 × N paid sessions (16 for eight questions), one at a time. `--variant` runs one
-side; `--agent-cmd` gets the prompt on stdin in the copy. The copy keeps `.git`, so a bare
-session could still dig the memory out of history.
+side; `--agent-cmd` gets the prompt on stdin in the copy. Each variant uses one copy of the repo
+(without `node_modules`) for the whole run; Ctrl-C stops the running session and removes the
+copies. The copies keep `.git`, where the removed memory and the questions file are still in
+history, so the default sessions get no git commands; do not grant them in your own `--agent-cmd`.
 
 ## Benchmark
 

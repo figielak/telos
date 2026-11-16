@@ -88,6 +88,16 @@ test('Delete-zone approaches, removed paths and the MAP index are listed; the ar
   assert.match((await ctx(root, 'plan', '01')).stdout, /^Map index: none \(run \/telos:map\)$/m);
 });
 
+test('a long list of removed paths is cut to a count, so it cannot crowd out the roadmap', async () => {
+  const root = repo();
+  const paths = Array.from({ length: 60 }, (_, i) => `- \`src/removed-module-${i}/\` — gone (01-01, 2026-01-02)`).join('\n');
+  writeFileSync(join(root, '.telos', 'HISTORY.md'), render('HISTORY.md', { date: '2026-01-01' })
+    .replace(/(## Delete-zone\n(?:<!--[\s\S]*?-->\n)?)- none/, `$1${paths}`));
+  const line = (await ctx(root, 'plan', '01')).stdout.split('\n').find((l) => l.startsWith('Removed paths'));
+  assert.match(line, /`src\/removed-module-0`, .*, \+\d+ more$/);
+  assert.ok(line.length < 480, String(line.length));
+});
+
 // 11-04: selective loading of area files.
 const HASH = 'a'.repeat(40);
 function withAreas(root, size = 0) {

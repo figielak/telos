@@ -131,6 +131,38 @@ test('a CLAUDE.md that links to AGENTS.md is left alone', async () => {
   assert.ok(lstatSync(join(root, 'CLAUDE.md')).isSymbolicLink());
 });
 
+test('a dangling link between CLAUDE.md and AGENTS.md, either way, keeps the block', async () => {
+  for (const [link, target] of [['CLAUDE.md', 'AGENTS.md'], ['AGENTS.md', 'CLAUDE.md']]) {
+    const root = repo();
+    symlinkSync(target, join(root, link));
+    const r = await telos(root, 'init');
+    assert.equal(r.code, 0, r.stderr);
+    assert.match(read(root, target), /^<!-- telos:start v5 -->/, link);
+    assert.doesNotMatch(read(root, target), /@AGENTS\.md/, link);
+    assert.ok(lstatSync(join(root, link)).isSymbolicLink());
+  }
+});
+
+test('an import mentioned inside a sentence is not added a second time', async () => {
+  const root = repo();
+  writeFileSync(join(root, 'CLAUDE.md'), '# Rules\nSee @AGENTS.md for everything.\n');
+  await telos(root, 'init');
+  assert.equal(read(root, 'CLAUDE.md'), '# Rules\nSee @AGENTS.md for everything.\n');
+  writeFileSync(join(root, 'CLAUDE.md'), 'Do not read `@AGENTS.md` or @AGENTS.mdx.\n');
+  await telos(root, 'init');
+  assert.match(read(root, 'CLAUDE.md'), /\n\n@AGENTS\.md\n$/);
+});
+
+test('a block past the 32 KiB that Codex reads is reported, and still written', async () => {
+  const root = repo();
+  writeFileSync(join(root, 'AGENTS.md'), `# Long\n${'x'.repeat(33 * 1024)}\n`);
+  const r = await telos(root, 'init');
+  assert.equal(r.code, 0);
+  assert.match(r.stderr, /^telos init: the Telos block in AGENTS\.md ends at byte \d+; Codex reads only the first 32768 bytes/);
+  assert.match(read(root, 'AGENTS.md'), /<!-- telos:end -->\n$/);
+  assert.equal((await telos(repo(), 'init')).stderr, '');
+});
+
 test('a start marker without an end marker in either file is refused, writing nothing', async () => {
   for (const file of ['AGENTS.md', 'CLAUDE.md']) {
     const root = repo();

@@ -1,10 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { spawn } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { ask, parseOutput, prompt, runAll, workingCopy } from '../lib/resume-run.mjs';
+import { DEFAULT_AGENT_CMD, ask, parseOutput, prompt, runAll, workingCopy } from '../lib/resume-run.mjs';
 import { memoryRepo, write } from './memory-repo.mjs';
 
 const STUB = fileURLToPath(new URL('./fixtures/resume-agent.mjs', import.meta.url));
@@ -82,4 +84,59 @@ test('parseOutput: single JSON result, error results and missing result events',
 
 test('prompt: the question, then the five-line limit', () => {
   assert.match(prompt('Why?'), /^Why\?\n\nAnswer in English, in at most five lines\./);
+});
+
+// Review fixes after phase 15.
+test('working copy: node_modules is skipped at any depth', (t) => {
+  const root = repo(t);
+  for (const dir of ['node_modules/a', 'pkg/node_modules/b']) {
+    mkdirSync(join(root, dir), { recursive: true });
+    write(root, `${dir}/f.js`, '');
+  }
+  write(root, 'pkg/index.mjs', '');
+  const copy = workingCopy(root, 'bare');
+  t.after(copy.cleanup);
+  assert.ok(existsSync(join(copy.dir, 'pkg/index.mjs')));
+  assert.ok(!existsSync(join(copy.dir, 'node_modules')) && !existsSync(join(copy.dir, 'pkg/node_modules')));
+});
+
+test('parseOutput: a stray non-JSON line never turns the transcript into the answer', () => {
+  const stream = ['Warning: noise on stdout',
+    JSON.stringify({ type: 'user', message: { content: [{ type: 'tool_result', content: 'secret fact' }] } }),
+    JSON.stringify({ type: 'result', is_error: false, result: 'I do not know.', total_cost_usd: 0.1, usage: { input_tokens: 5 } })].join('\n');
+  assert.deepEqual(parseOutput(stream), { answer: 'I do not know.', tokens: 5, cost: 0.1, toolCalls: 0, error: null });
+  assert.equal(parseOutput('plain text\n{"type":"system"}\n').answer, 'plain text\n{"type":"system"}');
+});
+
+test('the default agent command grants no git access: the copies keep .git with the memory in it', () => {
+  assert.doesNotMatch(DEFAULT_AGENT_CMD, /git/);
+});
+
+test('runAll: one working copy per variant for the whole run, removed afterwards', async (t) => {
+  const root = repo(t);
+  const results = await runAll({ root, questions: [{ q: 'A?' }, { q: 'B?' }], agentCmd: 'cat >/dev/null; pwd' });
+  assert.equal(results[0].memory.answer, results[1].memory.answer);
+  assert.equal(results[0].bare.answer, results[1].bare.answer);
+  assert.notEqual(results[0].memory.answer, results[0].bare.answer);
+  assert.ok(!existsSync(results[0].memory.answer) && !existsSync(results[0].bare.answer));
+});
+
+test('an interrupt kills the running agent and removes the working copies', async (t) => {
+  const root = repo(t);
+  write(root, '.telos/resume-test.md', Array.from({ length: 5 }, (_, i) => `- Q: q${i}?\n  expect: x\n`).join('\n'));
+  const tmp = mkdtempSync(join(tmpdir(), 'telos-int-'));
+  t.after(() => rmSync(tmp, { recursive: true, force: true }));
+  const pidFile = join(tmp, 'agent.pid');
+  const agent = `node -e "require('fs').writeFileSync(process.env.PIDFILE, String(process.pid)); setTimeout(() => {}, 60000)"`;
+  const bin = fileURLToPath(new URL('../bin/telos', import.meta.url));
+  const child = spawn(bin, ['resume-test', '--agent-cmd', agent], { cwd: root, stdio: 'ignore', env: { ...process.env, TMPDIR: tmp, PIDFILE: pidFile } });
+  const closed = new Promise((done) => { child.on('close', (code) => done(code)); });
+  const until = async (ok) => { for (let i = 0; i < 100 && !ok(); i += 1) await new Promise((r) => { setTimeout(r, 50); }); return ok(); };
+  assert.ok(await until(() => existsSync(pidFile) && readFileSync(pidFile, 'utf8')), 'the agent started');
+  const pid = Number(readFileSync(pidFile, 'utf8'));
+  child.kill('SIGINT');
+  assert.equal(await closed, 130);
+  const gone = () => { try { process.kill(pid, 0); return false; } catch { return true; } };
+  assert.ok(await until(gone), 'the agent is gone');
+  assert.deepEqual(readdirSync(tmp), ['agent.pid']);
 });
