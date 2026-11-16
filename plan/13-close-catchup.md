@@ -34,12 +34,12 @@ chars listing the changed areas, and `telos stale` is empty after the run; `npm 
   - Over 6000 chars: per-file rows shrink to counts first, then commit subjects.
   - Accept: `test/ctx-close.test.mjs` covers ready, blocked (unchecked items), and overflow.
 
-- [ ] **13-03 `telos ctx catchup`**
+- [x] **13-03 `telos ctx catchup`**
   - The same delta without phase bookkeeping; closing commands are `telos area anchor …`
     and one `telos history add quick quick "…"` line when a decision was recorded.
   - Accept: test for the empty delta and for a populated one.
 
-- [ ] **13-04 Shared instructions**
+- [x] **13-04 Shared instructions**
   - `shared/close.md`, used by both skills: read the bundle; for each affected area read
     only the changed files you need; edit the area under D2 and D3; fix broken refs; handle
     unmapped paths under D4; run `telos area lint`; run the closing commands; report in

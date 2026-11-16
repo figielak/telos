@@ -65,7 +65,7 @@ Skills are user-invoked only, so they cost nothing until called. Each injects on
 | `/telos:status` | Phase, task, blockers, latest Recent line and the next step in ≤ 10 lines; reads and changes nothing |
 | `/telos:map [--refresh]` | Write the `.telos/MAP.md` index and the `.telos/areas/` files from `telos ctx map` and 3–8 suggested files; requires `Map validation: PASS` for MAP, every area and the row ↔ file match (at most two repairs, else the old files are restored) and drafts empty PROJECT sections, unconfirmed. `--refresh` edits only the index blocks and area files whose paths a diff since the MAP commit touches; authored area sections are kept. With `git.auto_commit` it asks once, then commits `docs(telos): map` with explicit paths |
 | `/telos:plan [NN\|description]` | Plan the STATUS phase, phase `NN` or a new phase in one file (≤ 80 lines). At most one round of questions; `telos roadmap add` for a new phase, then `telos roadmap set NN active` and `telos status set`; places carry-over items. Commits `docs(NN): plan phase NN-name` only when `git.auto_commit` is true |
-| `/telos:close [NN]` | Close an active phase: stops on `REFUSED:` or `Close: blocked` (unchecked tasks, unreadable HISTORY), runs every configured check (a failure leaves the phase active, nothing recorded), confirms the done-when, then runs the bundle's closing commands in order; a retry skips a recorded phase entry. Commits `docs(NN): close phase NN-name` only when `git.auto_commit` is true |
+| `/telos:close [NN]` | Close an active phase: stops on `REFUSED:` or `Close: blocked` (unchecked tasks, unreadable HISTORY), runs every configured check (a failure leaves the phase active, nothing recorded), confirms the done-when, updates only the area notes the delta lists (decisions, rejected approaches, invariants, pitfalls, entry points; no diff retelling), fixes broken refs, places every unmapped path in an area, passes `telos area lint`, then runs the bundle's closing commands in order; a retry skips a recorded phase entry. Commits `docs(telos): close NN-name` only when `git.auto_commit` is true |
 
 ## CLI
 
@@ -88,7 +88,7 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error. The C
 | `telos area anchor <name>…` / `--all` | Set the area header commit and date to HEAD, keeping every other byte; run after checking the note against its files. Refuses, writing nothing, when a covered path is uncommitted |
 | `telos stale [--area <name>]… [--check]` | Without a model: one line per area whose header paths changed between its anchor commit and HEAD or are dirty (`<area>: stale · N files since <sha7> (a, b, +K more)`), whose anchor commit is gone (`unanchored`) or whose body has a backticked `path[:line]` to a missing file or past its end (`broken ref`); then `fresh: N areas` and changed files under no area (`unmapped: N files (top dirs)`). ≤ 6000 chars, omitted lines counted. Exit 0; `--check` exits 1 when anything is stale, broken or unanchored |
 | `telos map-scan` | Deterministic repository inventory for `/telos:map` (≤ 2000 estimated tokens); works before init, never executes repository code |
-| `telos ctx <bundle> [args]` | Print a skill's context (≤ 6000 chars, comments stripped): `status`, `map [--refresh]`, `plan [NN\|description] [--area <path>]…`, `close [NN]`, `shared <name>` |
+| `telos ctx <bundle> [args]` | Print a skill's context (≤ 6000 chars, comments stripped): `status`, `map [--refresh]`, `plan [NN\|description] [--area <path>]…`, `close [NN]`, `catchup`, `shared <name>` |
 | `telos budget [--ctx <bundle> [args]]` | Read-only size report: `.telos/` files, the CLAUDE.md block, the SessionStart output and optionally one bundle, in bytes, chars and ~tokens (chars / 4) |
 
 `ctx plan` gives the target phase and its file (or the template skeleton), carry-over, PROJECT
@@ -97,11 +97,14 @@ Purpose and Rules, stack, checks, Delete-zone approaches, the MAP index and the 
 6000 chars, else as `Read .telos/areas/<name>.md` pointers; the roadmap then keeps the rows that
 still fit, nearest the target phase first.
 `ctx close` gives the plan's checklist state, unchecked items, the check commands,
-`Auto-commit`, `Stale areas: N` when any (never blocking), `Close: ready|blocked` and the exact
+`Auto-commit` with the commit subject, `Stale areas: N` when any (never blocking), `Close: ready|blocked` and the exact
 closing commands (`telos area anchor …` first when an area changed). Last comes the delta: per
 area that needs review, the commits since its own anchor (≤ 10 subjects, newest first, quoted as
 data), the changed files with kind and `+added -deleted`, broken refs, then changed files under no
 area (`Unmapped`). Over 6000 chars, file rows shrink to kind counts first, then subjects go.
+`ctx catchup` gives the same delta without phase bookkeeping, for work done without Telos: the
+closing commands are `telos area anchor …` and, only when a decision was recorded, one
+`telos history add quick quick "…"`; an empty delta prints `Nothing to catch up`.
 
 ## Hooks
 

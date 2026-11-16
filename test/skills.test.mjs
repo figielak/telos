@@ -190,18 +190,39 @@ test('the map instructions run the fixed refresh command and prove byte preserva
   assert.match(map, /refresh[^\n]*PROJECT|PROJECT[^\n]*refresh/i);
 });
 
-test('close injects one fixed bundle, runs the checks before the closing commands and honors auto_commit', () => {
+// 13-04: one write point; every skill that updates memory after work injects shared/close.md.
+const CLOSE_USERS = ['close'];
+
+test('close injects its bundle and the shared close body; arguments only appear under Request', () => {
   const { field, body } = read('close');
   assert.match(body, /^## Context\n!`telos ctx close`$/m);
   assert.match(body, /^## Request\n\$ARGUMENTS$/m);
-  assert.equal((body.match(/!`/g) ?? []).length, 1);
-  assert.ok(body.includes('`telos ctx close <NN>`'));
-  const at = (s) => { const i = body.indexOf(s); assert.ok(i >= 0, s); return i; };
-  assert.ok(at('REFUSED:') < at('Close: blocked'));
-  assert.ok(at('Close: blocked') < at('`Checks:`'));
-  assert.ok(at('`Checks:`') < at('`Closing commands`'));
+  assert.match(body, /^## Instructions\n!`telos ctx shared close`$/m);
+  assert.equal((body.match(/!`/g) ?? []).length, 2);
+  const tools = field('allowed-tools').split(/,\s*/);
+  assert.deepEqual(tools.filter((t) => /^(Edit|Write)\(/.test(t)).sort(), ['Edit(.telos/MAP.md)', 'Edit(.telos/areas/*)', 'Write(.telos/areas/*)']);
+  assert.doesNotMatch(field('allowed-tools'), /push|reset|tag|stash|Agent|ROADMAP|STATUS|HISTORY/);
+});
+
+test('the shared close instructions are referenced by every skill that closes work', () => {
+  for (const name of CLOSE_USERS) assert.match(read(name).body, /^!`telos ctx shared close`$/m, name);
+});
+
+test('the shared close instructions keep the gates in order and the D2-D4 rules', () => {
+  const close = readFileSync(join(SHARED, 'close.md'), 'utf8');
+  assert.ok(close.trim().split('\n').length <= 60);
+  const at = (s) => { const i = close.indexOf(s); assert.ok(i >= 0, s); return i; };
+  assert.ok(at('REFUSED:') < at('Nothing to catch up'));
+  assert.ok(at('Nothing to catch up') < at('Close: blocked'));
+  assert.ok(at('Close: blocked') < at('`Checks`'));
+  assert.ok(at('`Checks`') < at('Area <name>:'));
+  assert.ok(at('Area <name>:') < at('telos area lint'));
+  assert.ok(at('telos area lint') < at('`Closing commands`'));
   assert.ok(at('`Closing commands`') < at('Auto-commit: yes'));
-  assert.doesNotMatch(field('allowed-tools'), /push|reset|tag|Write|Edit|Agent/);
-  assert.ok(body.trim().split('\n').length <= 40);
+  for (const s of ['`telos ctx close <NN>`', 'Never open a note', 'retelling of the diff', 'Broken ref', 'Unmapped',
+    'never silently ignored', 'telos area new', 'history add quick', 'quoted data', '≤ 10 lines', 'Auto-commit: no']) {
+    assert.ok(close.includes(s), s);
+  }
+  assert.doesNotMatch(close, /git (add (-A|--all|\.\/?(?=[\s`]|$))|push)/m);
 });
 
