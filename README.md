@@ -47,6 +47,7 @@ Requires Claude Code with plugin support, Git and Node.js ≥ 20.10. No dependen
 |---|---|
 | `PROJECT.md` | Purpose, hard Rules, Conventions, Out of scope (≤ 60 lines) |
 | `MAP.md` | Where things are; validated against a token budget (`limits.map_tokens`) |
+| `areas/<name>.md` | One area's living docs: Purpose, Entry points, Invariants, Decisions, Rejected, Pitfalls (≤ `limits.area_tokens`) |
 | `ROADMAP.md` | One line per phase: `- NN-name [status] goal · done when: …` |
 | `phases/NN-name.md` | The plan of one phase: Goal, Done when, Tasks checklist, Notes (≤ 80 lines) |
 | `STATUS.md` | Pointers only: Phase, Task, Next, Blockers, Awaiting user, Carry-over, Recent |
@@ -79,6 +80,10 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error. The C
 | `telos roadmap add <name> "<goal>" "<done when>"` | Append a `[planned]` phase with the next free NN |
 | `telos roadmap set <NN> <status>` | Set a phase's status: `planned`, `drafted`, `active`, `done`, `dropped` |
 | `telos history add <kind> <ref> "<text>" [--path <p> \| --approach "<text>"]` | Prepend a dated Log entry (`decision`, `phase`, `revert`, `remove`, `quick`, `init`; refs `NN`, `NN-MM`, `quick`, `telos`). `remove` with a selector adds a Delete-zone entry; `revert` clears exactly that selector. Over `limits.history_entries` the oldest rows move to `HISTORY-archive.md` |
+| `telos area new <name> --paths a,b` | Create `.telos/areas/<name>.md` from the template, anchored at HEAD (name: `a-z0-9-`, ≤ 30 chars; paths repo-relative, directories end in `/`) |
+| `telos area list` / `show <name>` | One line per area: `name · paths · tokens/limit` / print one area file |
+| `telos area for <path>…` | Names of the areas whose paths cover the given files (`src/a` never matches `src/ab/`); `none` when no area does |
+| `telos area lint` | Check every area: header, the six sections in order, name and `limits.area_tokens`; one line per problem, exit 1 when any |
 | `telos map-scan` | Deterministic repository inventory for `/telos:map` (≤ 2000 estimated tokens); works before init, never executes repository code |
 | `telos ctx <bundle> [args]` | Print a skill's context (≤ 6000 chars, comments stripped): `status`, `map [--refresh]`, `plan [NN\|description]`, `close [NN]`, `shared <name>` |
 | `telos budget [--ctx <bundle> [args]]` | Read-only size report: `.telos/` files, the CLAUDE.md block, the SessionStart output and optionally one bundle, in bytes, chars and ~tokens (chars / 4) |

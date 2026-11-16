@@ -28,7 +28,7 @@ a task bundle loads only the areas matching its paths; `npm test` passes.
   - Accept: `test/areas.test.mjs` covers a valid file, a missing section, an over-limit
     file, a malformed header and boundary matching.
 
-- [ ] **11-02 `telos area` command**
+- [x] **11-02 `telos area` command**
   - `telos area new <name> --paths a,b` (creates from template, anchor = HEAD),
     `area list` (name · paths · tokens/limit), `area show <name>`, `area for <path>…`
     (names of matching areas), `area lint` (all areas, exit 1 on problems).
