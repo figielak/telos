@@ -12,7 +12,7 @@ const vars = {
   source: '02:D-03', goal: 'Ship it', done: 'it ships', next: 'run `/telos:map` to map the existing code', supersedes: 'none',
 };
 
-// SPEC §4 size limits, in lines.
+// Size limits, in lines.
 const LINE_LIMITS = {
   'PROJECT.md': 60, 'ROADMAP.md': 80, 'STATUS.md': 40, 'phase.md': 80, 'claude-block.md': 15,
 };
@@ -29,7 +29,7 @@ test('every template renders without leftover placeholders', () => {
   }
 });
 
-test('templates stay within SPEC line limits', () => {
+test('templates stay within their line limits', () => {
   for (const [name, max] of Object.entries(LINE_LIMITS)) {
     const lines = render(name, vars).trimEnd().split('\n').length;
     assert.ok(lines <= max, `${name}: ${lines} lines > ${max}`);

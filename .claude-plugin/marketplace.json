@@ -1,12 +1,12 @@
 {
   "name": "telos",
-  "description": "Marketplace for the Telos workflow plugin",
+  "description": "Marketplace for the Telos project-memory plugin",
   "owner": { "name": "figielak" },
   "plugins": [
     {
       "name": "telos",
       "source": "./",
-      "description": "Lean plan → test → implement → verify workflow for Claude Code"
+      "description": "Project memory for coding agents, backed by a deterministic CLI"
     }
   ]
 }

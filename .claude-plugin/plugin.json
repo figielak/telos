@@ -1,9 +1,9 @@
 {
   "name": "telos",
   "displayName": "Telos",
-  "version": "0.1.0",
-  "description": "Lean plan → test → implement → verify workflow with durable project memory in the repo",
+  "version": "0.2.0",
+  "description": "Project memory for coding agents, backed by a deterministic CLI",
   "author": { "name": "Krystian" },
   "license": "MIT",
-  "keywords": ["workflow", "planning", "tdd", "project-memory"]
+  "keywords": ["project-memory", "planning", "cli"]
 }

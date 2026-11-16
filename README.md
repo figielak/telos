@@ -1,149 +1,102 @@
 # Telos
 
-A lean workflow plugin for Claude Code:
-plan → test → implement → verify, with durable project memory in `.telos/`.
+Project memory for coding agents, backed by a deterministic CLI.
 
-Status: **pre-alpha**. Minimal, standard and deep workflows are available: deep adds research and
-review agents, critical-task RED/GREEN/e2e evidence, doc-sync, ADR-lite promotion and ADR-aware undo.
-See [SPEC.md](SPEC.md) §14.
+Telos keeps a few small markdown files in `.telos/` — what the project is, where things are,
+what is next and why things were decided — and puts a short status into every new Claude Code
+session. Planning, testing and implementing stay ordinary agent work: Telos records, it does not
+run a process.
+
+Status: **pre-alpha**, version 0.2.0. Version 0.1 was a full workflow plugin (profiles, gated
+plan/approve/do/check/done, review agents); the [Benchmark](#benchmark) showed that ceremony cost
+2–5× more without better results, so 0.2 keeps only the memory core. The old state is tagged
+`pre-memory-core`.
 
 ## Install (per repository)
 
-```
+```text
 /plugin marketplace add figielak/telos
 /plugin install telos@telos
-/telos:init standard
 ```
 
-Requires Claude Code with plugin support, Git and Node.js ≥ 20.10.
+Then, in the repository: `telos init` (the plugin puts `telos` on the Bash PATH).
+Requires Claude Code with plugin support, Git and Node.js ≥ 20.10. No dependencies.
+
+## Five-minute walkthrough
+
+1. `telos init` — detects the stack and check commands, creates `.telos/` (PROJECT, MAP,
+   ROADMAP, STATUS, HISTORY, `config.json`), adds a short Telos block to `CLAUDE.md` and
+   `.telos/.cache/` to `.gitignore`. Rerun-safe: existing files are kept.
+2. `/telos:map` — on an existing codebase, writes `.telos/MAP.md` (structure, entry points,
+   flows, areas, where to find things) from a deterministic scan and a few targeted reads, and
+   drafts empty PROJECT sections for you to confirm.
+3. `/telos:plan add login with magic links` — adds a ROADMAP phase and writes one file,
+   `.telos/phases/NN-name.md`: goal, done-when, a checklist of `- [ ] **NN-MM Title**` tasks,
+   notes. The phase becomes `active` and STATUS points at the first task.
+4. Work as usual. Tick a task's box when it lands; `telos status set task=NN-MM next="…"`
+   keeps the pointer current.
+5. `/telos:close` — lists unchecked tasks (they block the close) and the configured check
+   commands; the agent runs them, then records `phase` in HISTORY, sets the phase `done` and
+   points STATUS at the next phase.
+6. A new session starts with the status (≤ 1200 chars): project purpose, stack, phase and task,
+   next step, blockers. `/telos:status` shows the same on demand.
+
+## Memory files
+
+| File | Holds |
+|---|---|
+| `PROJECT.md` | Purpose, hard Rules, Conventions, Out of scope (≤ 60 lines) |
+| `MAP.md` | Where things are; validated against a token budget (`limits.map_tokens`) |
+| `ROADMAP.md` | One line per phase: `- NN-name [status] goal · done when: …` |
+| `phases/NN-name.md` | The plan of one phase: Goal, Done when, Tasks checklist, Notes (≤ 80 lines) |
+| `STATUS.md` | Pointers only: Phase, Task, Next, Blockers, Awaiting user, Carry-over, Recent |
+| `HISTORY.md` | Why: a dated Log and the Delete-zone of removed paths and approaches |
+| `config.json` | Version 2: `stack`, `checks`, `limits`, `git`, `files_language` |
 
 ## Commands (in Claude Code)
 
-All skills are user-invoked only, so they cost nothing until called.
+Skills are user-invoked only, so they cost nothing until called. Each injects one
+`telos ctx <bundle>` and never reads the whole repository.
 
 | Command | Purpose |
 |---|---|
-| `/telos:init [minimal\|standard\|deep]` | Initialize Telos in the current repo: detects stack and check commands, asks once to confirm them (and the profile when not given; an initialized repo keeps its profile), runs `telos init`, prints a ≤ 10-line summary ending with the next step |
-| `/telos:discuss [NN]` | Standard/deep: clarify a phase (the STATUS phase or `NN`, selected with the validated `telos ctx discuss <NN>`) before planning: one question round, then writes `.telos/phases/NN-name/NN-CONTEXT.md` (all six sections, ≤ 60 lines). Answers become `D-NN`, assumed or open choices `D-NN [proposed]` and `Q-NN`; existing IDs and answers are kept, never renumbered; an `active` phase only gains new proposed items and plan changes go to `/telos:revise`. Updates Awaiting user via `telos status set awaiting=`; no commit; minimal replies `Requires standard profile. …` |
-| `/telos:plan [NN\|description]` | Plan a phase (the STATUS phase, phase `NN`, or a new phase from a description) in one file, `.telos/phases/NN-name.md`: Goal, Done when, a checklist of `- [ ] **NN-MM Title**` tasks with at most 3 detail lines each, Notes (≤ 80 lines). Asks at most one round of questions, adds a new phase with `telos roadmap add`, then `telos roadmap set NN active` and `telos status set phase=… next=…`; places carry-over items and removes them from STATUS. No lint or approve step; commits `docs(NN): plan phase NN-name` only when `git.auto_commit` is true |
-| `/telos:plan-lite [NN\|description]` | Same as `/telos:plan` on a cheaper model, for small obvious phases (same deep research evidence and critique pass) |
-| `/telos:revise <notes>` | Apply notes to the current phase's plan with minimal edits (split, merge, reorder, change); approved tasks it changes go back to `draft`; keeps CONTEXT `D-NN` / `[proposed]` / `Q-NN` lines unless the notes change them (confirms a proposed one only when the notes do) and syncs Awaiting user; deep runs the same single self-critique over the changed tasks (no research, no extra agent, no second question round); re-lints and summarizes |
-| `/telos:revise-lite <notes>` | Same as `/telos:revise` on a cheaper model, for minor edits (same deep critique pass) |
-| `/telos:approve` | Approve the drafted plan: refuses on lint problems, keeps tasks with unconfirmed decisions in `draft`, sets the rest `approved`, the phase `active` and STATUS, commits `docs(telos): plan phase NN-name` and creates the local tag `telos/NN-start` |
-| `/telos:do [task-id]` | Execute the next approved task (or the given one): tests first → implement → `telos accept` (max 2 fix attempts, then `blocked`) → Result with Deviations → task and STATUS state → one commit `<type>(NN-MM): …` of the listed files (only when `git.auto_commit` is true; else it lists the paths and subject); an `effort: hard` task stops first and suggests `/telos:do-hard`. Deep `critical` code tasks additionally need real RED (a failing assertion of the missing behavior, recorded as `RED: <cmd> → exit <n>: <reason>` in Result before implementing; already green or an environment failure is not RED; a resumed task without a recorded RED blocks, never re-creates it), a green `telos check --level full --task <id>` including the configured e2e (missing e2e blocks), and one `telos:reviewer-hard` agent round on `telos ctx review <id>` before any state change or commit: findings fixed in scope rerun the check and accept, `UNVERIFIED`/`REFUSED` or an unfixable HIGH/CRITICAL blocks, no re-review loop; Result keeps `RED:`, `GREEN:` and `Review: <verdict> · EvidenceId …` lines. The skill may launch only that agent. Other tasks, doc/audit and lower profiles are unchanged |
-| `/telos:do-hard [task-id]` | Same as `/telos:do` (including the deep critical RED/e2e/`telos:reviewer-hard` gates) on a stronger model, for complex or blocked tasks |
-| `/telos:map [--refresh]` | Map an existing repository: reads `telos ctx map` (scan, header to write, PROJECT state), reads 3–8 suggested files, writes `.telos/MAP.md` and requires `Map validation: PASS` (at most two repairs, else the old MAP is restored), then drafts empty PROJECT sections only. The PROJECT draft is **unconfirmed**: it asks no questions, lists `Assumed:` items and waits for your review. `--refresh` runs `telos ctx map --refresh`: `noop` only advances the header; `incremental` (≤ 30% of editable units affected) edits only the affected blocks and checks every other byte against the original; more than 30%, a stub or an unusable baseline falls back to a full build; a refresh never touches PROJECT. After `Map validation: PASS` with `git.auto_commit` true it asks once to commit `docs(telos): map`; on yes it checks `git diff --cached --name-only` (any other staged path → no commit), then `git add .telos/MAP.md` (+ PROJECT.md when changed) and `git commit -m "docs(telos): map" -- <those paths>`. Declined, headless, failed validation or `auto_commit` false → no git writes. No ROADMAP change; any other argument prints usage |
-| `/telos:map-hard [--refresh]` | Same as `/telos:map` (including the confirmed `docs(telos): map` commit) on a stronger model, for large or tangled repositories |
-| `/telos:quick <description>` | Make a small change without a phase (≤ ~5 files, < 1 hour): ≤ 5-line mini-plan in chat, implement (test first for behavior changes), run `test_related`/`test`, `lint`, `types`, commit only the touched paths as `<type>(quick): …`; no plan file or STATUS change; larger or unclear → suggests `/telos:plan`. Standard/deep: before the mini-plan it reruns `telos ctx quick --area '<selector>'…` with paths and topics taken from the description (safe characters only, also on a clean tree) and follows the matching lessons; never reintroduces a removed approach |
-| `/telos:quick-hard <description>` | Same as `/telos:quick` on a stronger model, for small but tricky fixes |
-| `/telos:profile <minimal\|standard\|deep>` | Switch the profile of an initialized repo: reads `telos ctx profile`, runs `telos profile <p>` once, summarizes created files; a downgrade retains HISTORY, LESSONS, CONTEXT, RESEARCH and `decisions/` (only features become unavailable); checks, stack, limits, git settings and CLAUDE.md stay unchanged; no commit |
-| `/telos:lesson [area] <lesson> [(ref)]` | Standard/deep: add one `- [area] lesson (ref)` line to `.telos/LESSONS.md` (ref defaults to the STATUS task, else `quick`). Duplicates are checked by area first (equal or nested path prefixes): a same-meaning lesson is not added, a distinct one in the same area stays separate. Malformed lines are listed, never deleted. At 20 entries it never adds a 21st: it asks you to promote a named lesson to PROJECT.md §Conventions (written and re-read before the lesson is removed) or drop a stale one, or to discard the new lesson. Edits only LESSONS/PROJECT; no task, STATUS, ROADMAP or git changes |
-| `/telos:check [NN]` | Standard/deep: verify a phase without changing anything: the exact `telos check --level full --phase <NN>` from the bundle (deep: a required but unconfigured e2e is UNVERIFIED, never covered by passing unit checks), `telos accept <id>` for every done task, then a hand check of each manual Acceptance item (accept exit 0 never proves them); reports verdicts, unverified items, unresolved decisions and unfinished tasks |
-| `/telos:close [NN]` | Close an active phase: stops on `REFUSED:` or `Close: blocked` (unfinished work, unreadable HISTORY), runs every configured check from the bundle (any failure leaves the phase active, nothing recorded), confirms the done-when, then runs the bundle's closing commands in order (`telos history add phase`, `telos roadmap set NN done`, `telos status set phase=<next> task=none`, `telos status add recent`); a retry skips a recorded phase entry. Commits `docs(NN): close phase NN-name` with explicit paths only when `git.auto_commit` is true |
-| `/telos:undo <NN-MM>` | Standard/deep: revert one task. Validates the id, reads `telos ctx undo <id>`, shows every commit with its stat, the Telos files they carry and transitive dependents (never reverted), and asks you once to confirm the exact hashes together with the ADR selection on deep (proposed IDs, or an option that also adds explicit-only shared-source IDs; no second question); anything else changes nothing. Then `git revert --no-commit` newest first (conflicts only in `.telos/` are resolved by keeping the current file; a code conflict stops with recovery steps and no HISTORY entry), restores current Telos metadata from HEAD, requires `telos check --level full`, then on deep runs `telos adr revert <NNN> --task <id>` for each selected ID only (a failure stops before any task, STATUS or HISTORY change with a rerun instruction; superseded predecessors are reported, never reactivated), and only then sets the task `reverted`, blocks dependents, reopens a closed phase, updates STATUS and logs one `revert` HISTORY entry via the CLI. Commits `revert(<id>): …` with explicit `.telos/` paths when `git.auto_commit` is true; never reset, stash or push |
-| `/telos:review [NN-MM\|NN]` | Deep only: one read-only review round in a forked `telos:reviewer` agent (Sonnet). Injects the fixed bundle `telos ctx review` (STATUS task, else phase); an exact two-digit `NN-MM` / `NN` argument makes the agent rerun `telos ctx review <selector>`, anything else prints usage. It reviews only that evidence and its listed continuations (`git diff` / `git log` / file ranges), reports findings with > 80% confidence (HIGH/CRITICAL need `file:line`, scenario and impact or are demoted), checks public-API docstrings, and ends with a verdict in ≤ 40 lines. Incomplete coverage is `UNVERIFIED`, never a clean `PASS`; zero findings is valid; no re-review loop and no fixes (those belong to the caller within its scope). Minimal/standard print `Requires deep profile. …` and stop |
-| `/telos:review-hard [NN-MM\|NN]` | Same as `/telos:review` in the `telos:reviewer-hard` agent (Opus), for `critical` work: security, payments, concurrency, data integrity |
-| `/telos:docs [path…]` | Deep only: on-demand documentation refresh from `telos ctx docs` (MAP pointers, configured docs destinations, configured checks and the bounded `docs-scan` candidates). The request may only hold literal repo-relative paths (letters, digits and `. _ - @ + /`), validated before the skill reruns `telos ctx docs --scope <path>`; without scope it uses the current phase diff. It edits only matched README/docs ranges and docstrings of changed public API, keeps behavior and unrelated text, invents no versions, commands or links, runs only configured checks via `telos check` and reports `Changed:`, real check results and `Unverified:`. `Sync: NO-OP` edits nothing; `Sync: NOT VERIFIED` (scan omissions or omitted rows) requires targeted inspection and is never reported as synchronized. No task, STATUS, ROADMAP or git changes. Minimal/standard print `Requires deep profile. …` and stop |
-| `/telos:research [NN] [--replace] [focus]` | Deep only: research a phase in a forked read-only `telos:researcher` agent (Sonnet). Injects the fixed bundle `telos ctx research` (STATUS phase); a first word of exactly two digits makes the agent rerun `telos ctx research <NN>`; focus text only narrows the search and never reaches a command. Search-first: existing libraries and patterns, then current primary docs and versions before any new dependency; open questions get options and a recommendation but stay open. Returns a ≤ 60-line report (Recommendation, Options, Unresolved, dated Sources; unavailable sources are stated, never invented) plus one `Handoff:` line for the bundle's `NN-RESEARCH.md`: create when missing, replace only with `--replace`, otherwise keep the file and show a proposed update. The agent has no write tools; the main thread writes that one path. Minimal/standard print `Requires deep profile. …` |
-| `/telos:research-hard [NN] [--replace] [focus]` | Same as `/telos:research` in the `telos:researcher-hard` agent (Opus), for architectural decisions and library choices with real trade-offs |
-| `/telos:status` | Show phase, task, blockers, latest result and the next step in ≤ 10 lines; reads and changes nothing |
+| `/telos:status` | Phase, task, blockers, latest Recent line and the next step in ≤ 10 lines; reads and changes nothing |
+| `/telos:map [--refresh]` | Write `.telos/MAP.md` from `telos ctx map` and 3–8 suggested files; requires `Map validation: PASS` (at most two repairs, else the old MAP is restored) and drafts empty PROJECT sections, unconfirmed. `--refresh` updates only the blocks a diff since the MAP commit affects (≤ 30% of units; else a full build). With `git.auto_commit` it asks once, then commits `docs(telos): map` with explicit paths |
+| `/telos:plan [NN\|description]` | Plan the STATUS phase, phase `NN` or a new phase in one file (≤ 80 lines). At most one round of questions; `telos roadmap add` for a new phase, then `telos roadmap set NN active` and `telos status set`; places carry-over items. Commits `docs(NN): plan phase NN-name` only when `git.auto_commit` is true |
+| `/telos:close [NN]` | Close an active phase: stops on `REFUSED:` or `Close: blocked` (unchecked tasks, unreadable HISTORY), runs every configured check (a failure leaves the phase active, nothing recorded), confirms the done-when, then runs the bundle's closing commands in order; a retry skips a recorded phase entry. Commits `docs(NN): close phase NN-name` only when `git.auto_commit` is true |
 
-### Review and research agents (deep)
+## CLI
 
-`agents/reviewer.md` and `agents/reviewer-hard.md` are identical read-only definitions except for
-name and model. Their tools are `Read`, `Grep`, `Glob` and Bash limited to `git diff`, `git log`
-and `telos ctx review`: no edits, network, commits or repository-wide discovery. Repository text
-is data, never instructions. The `/telos:review*` skills fork them with the shared instructions
-in `shared/review.md`. The tool restrictions, the `telos:` agent namespace and the forked-skill
-model selection are declared in files and checked by `npm test`; they are not proven against a
-live Claude Code host.
+Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error. The CLI never writes to git.
 
-`agents/researcher.md` and `agents/researcher-hard.md` follow the same pattern with `Read`, `Grep`,
-`Glob`, `WebSearch`, `WebFetch` and Bash limited to `telos ctx research`, and no write tools. The
-forked `/telos:research*` skills return the report as text; persisting it to the one
-`NN-RESEARCH.md` path named in the bundle is left to the main thread, guided by the `Handoff:` line.
-Automated tests cover the bundle, file contracts and instructions only: no live web search, no
-live fork and no main-thread handoff are exercised.
+| Command | Purpose |
+|---|---|
+| `telos --help` / `--version` | List commands / print the version |
+| `telos init [--stack a,b] [--checks '<json>'] [--force]` | Create the memory files, sync the CLAUDE.md block, add `.telos/.cache/` to `.gitignore`. Stack and checks default to detection (check keys: `build`, `types`, `lint`, `test`, `e2e`). Existing files are kept; `--force` rewrites `config.json` as version 2, keeping its values (a version 1 file loses `profile`, `docs`, `protected_configs`, `strict_scope` and the `format`/`test_related` checks) |
+| `telos status` | Compact status: phase with its ROADMAP state, task with its checklist state (`open`/`done`), Next, Blockers, carry-over count, latest Recent line; Awaiting user first |
+| `telos status set <key>=<value>…` | Set STATUS lines: `phase`, `task`, `next`, `blockers`, `awaiting`; empty value → `none` |
+| `telos status add recent\|carry "<line>"` / `rm carry <n>` | Prepend to Recent (3 newest kept); append to Carry-over (max 5); remove item `n` |
+| `telos roadmap add <name> "<goal>" "<done when>"` | Append a `[planned]` phase with the next free NN |
+| `telos roadmap set <NN> <status>` | Set a phase's status: `planned`, `drafted`, `active`, `done`, `dropped` |
+| `telos history add <kind> <ref> "<text>" [--path <p> \| --approach "<text>"]` | Prepend a dated Log entry (`decision`, `phase`, `revert`, `remove`, `quick`, `init`; refs `NN`, `NN-MM`, `quick`, `telos`). `remove` with a selector adds a Delete-zone entry; `revert` clears exactly that selector. Over `limits.history_entries` the oldest rows move to `HISTORY-archive.md` |
+| `telos map-scan` | Deterministic repository inventory for `/telos:map` (≤ 2000 estimated tokens); works before init, never executes repository code |
+| `telos ctx <bundle> [args]` | Print a skill's context (≤ 6000 chars, comments stripped): `status`, `map [--refresh]`, `plan [NN\|description]`, `close [NN]`, `shared <name>` |
+| `telos budget [--ctx <bundle> [args]]` | Read-only size report: `.telos/` files, the CLAUDE.md block, the SessionStart output and optionally one bundle, in bytes, chars and ~tokens (chars / 4) |
 
-## Standard workflow
+`ctx plan` gives the target phase and its file (or the template skeleton), carry-over, PROJECT
+Purpose and Rules, stack, checks, Delete-zone approaches, MAP `## Find` and the roadmap.
+`ctx close` gives the plan's checklist state, unchecked items, the check commands,
+`Auto-commit`, `Close: ready|blocked` and the exact closing commands.
 
-Start with standard at initialization, or upgrade an existing minimal repository:
+## Hooks
 
-```text
-/telos:init minimal
-/telos:profile standard
-```
+Node scripts in `hooks/`, no model calls; each is silent when `.telos/` is missing.
 
-Discuss needs a phase in ROADMAP. To create the first planned phase in a fresh repository,
-run in Bash:
-
-```sh
-telos roadmap add greeting "Greeting helpers" "Messages verified"
-telos status set phase=01-greeting task=none next=/telos:discuss
-```
-
-Then clarify and plan it in Claude Code. For a plan containing two dependent tasks
-`01-01` and `01-02`, the flow is:
-
-```text
-/telos:discuss 01
-/telos:plan 01
-/telos:approve
-/telos:do 01-01
-/telos:do 01-02
-/telos:check 01
-/telos:close 01
-/telos:undo 01-02
-```
-
-Confirm proposed decisions before approval or execution. Standard leaves a phase active
-after its last task; `/telos:close` requires passing full checks, task acceptance and explicit
-review of every manual item, then records decisions and the phase in HISTORY. Undo previews
-the exact commits and transitive dependents and asks for confirmation; a successful undo
-reopens a closed phase, preserves other work and blocks affected dependents. A conflict or
-failed post-revert check stops before recording a successful undo.
-
-`npm test` includes [the standard lifecycle proof](test/e2e-standard.test.mjs): isolated local
-Git repositories, public CLI calls, hook stdin/stdout payloads, close/undo failure paths,
-memory, profile downgrade and output caps. The harness plays the skill commands and supplies
-confirmation/manual-review outcomes. This proves the machine workflow; it does not prove
-live Claude Code skill loading, model judgment, interactive confirmation or host hook dispatch.
-No live-host smoke validation is claimed by this suite.
-
-## Deep workflow
-
-```text
-/telos:profile deep
-/telos:research 01          # forked researcher; the main thread writes 01-RESEARCH.md once
-/telos:discuss 01           # confirm proposed decisions
-/telos:plan 01              # research is evidence; one self-critique pass
-/telos:approve
-/telos:do-hard 01-01        # critical code: real RED, then GREEN + e2e, one reviewer-hard round
-/telos:close 01
-/telos:undo 01-01           # one confirmation covers the hashes and the selected ADR IDs
-```
-
-Deep critical code tasks record `RED:`, `GREEN:` and `Review:` evidence in their Result, and a
-missing RED/GREEN line or a missing `checks.e2e` blocks the close. `/telos:close` reuses a task
-review only when its EvidenceId is still current, else runs one phase review; it then syncs only
-matched docs, public docstrings and ≤ 10 changelog lines, reruns the targeted full check, and
-promotes hard-to-reverse decisions through `telos adr new` → body → `decision ADR NNN` HISTORY
-link → `→ ADR NNN` marker, resuming after an interruption without duplicates. Undo marks only
-the confirmed ADR IDs `reverted` and never reactivates a superseded predecessor. A downgrade keeps
-RESEARCH and `decisions/` but gates the deep commands and the Stop map reminder.
-
-`npm test` includes [the deep lifecycle proof](test/e2e-deep.test.mjs): isolated Git repositories
-from `test/fixtures/deep-loop/` with deterministic `test`/`e2e` checks run research → confirmation
-→ critical RED/GREEN/e2e/review → doc-sync and changelog → ADR promotion and retro → close →
-ADR-aware undo, plus the failure paths (missing e2e, an environment failure instead of RED,
-UNVERIFIED or CHANGES REQUESTED reviews, unverified manual items, a failed post-doc-sync check,
-interrupted promotion, cancelled or conflicting undo, downgrade). The harness supplies the
-reviewer and researcher outputs and the confirmations itself: it proves the CLI and file
-contracts, not a live fork, web search, model judgment or host hook dispatch, and no live-host
-smoke run is claimed. After doc-sync the proof reruns the close bundle's own
-`telos accept <id> --close NN` commands next to `telos check --level full --phase NN`; unrelated
-dirty source, out-of-scope task commits and wrong selectors still fail, and a retry with
-`git.auto_commit` false closes without an intermediate commit.
+| Event | Behavior |
+|---|---|
+| `SessionStart` (startup, resume, clear, compact) | Injects the compact status (≤ 1200 chars): Awaiting user first, PROJECT Purpose line 1, stack, phase/task with live states, Next, Blockers, carry-over count, latest Recent line, file pointers |
+| `PreToolUse` Bash | Git guard: blocks `git push`, `--no-verify` (also `commit -n`), `git add -A` / `--all` / `.` / `:/`, `git commit --amend` on a pushed HEAD and `git reset --hard`, with exit 2 and the reason; it splits `&&`, `;`, `\|`, env prefixes, `git -C`/`-c` and `sh -c '…'` |
+| `PreToolUse` Edit/Write | Delete-zone warning, never a block: editing a path listed in HISTORY §Delete-zone (or below it) adds its reason and the exact `telos history add revert …` command to restore it on request; once per path per session, symlinks resolved |
 
 ## Benchmark
 
@@ -162,91 +115,21 @@ anything-llm), against bare Claude Code and a static `CLAUDE.md`.
 - For small one-off tasks, plain Claude Code or a short `CLAUDE.md` is the better choice.
 - Long-running projects, where project memory should matter most, were not measured.
 
-The Telos author ran this benchmark. It covers two repositories, one Claude Code version
-and one model set, with five runs per case, so it does not generalise beyond them.
+The Telos author ran this benchmark on version 0.1 (the workflow plugin). It covers two
+repositories, one Claude Code version and one model set, with five runs per case, so it does not
+generalise beyond them. Version 0.2 has not been benchmarked.
 
-## CLI
+## Limits
 
-`map-scan` reads repository evidence without executing source files or manifests. Its tree
-stops at depth 3; directory counts include deeper eligible files. Entry points are candidates,
-and suggested excerpts prioritize entries, recent churn (last 100 commits), then size.
+- Memory is written at two points (`/telos:plan`, `/telos:close`) and by hand; nothing checks
+  yet that MAP or PROJECT still match the code.
+- Work done without the skills is not caught up automatically; update STATUS and the phase
+  checklist yourself.
+- Claude Code only for now: the hooks and skills are plugin features. The files are plain
+  markdown and the CLI runs anywhere Node does.
+- Size targets: bundles ≤ 6000 chars, SessionStart ≤ 1200 chars, MAP ≤ `limits.map_tokens`
+  estimated tokens. `telos budget` measures sizes, not host token usage.
 
-The plugin puts `telos` on the Bash PATH (`bin/`). Skills call it; you can run it too.
-Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error.
+## Development
 
-| Command | Purpose |
-|---|---|
-| `telos --help` / `-h` | List commands |
-| `telos --version` / `-v` | Print the version |
-| `telos adr new "<title>" --source NN:D-MM [--supersedes NNN]` | Deep only: create the next global ADR-lite `.telos/decisions/NNN-slug.md` (numbers never reuse gaps) from `templates/adr.md` (≤ 30 lines). The CLI owns the header — number, title, date, `Status: accepted`, `Source:` and `Supersedes:` — and with `--supersedes` flips only the old ADR's status to `superseded by NNN`, keeping its body bytes; the skill edits only the body sections, and nothing writes HISTORY or git. The source must be a confirmed decision in phase NN's CONTEXT (not `[proposed]`, not in *Awaiting user*); the supersedes target must be `accepted`; otherwise exit 1 before any write. An identical retry reuses the ADR (`reused`); the same source or title with other values refuses. One writer at a time (`.adr.lock`; a stale lock names its removal); symlinked files or directory refuse. Create plus supersession is journaled (`.adr-journal.json`): an interrupted run exits 1 and never reports success, the exact retry finishes it (`completed`), any other request or a file changed meanwhile refuses with recovery guidance instead of overwriting. Prints `<path> · ADR NNN · created\|reused\|completed[ · OLD superseded by NNN]`; malformed title (newline, control chars, no letters/digits, > 120 chars), source, number or options → exit 2 |
-| `telos adr revert NNN --task NN-MM` | Deep only, run by `/telos:undo` after the verified code revert: changes only the Status field of ADR NNN to `reverted (YYYY-MM-DD, NN-MM)`, keeping every other byte. The ADR's Source `NN:D-MM` must be one of the task's `decisions` in the same phase (ownership never comes from timestamps or prose), else exit 1. Repeating the same call prints `unchanged`; an ADR already reverted by another task or superseded (not binding) refuses without change; a superseded predecessor is never reactivated — a `Chain:` line names it for an explicit follow-up decision. Uses the same writer lock and refuses while an `adr new` journal is pending; a failed write exits 1 with `status unchanged` (or `unconfirmed`) and the exact rerun command. Malformed number, task or options → exit 2 |
-| `telos changelog [NN]` | Deep only, read-only conventional-commit candidates from the exact phase tag `telos/NN-start` to a pinned HEAD; NN defaults to STATUS phase. Preserves type/scope, `!` and `BREAKING CHANGE`/`BREAKING-CHANGE` notes, conventional and Git-generated reverts with target evidence; excludes `docs(telos)` planning bookkeeping and nonconventional subjects. Newest first, topological order; inspects at most 200 commits, reports uninspected older commits and candidates omitted from the ≤6000-character report. Git queries have a 2 MiB/10 s limit; failure/overflow refuses the draft. Messages are quoted data. Empty drafts are valid; invalid NN → exit 2, missing phase/tag or unrelated baseline → exit 1 with remedy; minimal/standard get the exact deep gate. Never executes repository code or changes CHANGELOG, git or Telos state. These are raw candidates: the skill condenses them to ≤10 lines under an existing version or a date heading without guessing a release version |
-| `telos init --profile <p> [--stack a,b] [--checks '<json>'] [--force]` | Create `.telos/` for `minimal`, `standard` or `deep`, sync the CLAUDE.md block, add `.telos/.cache/` to `.gitignore`. Rerun-safe: creates missing files, keeps existing ones; `--force` rewrites `config.json`. Stack/checks default to detection. Check keys: `build`, `types`, `lint`, `test`, `test_related`, `e2e` and the optional, never-detected `format` (Stop hook only; set it by hand, e.g. `"format": "prettier --write {files}"`); other keys are rejected. Exit 1 on a profile mismatch or a broken CLAUDE.md block |
-| `telos status` | Compact status: current phase/task with live states from ROADMAP and the task file, Next, Blockers, Awaiting user first. With no active phase/task, init's untouched `run /telos:map …` Next is shown as `plan the first phase with /telos:plan` once MAP is built and within budget, and a stored `/telos:do` on an `effort: hard` task is shown as `/telos:do-hard <id>` (read-time only; STATUS is not rewritten) |
-| `telos map-scan` | Deterministic inventory of tree/counts, manifests/scripts/checks, entry candidates, tests, sizes, churn, dirty paths and up to 8 suggested line ranges; works before init and without HEAD. Output ≤ 8000 UTF-16 code units including newline (2000 estimated tokens), whole-row omissions counted. Excludes git/Telos state, build/vendor/cache/virtualenv directories, lockfiles, binaries and symlinks; never executes repository code |
-| `telos docs-scan [NN] [--scope path]…` | Deep only, read-only: find candidate documentation references from `telos/NN-start` through HEAD, staged, unstaged and untracked changes; defaults to STATUS phase. Repeated scopes select literal repo-relative paths at `/` boundaries (either rename side retains both); invalid NN/scope → exit 2, missing baseline → exit 1 with remedy, no history fallback. Scans configured `docs.readme` and `docs.paths`, matches whole literal paths or simple JS/TS named exports (declarations, export lists, `exports.name`) and Python top-level public functions/classes from before/after evidence, merges adjacent matching lines with reasons; no match is valid. This is a heuristic candidate finder with no semantic completeness guarantee. Skips symlinks, external/traversing paths, nonregular/binary/non-UTF-8 files and generated/vendor/state trees; unsupported source languages retain path matching only. Limits: 64 KiB/file, 4 MiB decoded input, 256 changed paths and symbols each, 128 documents and match ranges each, 2048 traversal entries/32 levels, 128 detailed omissions, 2 MiB/git query with 10 s timeout, report ≤ 6000 characters. All omissions and report overflow are visible; inspect them before claiming doc-sync. Never executes repository code or writes git/Telos state |
-| `telos history add <kind> <ref> "<text>" [--path <relative-path> \| --approach "<text>"]` | Standard/deep: prepend a UTC-dated Log entry. Kinds: `decision`, `phase`, `revert`, `remove`, `quick`, `profile`, `init`; refs: `NN`, `NN-MM`, `ADR NNN`, `quick`, `telos`. Selectors are optional, mutually exclusive and only valid for `remove`/`revert`: remove records one Delete-zone target; revert clears entries for only that exact normalized path or exact approach text. Without a selector, either kind only logs. Exit 2 on invalid input, 1 on profile/storage failure |
-| `telos profile <minimal\|standard\|deep>` | Change only `config.profile` (other config keys, their order and values, and CLAUDE.md are kept; no re-detection). First creates the target's missing files (`HISTORY.md`, `LESSONS.md` for standard, `decisions/` for deep), then publishes config atomically and logs `profile telos: <from> → <to>` via `history add` when HISTORY exists. Downgrades keep all files. Same profile → no-op without history. Exit 1 on invalid config or a failed write (config and HISTORY restored, safe to retry), 2 on usage |
-| `telos status set <key>=<value>…` | Set STATUS lines; keys `phase`, `task`, `next`, `blockers`, `awaiting`; empty value → `none` |
-| `telos status add recent "<line>"` | Prepend to Recent, keep the 3 newest |
-| `telos status add carry "<line>"` | Append to Carry-over; exit 1 when 5 items exist |
-| `telos status rm carry <n>` | Remove Carry-over item `n` (1-based) |
-| `telos accept <id> [--close NN]` | Run the task's `` `cmd` → exit N `` Acceptance items (`sh -c` in the repo root, 600 s each; other items are MANUAL) and check that every changed file (work tree + commits `<type>(<id>):` since `telos/NN-start`) is in `scope`, `.telos/` or the Result's `Deviations:` line. One line per item, `accept <id>: PASS\|FAIL`; exit 1 on any FAIL. `--close NN` is the deep close reverify emitted by `telos ctx done` (never by `ctx check`): the task must be done, in phase NN, which must be active, on the deep profile (else exit 1 before any command runs); it additionally admits only *uncommitted* paths that `telos docs-scan NN` matches, the configured changelog when `telos changelog NN` has candidates, and paths in the scope of the phase's other done tasks. The task's own commits, other dirty paths and every command keep the strict check. Malformed NN or extra arguments → exit 2 |
-| `telos check [--level quick\|full] [--files <path>…] [--task NN-MM\|--phase NN]` | Standard/deep: run only configured checks in the repo root. Default `full`: build, types, lint, test; `--task`/`--phase` (mutually exclusive, full only, malformed → exit 2 before anything runs) select the target, and deep without a selector uses the STATUS phase (none → `REFUSED`, exit 1). Deep critical `code` tasks in the target add `e2e` after the full checks: unconfigured → `UNVERIFIED` exit 1 even when the rest pass, never guessed or installed; doc/audit, noncritical and standard targets keep the plain full set. A selected target prints `Target: <task\|phase> · …`; a missing task or a phase without task files → `REFUSED`, exit 1, nothing runs; `quick`: test_related when files and that command exist (otherwise test), lint, types. Missing checks print SKIP; no applicable checks prints UNVERIFIED and exits 1. Commands run unchanged except `{files}`, which receives individually quoted repo paths prefixed with `./` to prevent options; use `./` for CLI file names starting with `-`. The placeholder must be an unquoted standalone word; templates with placeholders inside quotes, comments, shell substitutions or here-documents fail before execution (templates containing backticks, `$(`, `${` or `<<` are conservatively refused when using placeholders). Outside-repo paths and symlink escapes are rejected. Never runs the optional Stop-only `checks.format`. Each command has a 600 s timeout and 64 KiB combined output limit; failures show at most 30 diagnostic lines (500 characters per output line). Exit 0 verified, 1 failed/unverified/profile or config error, 2 usage error. No Telos state or git writes |
-| `telos lint-plan [NN]` | Check a phase's task files (default: phase from STATUS): sections per type and detail level, line limits, `scope` set and Files ⊆ scope, machine-checkable acceptance, depends (exist, no cycles), decisions in CONTEXT, id = file name. Prints `ok: N tasks` or one `<id>: <problem>` line each and exits 1 |
-| `telos roadmap set <NN> <status>` | Change a phase's `[status]` in ROADMAP.md in place (`planned`, `drafted`, `active`, `done`, `dropped`) |
-| `telos roadmap add <name> "<goal>" "<done when>"` | Append `- NN-name [planned] goal · done when: …` with the next free NN |
-| `telos task new <NN> <slug> "<title>"` | Create the next task file `NN-MM-slug.md` (status `draft`) from the template; the phase dir is named after its ROADMAP line |
-| `telos task set <id>… status=<s>` | Set the status of one or more tasks in place (comments kept); all ids are checked before any write |
-| `telos task rm <id>` | Delete a `draft` task file; other statuses exit 1 |
-| `telos budget [--ctx <bundle> [args...]]` | Read-only size report (SPEC §12). Every row shows bytes, UTF-16 chars and `~N est. tokens` = ceil(UTF-16 code units / 4), final newline included — a deterministic size proxy, not host usage, and no proof that a workflow met its §12 target (read actual usage from the host, e.g. `/context`). *Stored*: raw `.telos/` files in name order, with explicit `missing` rows for PROJECT, MAP, STATUS, ROADMAP and config.json (plus HISTORY and LESSONS on standard/deep). *Rendered*: the installed CLAUDE.md block from start to end marker, the SessionStart hook output, and with `--ctx` exactly what `telos ctx <bundle> [args...]` prints (comments stripped, ≤ 6000 chars, `· truncated` when cut); skill bodies are not counted as always-on (live §12 scorecard: `.telos/phases/06-measure/06-RESULTS.md`; tuning decision: `06-TUNING.md`). Stored and rendered totals are separate. Limits: 256 KiB per file, 1000 entries, depth 6, 200 listed files (the rest are still counted in the total). `.cache/`, `archive/` and `*-archive.md`, symlinks (never followed), non-regular, oversize files and traversal limits are listed under `Omitted:` with the reason. Never writes, runs checks, shells, models or git. Exit 0 report printed; 1 without `.telos/`, on an unreadable config or when the selected bundle refuses (`REFUSED:`, a profile gate, an unknown shared name: `not measured`, no report); 2 on any other argument, an unknown bundle or bundle arguments the bundle rejects |
-| `telos ctx <bundle> [args]` | Print a skill's context bundle (≤ 6000 chars, comments stripped); unknown bundle → one line, exit 0 |
-| `telos ctx init [profile]` | Bundle for `/telos:init`: profile, repo and Telos state, CLAUDE.md block state, detected stack/checks with evidence |
-| `telos ctx lesson` | Bundle for `/telos:lesson` (the lesson stays in the skill body): exact `Requires standard profile. …` on minimal; `REFUSED: …` when LESSONS.md is missing (restore with `telos profile <current>`); else profile, default ref, `Lessons: N/20` (full-list guidance at 20), every entry as `L<n> (line N) [area] text (ref)`, malformed lines with reasons, then PROJECT Conventions (cut first by the cap). Never writes |
-| `telos ctx map [--refresh]` | Bundle for `/telos:map`: `Map validation: NOT BUILT\|PASS <tokens>/<limit>\|FAIL <reasons>` for the whole saved MAP (machine header read before comments are stripped), mode, exact header to write, token limit, headings and ref syntax, PROJECT draft/preserve state, source suggestions, then scan rows sized to fit. `--refresh` diffs the MAP header commit to HEAD: `Mode: noop`, `incremental` (≤ 30% of nonempty sections and `###` Areas affected; adds Reason, Impact, Changed, New Area candidates and each affected block whole) or `full` with the fallback Reason. `REFUSED: …` (exit 0) without init or HEAD, with uncommitted source changes (init-managed files allowed), a limit below the skeleton, an ambiguous MAP or diff, or affected blocks too large for the 6000-char payload; other arguments → exit 2. Also `Auto-commit: yes\|no` and the commit policy: `Commit after PASS: ask once; …` with the exact explicit-path commands, or `Commit: none — git.auto_commit is false; no git writes …` |
-| `telos ctx plan [NN\|description]` | Bundle for `/telos:plan`: target phase (STATUS phase by default, plus the NN a new phase would get; a description → the next NN), the phase file state (`exists, done/total`) or, when missing, the rendered `templates/phase.md` skeleton, carry-over items of the target phase, PROJECT Purpose and Rules, stack, checks, `Auto-commit: yes\|no`, Delete-zone approaches, MAP `## Find` lines and the roadmap (one line per phase, last so `cap()` cuts it first). Never writes |
-| `telos ctx approve [NN]` | Bundle for `/telos:approve`: phase line, task index, lint-plan result, draft ids, tasks blocked by proposed or awaited decisions, phase tag, uncommitted `.telos/` changes |
-| `telos ctx check [NN]` | Bundle for `/telos:check`: exact `Requires standard profile. …` on minimal; `REFUSED: …` without a phase, for a phase missing from ROADMAP or without task files; else profile, target, tasks with acceptance command/manual counts, `Accept:` commands for done tasks, skipped unfinished tasks, the exact full-check command `telos check --level full --phase NN` with its checks (or `UNVERIFIED`), on deep an `E2E:` line for critical code tasks (the configured e2e, or not configured — UNVERIFIED, which `ctx done` also lists as a close blocker), unresolved decisions/questions/Awaiting user of the phase. Never writes; a non-`NN` argument → exit 2. On deep also `Deep close:` (the close sequence), `Critical evidence` per critical code task (RED/GREEN recorded or missing in Result, the recorded review verdict and EvidenceId marked current, stale or unavailable, or not reusable — reused only for PASS / PASS WITH NOTES whose EvidenceId equals the task's current complete review evidence), `Review:` (none required, reuse, or the exact `telos ctx review NN` + `telos ctx shared review` → `telos:reviewer-hard` route) and `Doc-sync:` with `telos docs-scan NN`, `telos changelog NN` and the docs/changelog destinations. Over 6000 chars the task list and per-task evidence shrink to ids so verdicts and blockers stay whole |
-| `telos ctx close [NN]` | Bundle for `/telos:close` (STATUS phase by default): target line, `Unfinished:` items, `Checks` with every configured check command, `History: phase entry missing\|recorded`, `Auto-commit: yes\|no`, `Close: ready` or `Close: blocked` with one reason per line, and the exact closing commands with the next planned phase. `REFUSED: …` for no phase, a phase missing from ROADMAP, a done or non-active phase. Never writes; a non-`NN` argument → exit 2 |
-| `telos ctx discuss [NN]` | Bundle for `/telos:discuss` (focus text stays in the skill body): exact `Requires standard profile. …` on minimal; `REFUSED: …` for no STATUS phase, a phase missing from ROADMAP, or a `done`/`dropped` one; otherwise profile, target line, Mode (`write` planned, `drafted`, `active` → append-only, changes via revise), CONTEXT path and line count, next free `D-NN`/`Q-NN`, decisions referenced by tasks, Awaiting user, PROJECT Purpose/Rules, carry-over, task index and the CONTEXT (or the skeleton to create). Never writes; a non-`NN` argument → exit 2 |
-| `telos ctx docs [--scope path]…` | Deep-only, read-only bundle for `/telos:docs` (≤ 6000 chars): target phase and scope (`none (current phase diff)` by default), docs destinations, configured checks, up to 8 documentation MAP pointers, the scan baseline, `Doc matches`, `Omissions`, `Changed paths`, `Symbol candidates` and one `Sync:` line (`NO-OP`, `UPDATE` or `NOT VERIFIED`). Rows drop by priority (omissions, matches, paths, symbols) with an explicit count and the `telos docs-scan` remedy, which also makes the verdict `NOT VERIFIED`; a missing configured docs path is listed but does not block. Scopes must match letters, digits and `. _ - @ + /` and pass the scanner's literal-path checks, otherwise exit 2 before any scan; missing phase tag → `REFUSED` with the remedy (no history fallback); lower profiles → `Requires deep profile. …`. Never writes |
-| `telos ctx do [id]` | Bundle for `/telos:do`: picks the in-progress task or the first approved one with done depends; `REFUSED: …` (exit 0) for draft tasks, unmet depends and proposed/awaited decisions; else the task line, `Profile: <name>`, on deep for `critical` code tasks a `Deep critical (D-02)` block (RED rule, exact `telos check --level full --task <id>` with its e2e or `not configured → blocked`, `telos:reviewer-hard` on `telos ctx review <id>`, Result evidence lines and, when resumed, the recorded `RED:` line or a block), all ahead of the excerpts and never cut; then the task file, STATUS, PROJECT Rules, stack, checks, `Auto-commit: yes\|no`, CONTEXT goal and decisions, depends' Interface, Read-first excerpts (stale ones flagged) and up to 10 scope-matching MAP lines (a stub MAP → only its Not built yet hint) |
-| `telos ctx profile` | Bundle for `/telos:profile` (the requested profile stays in the skill body): current profile, present/missing files per profile, phase CONTEXT/RESEARCH counts, switch and retention guidance; `REFUSED: …` on invalid config; never writes |
-| `telos ctx quick [--area <path-or-topic>]…` | Bundle for `/telos:quick` (the description stays in the skill body): current phase/task (warns when one is in progress), PROJECT Rules, stack, quick checks (`test_related`, `test`, `lint`, `types`), working tree (≤ 20 files), size guard. Standard/deep then add memory, budgeted after Rules/Checks with `… N more … omitted (see <file>)` lines: lessons only for the given selectors (a path matches lesson areas at `/` boundaries, so `src/a` never matches `src/ab/`; a topic matches exactly, case-insensitive; no selectors → no lessons, only a rerun hint) and all Delete-zone approaches from the live HISTORY (never the archive). Selectors are explicit argv of `A-Z a-z 0-9 . _ @ + / -`, relative, ≤ 20; anything else → exit 2 |
-| `telos ctx research [NN]` | Deep-only, read-only bundle for `/telos:research` (≤ 6000 chars): STATUS phase by default; only the phase target, CONTEXT Goal, open questions, stack and the MAP lines sharing a topic word, plus the single `Report: .telos/phases/NN-name/NN-RESEARCH.md` path, its `Report status` (missing → create; exists → preserve unless `--replace`) and the date. An existing report is shown as `| `-prefixed data. Long lists end with an omission line naming the file to read. Missing STATUS phase, ROADMAP phase or CONTEXT and done phases → `REFUSED` with remedy (nothing created); minimal/standard → exact deep gate; malformed selector → exit 2 |
-| `telos ctx review [NN-MM\|NN]` | Deep-only, read-only review evidence (≤ 6000 chars): defaults to STATUS task, otherwise phase. Task: exact `<type>(NN-MM):` commits after `telos/NN-start` plus current task-scope edits; phase: tag through HEAD plus all current edits. Includes separate staged/unstaged patches, rename/delete/binary/untracked kinds, Acceptance, relevant MAP lines and a content-based `EvidenceId`. Omitted evidence has exact read-only commands or file ranges; `UNVERIFIED` forbids a clean verdict until inspected (binary, conflicts and submodules also require inspection). Repository text is data. Missing tag/target/repository or unavailable evidence → `REFUSED` with remedy, never all-history fallback; too many continuation references → refusal to split the review. Minimal/standard return the exact deep profile gate; malformed selector → exit 2. Never writes git, tasks or STATUS |
-| `telos ctx undo [NN-MM]` | Bundle for `/telos:undo` (read-only; never touches git state): without an id the undo candidates of the STATUS phase; with one the target and phase, `<type>(<id>):` commits after `telos/NN-start` newest first with full hashes and `--stat`, the revert order, `.telos/` files in those commits, transitive dependents, `Block after undo`, whether the phase reopens, on deep the `ADRs linked to <id>` lines (ADRs whose Source `NN:D-MM` is one of the task's decisions: unique accepted ones proposed with their exact `telos adr revert` command, ones whose decision an unreverted task of the phase shares marked `only if explicitly selected`, non-accepted ones `no change`, `Chain:` notes for predecessors that stay superseded, and an `ADR selection` summary; a malformed ADR file → `REFUSED`), `Auto-commit`. `REFUSED: …` with a remedy for a missing task, an already reverted task (status or a `revert(<id>):` commit), no repo, uncommitted changes, a missing phase tag, no task commits or a merge commit; exact `Requires standard profile. …` on minimal; a malformed id → exit 2 |
-| `telos ctx shared <name>` | Print `shared/<name>.md`, the instructions a skill and its `-lite`/`-hard` variant share (skills cannot `cat` plugin files) |
-| `telos ctx status` | Bundle for `/telos:status`: status view (incl. the read-time map → plan Next), stack line, file pointers |
-
-History text and approach selectors must be non-empty single lines without surrounding whitespace
-or HTML comments; approaches cannot contain the separator ` — `. Paths use `/` separators;
-`./`, repeated and trailing slashes normalize away. Absolute paths, traversal, backslashes,
-backticks, colons and targets resolving outside the repository are refused. A selector names
-one exact target: reverting `src/old` does not clear `src/older` or other entries with the same ref.
-
-Only Log entries over `limits.history_entries` rotate, oldest first, into
-`.telos/HISTORY-archive.md` (created on demand, with a `# History archive` title and `## Log`
-section). Delete-zone entries, comments and unrelated sections stay intact. Existing storage
-must have valid canonical sections and rows; missing HISTORY, malformed or unreadable files,
-and storage symlinks are refused before mutation. Writes are staged and synced before
-replacement, with the archive installed first. If interrupted between replacements, the
-original live entries remain recoverable and the archive may contain duplicate live rows;
-retrying is safe for retaining entries, but can preserve those duplicates. No Git writes occur.
-
-## Hooks
-
-Node scripts in `hooks/`, no model calls; each exits silently when `.telos/` is missing.
-
-| Event | Profile | Behavior |
-|---|---|---|
-| `SessionStart` (startup, resume, clear) | all | Injects a compact status (≤ 1200 chars): *Awaiting user* first (if any), PROJECT Purpose line 1, stack, profile, phase/task with live states, Next (same read-time map → plan hint as `telos status`), Blockers, carry-over count, latest Recent line, file pointers |
-| `SessionStart` (compact) | standard, deep | The same status, plus `Before compaction: task <id> · edited: <paths> (+N more)` from `.telos/.cache/session` when it was saved by this session (`session_id` hash must match); paths are trimmed to the room left under 1200 chars, so Awaiting user stays first and the task line stays visible. Minimal, a missing, corrupt, oversized or foreign cache → the plain status |
-| `PreCompact` | standard, deep | Saves `{version, session hash, STATUS task, edited paths}` to `.telos/.cache/session` (≤ 50 validated relative paths still queued by the PostToolUse hook). No output |
-| `PreToolUse` Bash | all | Git guard: blocks `git push`, `--no-verify` (also `commit -n`), `git add -A` / `--all` / `.` / `:/`, `git commit --amend` when HEAD is on a remote branch, and `git reset --hard`, with exit 2 and `telos git guard: <rule> — <why>`; it splits `&&`, `;`, `|`, env prefixes, `git -C`/`-c` and `sh -c '…'`, and ignores quoted text |
-| `PreToolUse` Edit/Write | standard, deep | Config protection: an edit to a `protected_configs` file (exact name, glob such as `eslint.config.*`, a name without `/` at any depth; `pyproject.toml#tool.ruff` protects the whole file) is blocked with exit 2 unless the in-progress STATUS task lists that exact path under Files; a broader `scope` never authorizes it, and without an in-progress task it is always blocked |
-| `PreToolUse` Edit/Write | standard, deep | Scope guard: with an in-progress STATUS task, an edit outside its `scope` adds a warning naming the scope and the `Deviations: <path> — <why>` line to record; `strict_scope: true` blocks it instead. `.telos/` is exempt; no in-progress task → no scope check. Paths are matched relative to the repo root, both lexically and through symlinks (`../`, absolute paths, symlinked files or directories, `srcx/` vs `src/` cannot bypass). Invalid standard config or an unreadable STATUS task blocks every edit outside `.telos/` with the fix to apply; minimal, missing `.telos/` and other tools are silent; unreadable hook input is reported and not checked |
-| `PreToolUse` Edit/Write | standard, deep | Delete-zone guard: editing a path listed in HISTORY (or any descendant) warns with its reason/ref and an exact `telos history add revert <ref> 'Restore on user request' --path '<deleted-root>'` command. Paths use the scope guard's normalizer, including symlinks. Warns once per canonical edited path per session using hashed markers only under `.telos/.cache/`; a missing session ID or unavailable/corrupt cache leaves warnings enabled. Warnings compose with scope warnings and never block, even with `strict_scope`; config/scope denials still take precedence. Only an explicit revert with the exact path selector clears the entry; approach entries remain in plan/quick until their own exact revert |
-| `PreToolUse` Edit/Write | standard, deep | Context hint: when `TELOS_CONTEXT_WINDOW` (capacity in tokens) is set, reads the last main-thread assistant `message.usage` (`input_tokens` + `cache_creation_input_tokens` + `cache_read_input_tokens`) from the hook's `transcript_path` and, the first time per session usage crosses 70%, 85% or 100%, adds one line: unrelated work → `/clear`; same task → checkpoint, then `/compact`; blocked → record the blocker and stop. A skipped threshold is not shown later. Hook payloads carry no capacity, so without the variable (or with unreadable usage) no percentage is estimated; transcript text is never echoed |
-| `PostToolUse` Edit/Write | standard, deep | Queues the canonical repo path of each successful Edit/Write/MultiEdit/NotebookEdit under `.telos/.cache/edited/<session>/pending/` (one file per path, so repeats deduplicate); `.telos/`, outside-repo paths, failed edits, other tools, minimal and missing `.telos/` are ignored. No output |
-| `Stop` | standard, deep | Atomically claims the session's queued paths (an edit arriving during the run goes to the next batch) and runs `checks.format` then `checks.types` once, passing the files through `{files}` as individually quoted literal paths (a command without `{files}` runs unchanged); `checks.format` is optional and never guessed or detected: unset → no formatter runs. Silent on success, no files or no format/types configured. A failure or timeout (120 s per check) blocks with exit 2 and at most 10 lines per failed check; the batch stays queued and merges into the next one. Skipped while `stop_hook_active` is set, so it never loops. Deep only, when no check failed: a nonblocking `systemMessage` reminder (once per session per message) that `.telos/MAP.md` may be stale because top-level directories (outside dot, vendor, build and cache trees) or declared entry points (`package.json` main/bin/exports, `pyproject.toml` project.scripts) appeared since the MAP header commit; read-only git names and manifests only, no source contents, no automatic refresh, never exit 2; silent without a valid MAP header. No git or Telos state writes (except the reminder's `.telos/.cache` marker) |
+`npm test` runs the `node:test` suites. See [AGENTS.md](AGENTS.md) for the layout and rules.

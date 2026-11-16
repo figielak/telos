@@ -92,7 +92,7 @@ Note: the ROADMAP line says "every removed path". Read it as above: individual `
   - Rewrite this repo's `.telos/config.json` with `telos init --force`.
   - Accept: `grep -c profile .telos/config.json` is 0; `npm test` passes.
 
-- [ ] **10-07 Docs and Delete-zone**
+- [x] **10-07 Docs and Delete-zone**
   - README.md ≤ 200 lines: what it is, install, five-minute walkthrough, command tables,
     hooks, benchmark summary (kept), limits.
   - Delete `SPEC.md`; update `AGENTS.md`, `templates/claude-block.md` (then re-sync

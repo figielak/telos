@@ -68,7 +68,7 @@ test('CLAUDE.md keeps user text and gets exactly one current block', async () =>
   await telos(root, 'init');
   await telos(root, 'init');
   const text = read(root, 'CLAUDE.md');
-  assert.ok(text.startsWith('# My rules\n\nBe nice.\n\n<!-- telos:start v1 -->\n'), text);
+  assert.ok(text.startsWith('# My rules\n\nBe nice.\n\n<!-- telos:start v2 -->\n'), text);
   assert.ok(text.endsWith('<!-- telos:end -->\n\nAfter.\n'), text);
   assert.equal(text.match(/telos:start/g).length, 1);
   assert.doesNotMatch(text, /old block/);
@@ -77,17 +77,17 @@ test('CLAUDE.md keeps user text and gets exactly one current block', async () =>
 test('CLAUDE.md is created, or the block appended after user text', async () => {
   const fresh = repo();
   await telos(fresh, 'init');
-  assert.match(read(fresh, 'CLAUDE.md'), /^<!-- telos:start v1 -->\n/);
+  assert.match(read(fresh, 'CLAUDE.md'), /^<!-- telos:start v2 -->\n/);
 
   const own = repo();
   writeFileSync(join(own, 'CLAUDE.md'), '# Mine');
   await telos(own, 'init');
-  assert.match(read(own, 'CLAUDE.md'), /^# Mine\n\n<!-- telos:start v1 -->\n/);
+  assert.match(read(own, 'CLAUDE.md'), /^# Mine\n\n<!-- telos:start v2 -->\n/);
 });
 
 test('a start marker without an end marker is refused', async () => {
   const root = repo();
-  writeFileSync(join(root, 'CLAUDE.md'), '<!-- telos:start v1 -->\nbroken\n');
+  writeFileSync(join(root, 'CLAUDE.md'), '<!-- telos:start v2 -->\nbroken\n');
   const r = await telos(root, 'init');
   assert.equal(r.code, 1);
   assert.match(r.stderr, /telos:end/);

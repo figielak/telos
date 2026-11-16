@@ -1,6 +1,6 @@
 {
   "name": "telos",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI and hooks for the Telos Claude Code plugin",
   "private": true,
   "type": "module",
