@@ -36,7 +36,7 @@ in its sandbox.
   - User text still never enters a shell injection; arguments stay validated argv.
   - Accept: bundle tests assert instructions + context; `telos budget --ctx` for each ≤ cap.
 
-- [ ] **14-03 Rules block in AGENTS.md**
+- [x] **14-03 Rules block in AGENTS.md**
   - `templates/agents-block.md` replaces `templates/claude-block.md`: memory files, "run
     `telos status` first", "read the area before editing", the command list as
     `telos ctx <name>`, Delete-zone rule, commit rules.

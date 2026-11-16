@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -62,36 +62,85 @@ test('rerun creates nothing and reports everything as kept', async () => {
   for (const f of FILES) assert.equal(read(root, `.telos/${f}`), before[f], f);
 });
 
-test('CLAUDE.md keeps user text and gets exactly one current block', async () => {
+// 14-03: the rules block lives in AGENTS.md, which every agent reads; CLAUDE.md imports it.
+const BLOCK = /^<!-- telos:start v5 -->\n[\s\S]*?<!-- telos:end -->\n/m;
+
+test('a fresh repo gets the block in AGENTS.md and a CLAUDE.md that imports it', async () => {
   const root = repo();
-  writeFileSync(join(root, 'CLAUDE.md'), '# My rules\n\nBe nice.\n\n<!-- telos:start -->\nold block\n<!-- telos:end -->\n\nAfter.\n');
-  await telos(root, 'init');
-  await telos(root, 'init');
-  const text = read(root, 'CLAUDE.md');
-  assert.ok(text.startsWith('# My rules\n\nBe nice.\n\n<!-- telos:start v4 -->\n'), text);
-  assert.ok(text.endsWith('<!-- telos:end -->\n\nAfter.\n'), text);
-  assert.equal(text.match(/telos:start/g).length, 1);
-  assert.doesNotMatch(text, /old block/);
+  const r = await telos(root, 'init');
+  assert.equal(r.code, 0, r.stderr);
+  assert.match(read(root, 'AGENTS.md'), /^<!-- telos:start v5 -->\n## Telos\n/);
+  assert.equal(read(root, 'CLAUDE.md'), '@AGENTS.md\n');
+  assert.match(r.stdout, /^Created: config\.json, .*AGENTS\.md, CLAUDE\.md/m);
 });
 
-test('CLAUDE.md is created, or the block appended after user text', async () => {
-  const fresh = repo();
-  await telos(fresh, 'init');
-  assert.match(read(fresh, 'CLAUDE.md'), /^<!-- telos:start v4 -->\n/);
+test('an existing AGENTS.md keeps its text and gets exactly one current block; reruns change nothing', async () => {
+  const root = repo();
+  writeFileSync(join(root, 'AGENTS.md'), '# Agents\n\nUse tabs.\n\n<!-- telos:start v4 -->\nold block\n<!-- telos:end -->\n\nAfter.\n');
+  writeFileSync(join(root, 'CLAUDE.md'), '# Claude\n\n@AGENTS.md\n');
+  await telos(root, 'init');
+  const agents = read(root, 'AGENTS.md');
+  assert.ok(agents.startsWith('# Agents\n\nUse tabs.\n\n<!-- telos:start v5 -->\n'), agents);
+  assert.ok(agents.endsWith('<!-- telos:end -->\n\nAfter.\n'), agents);
+  assert.doesNotMatch(agents, /old block/);
+  assert.equal(read(root, 'CLAUDE.md'), '# Claude\n\n@AGENTS.md\n', 'an existing import is kept as is');
+
+  const r = await telos(root, 'init');
+  assert.doesNotMatch(r.stdout, /^(Created|Updated):/m);
+  assert.match(r.stdout, /^Kept: .*AGENTS\.md, CLAUDE\.md/m);
+  assert.equal(read(root, 'AGENTS.md'), agents);
+
+  const plain = repo();
+  writeFileSync(join(plain, 'AGENTS.md'), '# Mine');
+  await telos(plain, 'init');
+  assert.match(read(plain, 'AGENTS.md'), /^# Mine\n\n<!-- telos:start v5 -->\n/);
+});
+
+test('an old CLAUDE.md block migrates: removed, replaced by the import, user text kept', async () => {
+  const root = repo();
+  writeFileSync(join(root, 'CLAUDE.md'), '# My rules\n\nBe nice.\n\n<!-- telos:start v4 -->\n## Telos\nold\n<!-- telos:end -->\n\nAfter.\n');
+  await telos(root, 'init');
+  assert.equal(read(root, 'CLAUDE.md'), '# My rules\n\nBe nice.\n\n@AGENTS.md\n\nAfter.\n');
+  assert.match(read(root, 'AGENTS.md'), BLOCK);
+  assert.equal(read(root, 'AGENTS.md').match(/telos:start/g).length, 1);
+
+  const imported = repo();
+  writeFileSync(join(imported, 'CLAUDE.md'), '@AGENTS.md\n\n<!-- telos:start -->\nold\n<!-- telos:end -->\n');
+  await telos(imported, 'init');
+  assert.equal(read(imported, 'CLAUDE.md'), '@AGENTS.md\n', 'the block goes; the import is not doubled');
+
+  const middle = repo();
+  writeFileSync(join(middle, 'CLAUDE.md'), 'A\n\n<!-- telos:start -->\nold\n<!-- telos:end -->\n\nB\n@AGENTS.md\n');
+  await telos(middle, 'init');
+  assert.equal(read(middle, 'CLAUDE.md'), 'A\n\nB\n@AGENTS.md\n');
 
   const own = repo();
   writeFileSync(join(own, 'CLAUDE.md'), '# Mine');
   await telos(own, 'init');
-  assert.match(read(own, 'CLAUDE.md'), /^# Mine\n\n<!-- telos:start v4 -->\n/);
+  assert.equal(read(own, 'CLAUDE.md'), '# Mine\n\n@AGENTS.md\n');
 });
 
-test('a start marker without an end marker is refused', async () => {
+test('a CLAUDE.md that links to AGENTS.md is left alone', async () => {
   const root = repo();
-  writeFileSync(join(root, 'CLAUDE.md'), '<!-- telos:start v4 -->\nbroken\n');
+  writeFileSync(join(root, 'AGENTS.md'), '# Shared\n');
+  symlinkSync('AGENTS.md', join(root, 'CLAUDE.md'));
   const r = await telos(root, 'init');
-  assert.equal(r.code, 1);
-  assert.match(r.stderr, /telos:end/);
-  assert.equal(existsSync(join(root, '.telos')), false, 'nothing written');
+  assert.equal(r.code, 0, r.stderr);
+  assert.match(read(root, 'AGENTS.md'), /^# Shared\n\n<!-- telos:start v5 -->/);
+  assert.doesNotMatch(read(root, 'AGENTS.md'), /@AGENTS\.md/);
+  assert.ok(lstatSync(join(root, 'CLAUDE.md')).isSymbolicLink());
+});
+
+test('a start marker without an end marker in either file is refused, writing nothing', async () => {
+  for (const file of ['AGENTS.md', 'CLAUDE.md']) {
+    const root = repo();
+    writeFileSync(join(root, file), '<!-- telos:start v4 -->\nbroken\n');
+    const r = await telos(root, 'init');
+    assert.equal(r.code, 1, file);
+    assert.match(r.stderr, new RegExp(`${file.replace('.', '\\.')} has .*telos:end`), file);
+    assert.equal(existsSync(join(root, '.telos')), false, `${file}: nothing written`);
+    assert.equal(existsSync(join(root, file === 'AGENTS.md' ? 'CLAUDE.md' : 'AGENTS.md')), false, `${file}: no other file`);
+  }
 });
 
 test('--checks and --stack override detection; invalid input exits 2', async () => {
@@ -163,5 +212,5 @@ test('rendered files contain no placeholders', async () => {
   const root = repo();
   await telos(root, 'init');
   for (const f of tree(root)) assert.doesNotMatch(read(root, `.telos/${f}`), /\{\{/, f);
-  assert.doesNotMatch(read(root, 'CLAUDE.md'), /\{\{/);
+  for (const f of ['AGENTS.md', 'CLAUDE.md']) assert.doesNotMatch(read(root, f), /\{\{/, f);
 });

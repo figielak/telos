@@ -15,11 +15,11 @@ const vars = {
 
 // Size limits, in lines.
 const LINE_LIMITS = {
-  'PROJECT.md': 60, 'ROADMAP.md': 80, 'STATUS.md': 40, 'phase.md': 80, 'claude-block.md': 15,
+  'PROJECT.md': 60, 'ROADMAP.md': 80, 'STATUS.md': 40, 'phase.md': 80, 'agents-block.md': 18,
 };
 
 test('all expected templates exist', () => {
-  const expected = ['PROJECT.md', 'MAP.md', 'ROADMAP.md', 'STATUS.md', 'HISTORY.md', 'phase.md', 'claude-block.md', 'area.md'];
+  const expected = ['PROJECT.md', 'MAP.md', 'ROADMAP.md', 'STATUS.md', 'HISTORY.md', 'phase.md', 'agents-block.md', 'area.md'];
   assert.deepEqual([...names].sort(), [...expected].sort());
 });
 
@@ -37,9 +37,10 @@ test('templates stay within their line limits', () => {
   }
 });
 
-test('CLAUDE.md block is marked and within ~250 tokens', () => {
-  const block = render('claude-block.md', vars);
-  assert.ok(block.length <= 1000, `${block.length} chars`);
+// 14-03: +status-first and step lines over the v4 CLAUDE.md block (≤ 1000 chars).
+test('AGENTS.md block is marked and within ~325 tokens', () => {
+  const block = render('agents-block.md', vars);
+  assert.ok(block.length <= 1300, `${block.length} chars`);
   assert.match(block, /^<!-- telos:start v\d+ -->\n/);
   assert.match(block, /<!-- telos:end -->\n$/);
 });
@@ -48,6 +49,15 @@ test('a missing variable is an error naming it', () => {
   assert.throws(() => render('phase.md', {}), /missing variable/);
 });
 
-test('the CLAUDE.md block points at area files before editing', () => {
-  assert.match(render('claude-block.md', vars), /`telos area for <path>`[\s\S]*\.telos\/areas\/<name>\.md/);
+test('the AGENTS.md block points at area files before editing', () => {
+  assert.match(render('agents-block.md', vars), /`telos area for <path>`[\s\S]*\.telos\/areas\/<name>\.md/);
+});
+
+test('the AGENTS.md block works without hooks or skills (14:D2-D4)', () => {
+  const block = render('agents-block.md', vars);
+  assert.match(block, /Run `telos status` first/);
+  assert.match(block, /`telos ctx <step>`/);
+  for (const step of ['plan', 'close', 'catchup', 'map']) assert.match(block, new RegExp(`\`${step}[\` ]`), step);
+  assert.match(block, /Delete-zone/);
+  for (const rule of ['git add -A', '--no-verify', 'reset --hard', 'push']) assert.ok(block.includes(rule), rule);
 });

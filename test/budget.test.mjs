@@ -73,7 +73,7 @@ test('the default report is deterministic, with distinct stored and rendered tot
     assert.match(a.out, /^Host usage: not measured/m);
     assert.match(a.out, /\.telos\/STATUS\.md · \d+ B/);
     assert.match(a.out, /SessionStart \(hook output\) · \d+ B/);
-    assert.match(a.out, /CLAUDE\.md Telos block · \d+ B/);
+    assert.match(a.out, /AGENTS\.md Telos block · \d+ B/);
   }
 });
 
@@ -144,11 +144,11 @@ test('malformed selectors and arguments exit 2', async (t) => {
 test('missing optional memory and block are explicit rows; no .telos exits 1', async (t) => {
   const root = repo(t);
   rmSync(join(root, '.telos', 'HISTORY.md'));
-  rmSync(join(root, 'CLAUDE.md'));
+  rmSync(join(root, 'AGENTS.md'));
   const { code, out } = await budget(root);
   assert.equal(code, 0);
   assert.match(out, /\.telos\/HISTORY\.md · missing/);
-  assert.match(out, /CLAUDE\.md Telos block · missing/);
+  assert.match(out, /AGENTS\.md Telos block · missing/);
   rmSync(join(root, '.telos', 'STATUS.md'));
   assert.match((await budget(root)).out, /SessionStart \(hook output\) · missing/);
 

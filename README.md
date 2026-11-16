@@ -25,8 +25,9 @@ Requires Claude Code with plugin support, Git and Node.js ≥ 20.10. No dependen
 ## Five-minute walkthrough
 
 1. `telos init` — detects the stack and check commands, creates `.telos/` (PROJECT, MAP,
-   ROADMAP, STATUS, HISTORY, `config.json`), adds a short Telos block to `CLAUDE.md` and
-   `.telos/.cache/` to `.gitignore`. Rerun-safe: existing files are kept.
+   ROADMAP, STATUS, HISTORY, `config.json`), adds a short Telos rules block to `AGENTS.md`
+   (read by Codex and other agents), an `@AGENTS.md` import to `CLAUDE.md` (an old Telos block
+   there is removed) and `.telos/.cache/` to `.gitignore`. Rerun-safe: existing files are kept.
 2. `/telos:map` — on an existing codebase, writes `.telos/MAP.md`, a short index (structure,
    one row per area, where to find things), and one `.telos/areas/<name>.md` per area (entry
    points, invariants, decisions) from a deterministic scan and a few targeted reads, and
@@ -77,7 +78,7 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error. The C
 | Command | Purpose |
 |---|---|
 | `telos --help` / `--version` | List commands / print the version |
-| `telos init [--stack a,b] [--checks '<json>'] [--force]` | Create the memory files, sync the CLAUDE.md block, add `.telos/.cache/` to `.gitignore`. Stack and checks default to detection (check keys: `build`, `types`, `lint`, `test`, `e2e`). Existing files are kept; `--force` rewrites `config.json` as version 2, keeping its values (a version 1 file loses `profile`, `docs`, `protected_configs`, `strict_scope` and the `format`/`test_related` checks) |
+| `telos init [--stack a,b] [--checks '<json>'] [--force]` | Create the memory files, sync the rules block into `AGENTS.md` and the `@AGENTS.md` import into `CLAUDE.md` (an old CLAUDE.md block is removed; a CLAUDE.md symlink to AGENTS.md is left alone; a start marker without an end marker exits 1, writing nothing), add `.telos/.cache/` to `.gitignore`. Stack and checks default to detection (check keys: `build`, `types`, `lint`, `test`, `e2e`). Existing files are kept; `--force` rewrites `config.json` as version 2, keeping its values (a version 1 file loses `profile`, `docs`, `protected_configs`, `strict_scope` and the `format`/`test_related` checks) |
 | `telos status` | Compact status: phase with its ROADMAP state, task with its checklist state (`open`/`done`), Next, Blockers, carry-over count, latest Recent line; Awaiting user first |
 | `telos status set <key>=<value>…` | Set STATUS lines: `phase`, `task`, `next`, `blockers`, `awaiting`; empty value → `none` |
 | `telos status add recent\|carry "<line>"` / `rm carry <n>` | Prepend to Recent (3 newest kept); append to Carry-over (max 5); remove item `n` |
@@ -92,7 +93,7 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error. The C
 | `telos stale [--area <name>]… [--check]` / `--unmapped` | Without a model: one line per area whose header paths changed between its anchor commit and HEAD or are dirty (`<area>: stale · N files since <sha7> (a, b, +K more)`), whose anchor commit is gone (`unanchored`) or whose body has a backticked `path[:line]` to a missing file or past its end (`broken ref`); then `fresh: N areas` and changed files under no area (`unmapped: N files (top dirs)`). ≤ 6000 chars, omitted lines counted. Exit 0; `--check` exits 1 when anything is stale, broken or unanchored. `--unmapped` prints only the unmapped paths, one per line (`unmapped: none` when empty), and takes no other option |
 | `telos map-scan` | Deterministic repository inventory for `/telos:map` (≤ 2000 estimated tokens); works before init, never executes repository code |
 | `telos ctx <bundle> [args]` | Print one self-contained step: the context (≤ 6000 chars, comments stripped), then `## Instructions` from `shared/<name>.md` (≤ 5600 chars), for `status`, `map [--refresh]`, `plan [NN\|description] [--area <path>]…`, `close [NN]` and `catchup`; a `REFUSED: …` or `Nothing to catch up` line comes alone. `shared <name>` prints only an instruction file |
-| `telos budget [--ctx <bundle> [args]]` | Read-only size report: `.telos/` files, the CLAUDE.md block, the SessionStart output and optionally one bundle, in bytes, chars and ~tokens (chars / 4) |
+| `telos budget [--ctx <bundle> [args]]` | Read-only size report: `.telos/` files, the AGENTS.md block, the SessionStart output and optionally one bundle, in bytes, chars and ~tokens (chars / 4) |
 
 `ctx plan` gives the target phase and its file (or the template skeleton), carry-over, PROJECT
 Purpose and Rules, stack, checks, Delete-zone approaches, the MAP index and the roadmap. Each
