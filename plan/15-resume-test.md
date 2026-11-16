@@ -28,7 +28,7 @@ session know the project better, and more cheaply, with the memory than without 
     parse and validate (5–10 questions, each with at least one fact).
   - Accept: parser tests for valid, too few, missing `expect`.
 
-- [ ] **15-02 Runner**
+- [x] **15-02 Runner**
   - For each question and variant: build the working copy (D3), run the agent command with
     the question and "answer in at most five lines", capture the answer and the usage.
   - Default agent command: Claude Code headless with JSON output; check the exact flags
