@@ -10,6 +10,7 @@ const vars = {
   name: 'demo-app', date: '2026-10-24',
   id: '01-02', title: 'Check board game', nn: '01', number: '001',
   source: '02:D-03', goal: 'Ship it', done: 'it ships', next: 'run `/telos:map` to map the existing code', supersedes: 'none',
+  commit: 'a'.repeat(40), paths: 'src/auth/, lib/x.mjs',
 };
 
 // Size limits, in lines.
@@ -18,7 +19,7 @@ const LINE_LIMITS = {
 };
 
 test('all expected templates exist', () => {
-  const expected = ['PROJECT.md', 'MAP.md', 'ROADMAP.md', 'STATUS.md', 'HISTORY.md', 'phase.md', 'claude-block.md'];
+  const expected = ['PROJECT.md', 'MAP.md', 'ROADMAP.md', 'STATUS.md', 'HISTORY.md', 'phase.md', 'claude-block.md', 'area.md'];
   assert.deepEqual([...names].sort(), [...expected].sort());
 });
 

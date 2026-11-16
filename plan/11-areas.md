@@ -21,7 +21,7 @@ a task bundle loads only the areas matching its paths; `npm test` passes.
 
 ## Tasks
 
-- [ ] **11-01 Area format and parser**
+- [x] **11-01 Area format and parser**
   - `templates/area.md`; `lib/areas.mjs`: parse header (commit, date, paths), sections,
     token estimate; `lintArea()` returns one problem per line.
   - Path matching reuses the `/`-boundary rule (`src/a` never matches `src/ab/`).
