@@ -48,7 +48,7 @@ session know the project better, and more cheaply, with the memory than without 
     report and the cost warning (2 × N headless sessions).
   - Accept: CLI test with the stub; README row present.
 
-- [ ] **15-05 First real run on Telos**
+- [x] **15-05 First real run on Telos**
   - Write eight questions for this repository from HISTORY and the area files; run once;
     record the report in Notes.
   - If bare scores as well as memory, record which questions were too easy and replace them
@@ -56,3 +56,45 @@ session know the project better, and more cheaply, with the memory than without 
   - Accept: a recorded report with both variants.
 
 ## Notes
+
+### 15-05 First real run (2026-11-16)
+
+`bin/telos resume-test` on this repo, default agent command (Claude Code 2.1, headless,
+read-only tools), eight questions in `.telos/resume-test.md`, 16 sessions of 9–18 s each:
+
+```text
+#  Question                                          memory  bare
+1  What is the current phase of this project and i…  ✓       ✓
+2  Which phase follows the current one, and what r…  ✓       ✓
+3  Where are the default size limits for the MAP i…  ✓       ✓
+4  Why does the Telos rules block live in AGENTS.m…  ✓       ✓
+5  Why was the bench/ benchmark harness removed?     ✓       ✓
+6  Why were the separate discuss, approve, check a…  ✓       ✓
+7  Why does /telos:map --refresh never fall back t…  ✗       ✗
+8  Why do the Telos hooks stay Claude Code only, a…  ✗       ✗
+
+             memory   bare
+Correct      6/8      6/8
+Tokens       1717.8K  1709.2K
+Cost         $2.14    $1.71
+Tool calls   20       22
+Failed runs  0        0
+```
+
+- Bare scored as well as memory: every question was too easy for bare **on this repo**,
+  because `plan/` (phase files with decisions and notes), README and the non-block part of
+  AGENTS.md repeat what `.telos/` holds; bare answers cited `plan/11-areas.md` and
+  `plan/14-agents.md`. Questions 1–6 are the too-easy ones. This repo cannot show a memory
+  advantage, so no replacement set is written here. Phase 16 must run the test on the large
+  project, whose questions have no copy outside `.telos/`.
+- 7 and 8 were scored wrong on both sides. The answers were right, but they said "hand-written"
+  and "trusts", not "authored" and "trusted". Both facts now take alternatives
+  (`authored|hand-written|by hand`, `trust`). Rule for writing facts: use the shortest stem.
+  Rescoring the same answers offline with the new facts gives memory 8/8 and bare 6/8. Both
+  bare misses are Polish answers, so this is not a memory advantage.
+- Bare answered in Polish despite "Answer in English": the user-level language setting wins over
+  the prompt. Keep facts to identifiers, paths and numbers, or add both languages as alternatives.
+- The memory side cost more ($2.14 vs $1.71) at about the same number of tool calls. Reading
+  `.telos/` adds tokens and saves no exploration when the facts are also in `plan/`.
+- Known leak: both copies keep `.git`, so a committed `.telos/resume-test.md` (and the memory) is
+  reachable through `git show`; no session did this here.
