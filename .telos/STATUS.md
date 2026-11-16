@@ -1,9 +1,9 @@
 # Status
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
-Phase: 10-prune
+Phase: 11-areas
 Task: none
-Next: 10-01 Remove website and deep features
+Next: 11-01 Area format and parser (plan/11-areas.md)
 Blockers: none
 Awaiting user: none
 <!-- Blockers: "NN-MM: reason". Awaiting user: IDs only, e.g. "02:Q-01, 02:D-03" -->
@@ -15,6 +15,6 @@ Awaiting user: none
 
 ## Recent
 <!-- max 3, newest first: "- NN-MM done: one line" -->
+- 10 closed: Telos cut to a memory core (4 skills, 3 hooks, config v2)
 - 09 dropped: superseded by the memory-core redesign; phases 10-16 added
 - 07 closed: benchmark removed by owner's decision; results kept in README Benchmark
-- 07-10 done: bench/RESULTS.md published in repo; Telos cost more in all 6 units, acceptance held
