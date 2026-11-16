@@ -26,7 +26,7 @@ any model call; SessionStart shows the stale count; `npm test` passes.
     11-01 matcher. Git calls go through `lib/git.mjs` (read-only, size and time limits).
   - Accept: unit tests for fresh, stale by commit, stale by dirty file, unanchored.
 
-- [ ] **12-02 Reference check**
+- [x] **12-02 Reference check**
   - Extract the reference check from `inspectMap` (`lib/map.mjs`) into a shared function and
     apply it to area bodies;
     report `<area>: broken ref <path[:line]>`.
