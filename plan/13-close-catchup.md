@@ -46,13 +46,13 @@ chars listing the changed areas, and `telos stale` is empty after the run; `npm 
     ≤ 10 lines what was recorded and what was left unverified.
   - Accept: `test/skills.test.mjs` asserts the instruction file is referenced by both skills.
 
-- [ ] **13-05 Skills**
+- [x] **13-05 Skills**
   - `skills/close/SKILL.md` (update) and `skills/catchup/SKILL.md` (new): one
     `telos ctx …` injection each, user-invoked only, no free user text in the injection.
   - README rows; CLAUDE.md block mentions catch-up after work outside Telos.
   - Accept: manifest test lists five skills: `status plan close catchup map`.
 
-- [ ] **13-06 End-to-end proof**
+- [x] **13-06 End-to-end proof**
   - `test/e2e-memory.test.mjs`: copy the `areas` fixture, make three commits without Telos
     (edit in area A, new file in area B, new top-level dir), assert the catch-up bundle
     (≤ 6000 chars, lists A, B and the unmapped dir), apply scripted area edits, run the
