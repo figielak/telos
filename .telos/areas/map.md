@@ -1,4 +1,4 @@
-<!-- telos-area: commit 8398de51a6a618345a0e99d7e102ab061a01332b · 2026-11-16 · paths: lib/map.mjs, lib/map-scan.mjs, lib/map-refresh.mjs, lib/map-budget.mjs, lib/areas.mjs, lib/stale.mjs, lib/refs.mjs -->
+<!-- telos-area: commit 61dffd78cf2b6bfda2b3b0457ec9a150a1027c24 · 2026-11-16 · paths: lib/map.mjs, lib/map-scan.mjs, lib/map-refresh.mjs, lib/map-budget.mjs, lib/areas.mjs, lib/stale.mjs, lib/refs.mjs -->
 # map
 
 ## Purpose
@@ -9,7 +9,7 @@ MAP index validation, repo scan, refresh planning, the area files and their stal
 - `lib/map-scan.mjs:147` — `scanRepo`; `lib/map-scan.mjs:209` — `renderScan`
 - `lib/map-refresh.mjs:66` — `planRefresh` (noop / incremental / full / refused)
 - `lib/areas.mjs:110` — `lintArea`; `:138` `loadAreas`; `:184` `areasFor`; `:303` `telos area`
-- `lib/stale.mjs:28` — `staleAreas` (`telos stale`); `lib/refs.mjs:15` — `parseReference`, `:39` `pathReferences`
+- `lib/stale.mjs:28` — `staleAreas` (`telos stale`); `lib/refs.mjs:15` — `parseReference`, `:41` `pathReferences`, `:77` `brokenReferences`
 
 ## Invariants
 - MAP ≤ `limits.map_tokens` (600), each area ≤ `limits.area_tokens` (800); over the limit is an
@@ -24,8 +24,9 @@ MAP index validation, repo scan, refresh planning, the area files and their stal
 - Two-level memory: MAP is a short index, details live in `.telos/areas/<name>.md` (11).
 - Refresh is always incremental over index blocks and area files; full only without a valid
   baseline (11-03) — area files hold authored Decisions, Rejected, Pitfalls.
-- Area bodies: only path-like backticked spans (a / or :line) are checked refs; MAP
-  keeps the strict rule that every span is a reference (12-02).
+- Area bodies: a backticked span is a checked ref only when it is path-like and either has a /
+  with its first segment present in the repo, or a :line after a name with an extension; MAP
+  keeps the strict rule that every span is a reference (12-02, 12 review).
 - The scan never executes repository code and excludes lockfiles, binaries and build dirs.
 
 ## Rejected
@@ -34,5 +35,7 @@ MAP index validation, repo scan, refresh planning, the area files and their stal
 
 ## Pitfalls
 - `ctx map` refuses on uncommitted source changes; commit before mapping.
-- A backticked example path in an area body is checked as a ref; write examples bare.
+- A backticked example path under an existing top-level directory is checked as a ref; write
+  such examples bare. A ref into a deleted top-level directory is no longer reported.
+- An uncommitted rename counts on both sides: the old path makes its area stale.
 - Write the MAP and area headers from `Header to write` / `Area header`; never invent a hash.

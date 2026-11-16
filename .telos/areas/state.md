@@ -1,4 +1,4 @@
-<!-- telos-area: commit 8398de51a6a618345a0e99d7e102ab061a01332b · 2026-11-16 · paths: lib/phases.mjs, lib/frontmatter.mjs, lib/config.mjs, lib/repo.mjs, lib/history.mjs, lib/git.mjs, lib/status.mjs, lib/roadmap.mjs -->
+<!-- telos-area: commit 61dffd78cf2b6bfda2b3b0457ec9a150a1027c24 · 2026-11-16 · paths: lib/phases.mjs, lib/frontmatter.mjs, lib/config.mjs, lib/repo.mjs, lib/history.mjs, lib/git.mjs, lib/status.mjs, lib/roadmap.mjs -->
 # state
 
 ## Purpose
@@ -14,6 +14,7 @@ Memory files and their writers: STATUS, ROADMAP, HISTORY, phase files, config, g
 - ROADMAP, STATUS and HISTORY change only through `telos`, never by hand.
 - Phase plans are read only via `lib/phases.mjs`, frontmatter only via `lib/frontmatter.mjs`.
 - `lib/git.mjs` only reads git (status, log, diff, rev-parse); each call ≤ 64 MiB and 10 s.
+- `porcelainFiles` lists both paths of an uncommitted rename (the old one is gone).
 - Config is version 2; a v1 file loads through `upgrade` (`lib/config.mjs:84`).
 
 ## Decisions
