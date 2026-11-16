@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { isRepo, porcelainFiles, refExists, taskCommitFiles } from '../lib/git.mjs';
+import { isRepo, porcelainFiles, refExists } from '../lib/git.mjs';
 
 const git = (root, ...args) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8' });
 
@@ -50,22 +50,6 @@ test('porcelainFiles works before the first commit', () => {
   const root = repo();
   writeFileSync(join(root, 'new.ts'), 'x\n');
   assert.deepEqual(porcelainFiles(root), ['new.ts']);
-});
-
-test('taskCommitFiles finds only commits of the given scope since a ref', () => {
-  const root = repo();
-  commit(root, 'feat(02-04): early', { 'early.ts': '1\n' });
-  git(root, 'tag', 'telos/02-start');
-  commit(root, 'feat(02-04): add accept\n\n- body line', { 'lib/accept.mjs': '1\n' });
-  commit(root, 'feat(02-03): other task', { 'lib/lint.mjs': '1\n' });
-  commit(root, 'docs(quick): mentions feat(02-04): in the subject', { 'README.md': '1\n' });
-  commit(root, 'fix(02-04): follow-up', { 'test/accept.test.mjs': '1\n' });
-  assert.deepEqual(taskCommitFiles(root, '02-04', 'telos/02-start').sort(), ['lib/accept.mjs', 'test/accept.test.mjs']);
-  assert.deepEqual(taskCommitFiles(root, '02-04').sort(), ['early.ts', 'lib/accept.mjs', 'test/accept.test.mjs']);
-});
-
-test('taskCommitFiles is empty in a repo without commits', () => {
-  assert.deepEqual(taskCommitFiles(repo(), '02-04'), []);
 });
 
 test('refExists checks tags', () => {

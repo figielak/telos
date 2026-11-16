@@ -105,7 +105,7 @@ Note: the ROADMAP line says "every removed path". Read it as above: individual `
     ADR journal; doc-sync and changelog generation; task undo; edit-scope guards and Stop checks.
   - Accept: `wc -l README.md` ≤ 200; `telos budget` runs; Delete-zone has the entries above.
 
-- [ ] **10-08 Core e2e and verification**
+- [x] **10-08 Core e2e and verification**
   - New `test/e2e-core.test.mjs`: temp repo → `telos init` → `roadmap add` → phase file →
     `ctx plan` → tick tasks → `ctx close` → closing commands → SessionStart text.
   - Rebuild `.telos/MAP.md` for the reduced tree.
@@ -116,3 +116,16 @@ Note: the ROADMAP line says "every removed path". Read it as above: individual `
 ## Notes
 
 - Before: 24 skills, 15 CLI commands, 6 hook entries, ~6.9K lines in `lib/` + `hooks/`.
+- After: 4 skills, 7 CLI commands (`budget`, `ctx`, `history`, `init`, `map-scan`, `roadmap`,
+  `status`), 3 hook entries, 2973 lines in `lib/` + `hooks/` (2904 in `lib/`), 3863 lines in
+  `test/` (238 tests, all passing).
+- `telos budget` at 10-08: CLAUDE.md block ~192 est. tokens, SessionStart ~91, rendered total ~283;
+  `ctx plan 11` 5174 chars, `ctx close` 988 chars. Stored total ~123.7K est. tokens, almost all
+  the archived phase directories 01–09.
+- Deviations: `e2e-standard.test.mjs` went in 10-04, not 10-05 (the gated loop broke once plan
+  wrote one file). Skill variants (`-lite`/`-hard`) are one Delete-zone approach entry, not a path
+  each; the 14 base skills have path entries. `grep changelog lib/` still hits the `NOT_CODE`
+  filename pattern in `lib/init.mjs` (a file classifier, not the feature). `profile` survives only
+  as a dropped v1 config key and a legacy HISTORY kind, so old files still parse. The 10-03 commit
+  left one test red (the `shared/do.md` size baseline, +1 char); 10-04 fixed it. The 25 Delete-zone
+  entries rotated the oldest Log rows into `.telos/HISTORY-archive.md`.
