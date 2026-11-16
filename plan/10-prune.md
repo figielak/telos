@@ -37,7 +37,7 @@ Note: the ROADMAP line says "every removed path". Read it as above: individual `
     only as far as needed to compile; those files go in later tasks.
   - Accept: `npm test` passes; `grep -rn "adr\|docs-scan\|changelog" lib/` finds nothing.
 
-- [ ] **10-02 Reduce hooks**
+- [x] **10-02 Reduce hooks**
   - `hooks/hooks.json`: keep SessionStart (all four matchers) and PreToolUse Bash git guard;
     keep PreToolUse Edit/Write only for the Delete-zone warning. Remove PostToolUse, Stop,
     PreCompact.

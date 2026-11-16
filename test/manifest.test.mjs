@@ -26,8 +26,14 @@ test('package.json declares no dependencies', () => {
   }
 });
 
-test('hooks.json wires the git guard on Bash and the edit guard on Edit/Write to existing scripts', () => {
+test('hooks.json has exactly three entries: SessionStart, the Bash git guard and the Edit/Write Delete-zone guard', () => {
   const hooks = readJson('hooks/hooks.json').hooks;
+  assert.deepEqual(Object.keys(hooks), ['SessionStart', 'PreToolUse']);
+  const entries = Object.values(hooks).flat();
+  assert.equal(entries.length, 3);
+  const [start] = hooks.SessionStart;
+  assert.deepEqual(start.matcher.split('|').sort(), ['clear', 'compact', 'resume', 'startup']);
+  assert.deepEqual(start.hooks.map((x) => x.command), ['node "${CLAUDE_PLUGIN_ROOT}/hooks/session-start.mjs"']);
   const pre = hooks.PreToolUse;
   const command = (matcher) => pre.find((h) => h.matcher === matcher)?.hooks.map((x) => x.command) ?? [];
   assert.deepEqual(command('Bash'), ['node "${CLAUDE_PLUGIN_ROOT}/hooks/git-guard.mjs"']);
@@ -35,32 +41,11 @@ test('hooks.json wires the git guard on Bash and the edit guard on Edit/Write to
   assert.ok(edit, 'edit guard matcher missing');
   for (const tool of ['Edit', 'Write', 'MultiEdit', 'NotebookEdit']) assert.ok(edit.matcher.split('|').includes(tool), tool);
   assert.deepEqual(edit.hooks.map((x) => x.command), ['node "${CLAUDE_PLUGIN_ROOT}/hooks/edit-guard.mjs"']);
-  for (const group of Object.values(hooks).flat()) {
+  for (const group of entries) {
     for (const { command: cmd } of group.hooks) {
       const script = /\$\{CLAUDE_PLUGIN_ROOT\}\/(hooks\/[\w-]+\.mjs)/.exec(cmd)?.[1];
       assert.ok(script, cmd);
       assert.ok(existsSync(new URL(script, root)), script);
     }
   }
-});
-
-test('hooks.json queues edits on PostToolUse and runs the edited-file checks at Stop with a timeout', () => {
-  const hooks = readJson('hooks/hooks.json').hooks;
-  const post = hooks.PostToolUse.find((h) => h.matcher.split('|').includes('Edit'));
-  for (const tool of ['Edit', 'Write', 'MultiEdit', 'NotebookEdit']) assert.ok(post.matcher.split('|').includes(tool), tool);
-  assert.deepEqual(post.hooks.map((x) => x.command), ['node "${CLAUDE_PLUGIN_ROOT}/hooks/edited.mjs"']);
-  assert.equal(hooks.Stop.length, 1);
-  const [stop] = hooks.Stop[0].hooks;
-  assert.equal(stop.command, 'node "${CLAUDE_PLUGIN_ROOT}/hooks/stop.mjs"');
-  assert.ok(stop.timeout >= 240, 'Stop timeout covers format + types at 120 s each');
-  // 05-14: the deep map-staleness reminder runs inside the same single Stop hook.
-  assert.equal(hooks.Stop[0].hooks.length, 1);
-  assert.match(readFileSync(new URL('../hooks/stop.mjs', import.meta.url), 'utf8'), /mapStaleness/);
-});
-
-test('hooks.json saves the session before compaction', () => {
-  const hooks = readJson('hooks/hooks.json').hooks;
-  assert.equal(hooks.PreCompact.length, 1);
-  assert.deepEqual(hooks.PreCompact[0].hooks.map((x) => x.command), ['node "${CLAUDE_PLUGIN_ROOT}/hooks/pre-compact.mjs"']);
-  assert.ok(hooks.SessionStart.some((e) => e.matcher === 'compact'));
 });

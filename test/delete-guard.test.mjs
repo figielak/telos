@@ -172,36 +172,11 @@ test('deletion warnings apply without an in-progress task in both standard and d
   }
 });
 
-test('scope and deletion warnings compose; repeating an edit keeps the scope warning', (t) => {
-  const root = repo(t);
-  remove(root, 'docs/old');
-  const first = warned(hook(root, 'docs/old/new.md'));
-  assert.match(first, /outside the scope of 01-02/);
-  assert.match(first, /Deviations:/);
-  const next = hook(root, 'docs/old/new.md');
-  assert.equal(next.code, 0);
-  assert.match(next.context, /outside the scope of 01-02/);
-  assert.doesNotMatch(next.context, /delete-zone/i);
-});
-
-test('config, scope and invalid-state denials take precedence and do not consume warning markers', (t) => {
-  for (const [path, invalid, reason] of [
-    ['src/tsconfig.json', null, /protected config/],
-    ['docs/old/new.md', null, /strict_scope/],
-    ['src/a', '.telos/config.json', /config\.json/],
-    ['src/a', TASK, /task 01-02/],
-  ]) {
+test('protected configs and a broken task never block; the warning still shows', (t) => {
+  for (const [path, invalid] of [['src/tsconfig.json', null], ['src/a', TASK]]) {
     const root = repo(t, { strict: true });
     remove(root, path);
-    const saved = invalid && readFileSync(join(root, invalid), 'utf8');
     if (invalid) writeFileSync(join(root, invalid), invalid === TASK ? '---\nid: 01-02\nstatus: [broken\n---\n' : 'broken');
-    const result = hook(root, path);
-    assert.equal(result.code, 2, `${path}: ${invalid ?? reason}`);
-    assert.equal(result.stdout, '');
-    assert.match(result.stderr, reason);
-    if (invalid) writeFileSync(join(root, invalid), saved);
-    const config = join(root, '.telos/config.json');
-    writeFileSync(config, JSON.stringify({ ...JSON.parse(readFileSync(config, 'utf8')), protected_configs: [], strict_scope: false }));
     warned(hook(root, path));
   }
 });

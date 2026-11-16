@@ -80,27 +80,20 @@ test('stdin cwd wins over the process cwd', () => {
   assert.match(r.stdout, /^Project: A tiny demo app/);
 });
 
-test('hooks.json runs the script on startup, resume and clear', () => {
+test('hooks.json runs the script on startup, resume, clear and compact', () => {
   const { hooks } = JSON.parse(readFileSync(HOOKS_JSON, 'utf8'));
   const [entry] = hooks.SessionStart;
-  assert.equal(entry.matcher, 'startup|resume|clear');
+  assert.equal(entry.matcher, 'startup|resume|clear|compact');
   assert.equal(entry.hooks[0].type, 'command');
   assert.match(entry.hooks[0].command, /\$\{CLAUDE_PLUGIN_ROOT\}\/hooks\/session-start\.mjs/);
 });
 
-test('a compact SessionStart on minimal prints exactly the startup status', () => {
+test('a compact SessionStart prints exactly the startup status', () => {
   const root = repo();
   const startup = hook(root).out;
   const compact = hook(root, JSON.stringify({ cwd: root, hook_event_name: 'SessionStart', source: 'compact', session_id: 's' })).out;
   assert.equal(compact, startup);
   assert.ok(startup.trimEnd().length <= 1200);
-});
-
-test('hooks.json also runs the script after compaction', () => {
-  const { hooks } = JSON.parse(readFileSync(HOOKS_JSON, 'utf8'));
-  const compact = hooks.SessionStart.find((e) => e.matcher === 'compact');
-  assert.ok(compact, 'compact matcher missing');
-  assert.match(compact.hooks[0].command, /\$\{CLAUDE_PLUGIN_ROOT\}\/hooks\/session-start\.mjs/);
 });
 
 test('after a built MAP, SessionStart derives the first-plan hint without writing STATUS', () => {
