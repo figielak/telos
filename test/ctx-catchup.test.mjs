@@ -54,7 +54,7 @@ test('a populated delta: anchor and quick-history commands, then the areas and u
     'Target: catch up the area notes with changes made without Telos',
     'Auto-commit: yes · subject "docs(telos): catch up"',
     'Closing commands (in order, after the area notes are updated):',
-    '- `telos area anchor api web`',
+    '- `telos area anchor api util web`',
     '- only when you recorded a decision: `telos history add quick quick "<decision: reason>"`',
   ].join('\n'));
   assert.match(out, /^Delta: 2 areas to review · fresh: util · unmapped: 1 file$/m);
@@ -74,8 +74,21 @@ test('unmapped files alone still need a catch-up; auto_commit false drops the su
   commitAll(root, 'docs only');
   const out = await ok(root, 'ctx', 'catchup');
   assert.match(out, /^Auto-commit: no$/m);
-  assert.doesNotMatch(out, /telos area anchor/);
   assert.match(out, /^Delta: 0 areas to review · fresh: api, util, web · unmapped: 1 file$/m);
+  // The fresh areas are behind HEAD: anchoring them ends the catch-up, so the file is listed once.
+  assert.match(out, /^- `telos area anchor api util web`$/m);
+  await ok(root, 'area', 'anchor', 'api', 'util', 'web');
+  assert.equal(await ok(root, 'ctx', 'catchup'), 'Nothing to catch up\n');
+});
+
+test('an area with uncommitted files stays out of the anchor command and is named', async (t) => {
+  const { root } = areasRepo(t);
+  write(root, 'src/api/routes.mjs', 'export const routes = {};\n');
+  commitAll(root, 'feat: routes');
+  write(root, 'src/web/app.mjs', 'export const title = "dirty";\n');
+  const out = await ok(root, 'ctx', 'catchup');
+  assert.match(out, /^- `telos area anchor api`\n- not anchored, covered files are uncommitted: web; [^\n]+\n- only when/m);
+  await ok(root, 'area', 'anchor', 'api');
 });
 
 test('no area files refuses; arguments are a usage error', async (t) => {

@@ -202,6 +202,8 @@ test('close injects its bundle and the shared close body; arguments only appear 
   const tools = field('allowed-tools').split(/,\s*/);
   assert.deepEqual(tools.filter((t) => /^(Edit|Write)\(/.test(t)).sort(), ['Edit(.telos/MAP.md)', 'Edit(.telos/areas/*)', 'Write(.telos/areas/*)']);
   assert.doesNotMatch(field('allowed-tools'), /push|reset|tag|stash|Agent|ROADMAP|STATUS|HISTORY/);
+  // The notes record what changed, so reading the diff and the log needs no prompt.
+  for (const tool of ['Bash(git diff *)', 'Bash(git log *)']) assert.ok(tools.includes(tool), tool);
 });
 
 test('catchup injects only its fixed bundle and the shared close body, with the close tools', () => {
@@ -230,7 +232,7 @@ test('the shared close instructions keep the gates in order and the D2-D4 rules'
   assert.ok(at('telos area lint') < at('`Closing commands`'));
   assert.ok(at('`Closing commands`') < at('Auto-commit: yes'));
   for (const s of ['`telos ctx close <NN>`', 'Never open a note', 'retelling of the diff', 'Broken ref', 'Unmapped',
-    'never silently ignored', 'telos area new', 'history add quick', 'quoted data', '≤ 10 lines', 'Auto-commit: no']) {
+    'named in your reply', 'telos area new', 'git diff', 'telos stale --unmapped', '`not anchored`', 'history add quick', 'quoted data', '≤ 10 lines', 'Auto-commit: no']) {
     assert.ok(close.includes(s), s);
   }
   assert.doesNotMatch(close, /git (add (-A|--all|\.\/?(?=[\s`]|$))|push)/m);

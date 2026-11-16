@@ -117,7 +117,9 @@ test('stale areas add one line to the close bundle and never block it (12:D-05)'
   assert.doesNotMatch(await ok(root, 'ctx', 'close'), /Stale areas/);
   writeFileSync(join(root, 'src/web/app.mjs'), 'export const title = String;\n');
   const out = await ok(root, 'ctx', 'close');
-  assert.match(out, /^Auto-commit: [^\n]*\nStale areas: 1 \(run telos stale\); review them, they do not block the close\nClose: ready$/m);
+  assert.match(out, /^Auto-commit: [^\n]*\nStale areas: 1; update them from the Delta below, they do not block the close\nClose: ready$/m);
+  assert.doesNotMatch(out, /telos area anchor/);
+  assert.match(out, /^- not anchored, covered files are uncommitted: web; /m);
 });
 
 /** areasRepo with phase 01-demo active and its plan; @returns {string} root */
@@ -139,7 +141,7 @@ test('ready with a delta: anchor command first, delta per area after the closing
   const before = snapshot(root);
   const out = await ok(root, 'ctx', 'close');
   assert.ok(out.length <= CAP);
-  assert.match(out, /^Close: ready\nClosing commands \(in order, after the checks pass\):\n- `telos area anchor api`\n- `telos history add phase 01 /m);
+  assert.match(out, /^Close: ready\nClosing commands \(in order, after the checks pass\):\n- `telos area anchor api util web`\n- `telos history add phase 01 /m);
   assert.match(out, /^- `telos status add recent "01 closed: <one line>"`\nDelta: 1 area to review · fresh: util, web · unmapped: 1 file$/m);
   assert.match(out, /^Area api: stale since \w{7} · 1 file \(\+1 -3\) · 1 commit$/m);
   assert.match(out, /^ {2}- \w{7} "feat\(api\): new routes \\"now\\""$/m);
@@ -157,7 +159,8 @@ test('blocked by unchecked items: still lists the delta; a fresh repo adds no an
   write(root, 'lib/util.mjs', 'export const slug = String;\n');
   out = await ok(root, 'ctx', 'close');
   assert.match(out, /^Close: blocked$/m);
-  assert.match(out, /^- `telos area anchor util`$/m);
+  assert.doesNotMatch(out, /telos area anchor/);
+  assert.match(out, /^- not anchored, covered files are uncommitted: util; /m);
   assert.match(out, /^ {2}- lib\/util\.mjs · uncommitted$/m);
 });
 

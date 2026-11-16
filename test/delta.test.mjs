@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { anchorNames, COMMITS_SHOWN, computeDelta, FILES_SHOWN, fitDelta, quoteSubject, renderDelta } from '../lib/delta.mjs';
+import { anchorPlan, COMMITS_SHOWN, computeDelta, FILES_SHOWN, fitDelta, quoteSubject, renderDelta, UNMAPPED_SHOWN } from '../lib/delta.mjs';
 import { commitLog, diffNumstat } from '../lib/git.mjs';
 import { areasRepo, commitAll, write } from './areas-repo.mjs';
 
@@ -30,7 +30,9 @@ test('two areas changed, one fresh, one unmapped file', (t) => {
   assert.deepEqual(delta.areas.map((a) => a.name), ['api', 'web']);
   assert.deepEqual(delta.fresh, ['util']);
   assert.deepEqual(delta.unmapped, ['docs/guide.md']);
-  assert.deepEqual(anchorNames(delta), ['api', 'web']);
+  assert.deepEqual(delta.lagging, ['util']);
+  // web has an uncommitted file: held back; util is fresh but behind HEAD while a file is unmapped.
+  assert.deepEqual(anchorPlan(delta), { names: ['api', 'util'], held: ['web'] });
 
   const { api, web } = byName(delta);
   assert.equal(api.commit, anchor);
@@ -74,7 +76,7 @@ test('the rendering lists areas, quoted subjects newest first, file kinds and th
   const counts = renderDelta(delta, { detail: 'counts' });
   assert.match(counts, /^Area api: stale since \w{7} · 2 files \(\+3 -3\) · 2 commits · 1 modified, 1 added$/m);
   assert.doesNotMatch(counts, /Files:/);
-  assert.match(counts, /^Unmapped .*: 1 file \(docs\/ 1\)$/m);
+  assert.match(counts, /^Unmapped .*: 1 file \(docs\/ 1\); list all: telos stale --unmapped$/m);
   const bare = renderDelta(delta, { detail: 'bare' });
   assert.doesNotMatch(bare, /Commits|quoted/);
   assert.ok(bare.length < counts.length && counts.length < renderDelta(delta).length);
@@ -82,7 +84,7 @@ test('the rendering lists areas, quoted subjects newest first, file kinds and th
 
 test('a fresh repo has an empty delta; an uncommitted covered file is a row without counts', (t) => {
   const { root } = areasRepo(t);
-  assert.deepEqual(computeDelta(root), { error: null, areas: [], fresh: ['api', 'util', 'web'], unmapped: [] });
+  assert.deepEqual(computeDelta(root), { error: null, areas: [], fresh: ['api', 'util', 'web'], lagging: ['api', 'util', 'web'], unmapped: [] });
   write(root, 'lib/util.mjs', 'export const slug = String;\n');
   const delta = computeDelta(root);
   assert.deepEqual(delta.areas.map((a) => [a.name, a.commits.total, a.files]), [['util', 0, [{ path: 'lib/util.mjs', kind: 'uncommitted', added: null, deleted: null, dirty: true }]]]);
@@ -104,6 +106,29 @@ test('rows are budgeted with omission counts', (t) => {
   const text = renderDelta(delta);
   assert.match(text, /^  - … 2 older commits omitted$/m);
   assert.match(text, new RegExp(`^  - … ${api.files.length - FILES_SHOWN} more files omitted$`, 'm'));
+});
+
+test('fresh areas behind HEAD join the anchor command only while files are unmapped', (t) => {
+  const { root } = areasRepo(t);
+  write(root, 'src/api/routes.mjs', 'export const routes = {};\n');
+  commitAll(root, 'feat(api): routes');
+  let delta = computeDelta(root);
+  assert.deepEqual(delta.lagging, ['util', 'web']);
+  assert.deepEqual(anchorPlan(delta), { names: ['api'], held: [] });
+  for (let i = 0; i <= UNMAPPED_SHOWN; i++) write(root, `docs/page${i}.md`, '# page\n');
+  commitAll(root, 'docs: pages');
+  delta = computeDelta(root);
+  assert.deepEqual(anchorPlan(delta), { names: ['api', 'util', 'web'], held: [] });
+  assert.match(renderDelta(delta), /^  - … 1 more file omitted; list all: telos stale --unmapped$/m);
+});
+
+test('git detail that is unavailable is not shown as a binary file or as zero commits', () => {
+  const row = (extra) => ({ path: 'a.bin', kind: 'modified', added: null, deleted: null, dirty: false, ...extra });
+  const area = (files, total) => ({ name: 'api', state: 'stale', commit: 'a'.repeat(40), commits: { total, shown: [] }, files, broken: [] });
+  const text = renderDelta({ error: null, areas: [area([row({ binary: true }), row({ path: 'b.mjs' })], null)], fresh: [], lagging: [], unmapped: [] });
+  assert.match(text, /^Area api: stale since a{7} · 2 files · commits unavailable$/m);
+  assert.match(text, /^  - a\.bin · modified binary$/m);
+  assert.match(text, /^  - b\.mjs · modified$/m);
 });
 
 test('unanchored areas and broken refs are listed without a diff', (t) => {

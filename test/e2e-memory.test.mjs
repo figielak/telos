@@ -67,7 +67,7 @@ test('commits made without Telos: catch-up bundle, area edits, closing commands,
 
   // The closing commands exactly as the bundle lists them, placeholders filled.
   const commands = [...bundle.matchAll(/^- (?:only when you recorded a decision: )?`(telos [^`]+)`$/gm)].map(([, c]) => c);
-  assert.deepEqual(commands, ['telos area anchor api web', 'telos history add quick quick "<decision: reason>"']);
+  assert.deepEqual(commands, ['telos area anchor api util web', 'telos history add quick quick "<decision: reason>"']);
   for (const command of commands) {
     const args = argv(command.replace('<decision: reason>', '/health skips auth: probes need no token')).slice(1);
     ok(root, ...args);

@@ -96,9 +96,28 @@ test('output stays within the cap and counts the omitted lines', async (t) => {
   assert.match(r.out, /fresh: 2 areas\nNext: [^\n]+\n$/);
 });
 
+test('--unmapped lists every unmapped path, capped with a counted omission; it takes no other option', async (t) => {
+  const { root } = areasRepo(t);
+  assert.deepEqual(await stale(root, '--unmapped'), { code: 0, out: 'unmapped: none\n', err: '' });
+  for (let i = 0; i < 20; i++) write(root, `docs/page${String(i).padStart(2, '0')}.md`, '# page\n');
+  write(root, 'src/api/routes.mjs', 'export const routes = {};\n');
+  commitAll(root, 'docs and api');
+  const r = await stale(root, '--unmapped');
+  assert.equal(r.code, 0);
+  assert.deepEqual(r.out.trimEnd().split('\n'), Array.from({ length: 20 }, (_, i) => `docs/page${String(i).padStart(2, '0')}.md`));
+  mkdirSync(join(root, 'gen'));
+  for (let i = 0; i < 200; i++) write(root, `gen/${'generated-module-name-'.repeat(3)}${i}.mjs`, 'export {};\n');
+  commitAll(root, 'many');
+  const big = await stale(root, '--unmapped');
+  assert.ok(big.out.length <= STALE_CAP, `${big.out.length} chars`);
+  const lines = big.out.trimEnd().split('\n');
+  const omitted = Number(/^… (\d+) more files omitted; place the listed ones and rerun$/.exec(lines.at(-1))?.[1]);
+  assert.equal(lines.length - 1 + omitted, 220);
+});
+
 test('usage errors exit 2; no areas exits 0; no git exits 1', async (t) => {
   const { root } = areasRepo(t);
-  for (const args of [['--bogus'], ['extra'], ['--area', 'Bad Name'], ['--area']]) {
+  for (const args of [['--bogus'], ['extra'], ['--area', 'Bad Name'], ['--area'], ['--unmapped', '--check'], ['--unmapped', '--area', 'api']]) {
     const r = await stale(root, ...args);
     assert.equal(r.code, 2, `${args.join(' ')}: ${r.err}`);
     assert.match(r.err, /^telos stale: /);
