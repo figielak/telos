@@ -97,7 +97,8 @@ Purpose and Rules, stack, checks, Delete-zone approaches, the MAP index and the 
 6000 chars, else as `Read .telos/areas/<name>.md` pointers; the roadmap then keeps the rows that
 still fit, nearest the target phase first.
 `ctx close` gives the plan's checklist state, unchecked items, the check commands,
-`Auto-commit`, `Close: ready|blocked` and the exact closing commands.
+`Auto-commit`, `Stale areas: N` when any (never blocking), `Close: ready|blocked` and the exact
+closing commands.
 
 ## Hooks
 
@@ -105,7 +106,7 @@ Node scripts in `hooks/`, no model calls; each is silent when `.telos/` is missi
 
 | Event | Behavior |
 |---|---|
-| `SessionStart` (startup, resume, clear, compact) | Injects the compact status (≤ 1200 chars): Awaiting user first, PROJECT Purpose line 1, stack, phase/task with live states, Next, Blockers, carry-over count, latest Recent line, `Areas: N` when area files exist, file pointers |
+| `SessionStart` (startup, resume, clear, compact) | Injects the compact status (≤ 1200 chars): Awaiting user first, PROJECT Purpose line 1, stack, phase/task with live states, Next, Blockers, carry-over count, latest Recent line, `Areas: N` when area files exist, `Stale areas: N (run telos stale)` when any area is stale, unanchored or has a broken ref (git only, no model), file pointers |
 | `PreToolUse` Bash | Git guard: blocks `git push`, `--no-verify` (also `commit -n`), `git add -A` / `--all` / `.` / `:/`, `git commit --amend` on a pushed HEAD and `git reset --hard`, with exit 2 and the reason; it splits `&&`, `;`, `\|`, env prefixes, `git -C`/`-c` and `sh -c '…'` |
 | `PreToolUse` Edit/Write | Delete-zone warning, never a block: editing a path listed in HISTORY §Delete-zone (or below it) adds its reason and the exact `telos history add revert …` command to restore it on request; once per path per session, symlinks resolved |
 

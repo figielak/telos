@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { main } from '../lib/cli.mjs';
+import { areasRepo } from './areas-repo.mjs';
 
 async function telos(root, ...args) {
   const out = { text: '', write(s) { out.text += s; } };
@@ -105,4 +106,15 @@ test('a recorded phase entry drops its command; the last phase points to a new p
   assert.match(out, /^History: phase entry recorded$/m);
   assert.doesNotMatch(out, /telos history add/);
   assert.match(out, /^- `telos status set phase=none task=none "next=\/telos:plan"`$/m);
+});
+
+test('stale areas add one line to the close bundle and never block it (12:D-05)', async (t) => {
+  const { root } = areasRepo(t);
+  await ok(root, 'roadmap', 'add', 'demo', 'demo phase', 'demo works');
+  await ok(root, 'roadmap', 'set', '01', 'active');
+  await ok(root, 'status', 'set', 'phase=01-demo', 'task=none');
+  assert.doesNotMatch(await ok(root, 'ctx', 'close'), /Stale areas/);
+  writeFileSync(join(root, 'src/web/app.mjs'), 'export const title = String;\n');
+  const out = await ok(root, 'ctx', 'close');
+  assert.match(out, /^Auto-commit: (yes|no)\nStale areas: 1 \(run telos stale\); review them, they do not block the close\nClose: ready$/m);
 });

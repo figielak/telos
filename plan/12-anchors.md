@@ -45,7 +45,7 @@ any model call; SessionStart shows the stale count; `npm test` passes.
     is committed).
   - Accept: byte-compare test; refusal test.
 
-- [ ] **12-05 SessionStart line and fixtures**
+- [x] **12-05 SessionStart line and fixtures**
   - `lib/session.mjs`: `Stale areas: N (run telos stale)` when N > 0, inside the 1200-char
     cap. Budget: the hook stays under 300 ms with 30 areas (measure in a test with a
     generous bound).

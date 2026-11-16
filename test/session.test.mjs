@@ -1,13 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { SESSION_CAP } from '../lib/session.mjs';
 import { setLines } from '../lib/status.mjs';
 import { render } from '../lib/template.mjs';
+import { areasRepo, commitAll, setAnchor } from './areas-repo.mjs';
 import { memoryRepo } from './memory-repo.mjs';
 
 const HOOK = fileURLToPath(new URL('../hooks/session-start.mjs', import.meta.url));
@@ -130,4 +132,47 @@ test('SessionStart adds only an Areas count, and only when area files exist', ()
   const { out } = hook(root);
   assert.match(out, /^Areas: 2\nFiles: /m);
   assert.doesNotMatch(out, /secret-|web|api/);
+});
+
+test('Stale areas line: shown only when an area is stale, inside the cap', (t) => {
+  const { root } = areasRepo(t);
+  const fresh = hook(root);
+  assert.equal(fresh.code, 0);
+  assert.match(fresh.out, /^Areas: 3$/m);
+  assert.doesNotMatch(fresh.out, /Stale areas/);
+  writeFileSync(join(root, 'src/api/routes.mjs'), 'export const routes = {};\n');
+  rmSync(join(root, 'lib/util.mjs'));
+  const { out } = hook(root);
+  assert.match(out, /^Areas: 3\nStale areas: 3 \(run telos stale\)\nFiles: /m);
+  assert.ok(out.length <= SESSION_CAP + 1, `${out.length}`);
+});
+
+test('Stale areas line: no git work tree → no line, the status still prints', () => {
+  const root = repo();
+  mkdirSync(join(root, '.telos', 'areas'));
+  writeFileSync(join(root, '.telos', 'areas', 'x.md'), '# x\n');
+  const { code, out } = hook(root);
+  assert.equal(code, 0);
+  assert.match(out, /^Areas: 1\nFiles: /m);
+});
+
+test('the hook stays fast with 30 areas, half of them stale', (t) => {
+  const { root } = areasRepo(t);
+  const header = readFileSync(join(root, '.telos/areas/api.md'), 'utf8').split('\n')[0];
+  for (let i = 0; i < 27; i++) {
+    mkdirSync(join(root, `pkg/m${i}`), { recursive: true });
+    writeFileSync(join(root, `pkg/m${i}/index.mjs`), 'export {};\n');
+    writeFileSync(join(root, `.telos/areas/m${i}.md`), `${header.replace(/paths: .*/, `paths: pkg/m${i}/ -->`)}\n# m${i}\n\n## Purpose\n- \`pkg/m${i}/index.mjs:1\`\n`);
+  }
+  setAnchor(root, commitAll(root, 'more areas'));
+  commitAll(root, 'anchor');
+  for (let i = 0; i < 15; i++) writeFileSync(join(root, `pkg/m${i}/index.mjs`), 'export const x = 1;\n');
+  hook(root);
+  const start = process.hrtime.bigint();
+  const { out } = hook(root);
+  const ms = Number(process.hrtime.bigint() - start) / 1e6;
+  assert.match(out, /^Areas: 30\nStale areas: 15 \(run telos stale\)$/m);
+  // Budget 300 ms; the bound is generous for slow CI machines.
+  assert.ok(ms < 1500, `SessionStart took ${ms.toFixed(0)} ms`);
+  t.diagnostic(`SessionStart with 30 areas: ${ms.toFixed(0)} ms`);
 });
