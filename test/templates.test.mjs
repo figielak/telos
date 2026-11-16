@@ -9,18 +9,18 @@ const names = readdirSync(new URL('../templates/', import.meta.url)).filter((f) 
 const vars = {
   name: 'demo-app', profile: 'standard', date: '2026-10-24',
   id: '01-02', title: 'Check board game', nn: '01', number: '001',
-  source: '02:D-03', next: 'run `/telos:map` to map the existing code', supersedes: 'none',
+  source: '02:D-03', goal: 'Ship it', done: 'it ships', next: 'run `/telos:map` to map the existing code', supersedes: 'none',
 };
 
 // SPEC §4 size limits, in lines.
 const LINE_LIMITS = {
   'PROJECT.md': 60, 'ROADMAP.md': 80, 'STATUS.md': 40, 'CONTEXT.md': 60,
-  'task.md': 80, 'claude-block.md': 15,
+  'task.md': 80, 'phase.md': 80, 'claude-block.md': 15,
 };
 
 test('all expected templates exist', () => {
   const expected = ['PROJECT.md', 'MAP.md', 'ROADMAP.md', 'STATUS.md', 'HISTORY.md', 'LESSONS.md',
-    'CONTEXT.md', 'task.md', 'claude-block.md'];
+    'CONTEXT.md', 'task.md', 'phase.md', 'claude-block.md'];
   assert.deepEqual([...names].sort(), [...expected].sort());
 });
 

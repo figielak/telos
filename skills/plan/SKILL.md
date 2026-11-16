@@ -1,10 +1,10 @@
 ---
 name: plan
-description: Plan a Telos phase: write draft task files and a short summary
+description: Plan a Telos phase: write its one phase file and set it active
 argument-hint: "[NN|description]"
 disable-model-invocation: true
 model: opus
-allowed-tools: Bash(telos *), Read, Grep, Glob, Edit(.telos/**), Write(.telos/phases/**)
+allowed-tools: Bash(telos *), Bash(git add *), Bash(git commit *), Read, Grep, Glob, Edit(.telos/phases/**), Write(.telos/phases/**)
 ---
 ## Context
 !`telos ctx plan`

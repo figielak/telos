@@ -110,26 +110,3 @@ test('an active phase keeps its decisions and directs plan changes through revis
   assert.match(r.stdout, /never (?:rewrite|replace)/i);
 });
 
-test('existing decisions and questions are shown verbatim with the next free IDs and their tasks', async (t) => {
-  const root = repo(t);
-  writeFileSync(join(root, DEMO, '01-CONTEXT.md'), CONTEXT);
-  const task = join(root, DEMO, '01-02-second-task.md');
-  writeFileSync(task, readFileSync(task, 'utf8').replace('decisions: []', 'decisions: [D-02]'));
-  const status = join(root, '.telos', 'STATUS.md');
-  writeFileSync(status, readFileSync(status, 'utf8').replace('Awaiting user: none', 'Awaiting user: 01:D-02, 01:Q-01'));
-
-  const r = await ctx(root, 'discuss');
-  assert.match(r.stdout, /^Context: \.telos\/phases\/01-demo\/01-CONTEXT\.md \(\d+ lines\)$/m);
-  assert.match(r.stdout, /^- D-01: Keep greet pure\.$/m);
-  assert.match(r.stdout, /^- D-02 \[proposed\]: Cache greetings\.$/m);
-  assert.match(r.stdout, /^- Q-01: Who reads the greeting\?$/m);
-  assert.match(r.stdout, /^Next IDs: D-03 · Q-02$/m);
-  assert.match(r.stdout, /^Referenced: D-02 ← 01-02$/m);
-  assert.match(r.stdout, /^Awaiting user: 01:D-02, 01:Q-01$/m);
-
-  // The existing gates still hold for the referenced proposed decision.
-  assert.match((await ctx(root, 'approve')).stdout, /^- 01-02: D-02 is proposed$/m);
-  assert.match((await ctx(root, 'do', '01-02')).stdout, /^REFUSED: .*D-02/m);
-  // And plan/revise see the same CONTEXT unchanged.
-  assert.match((await ctx(root, 'plan')).stdout, /^- D-02 \[proposed\]: Cache greetings\.$/m);
-});

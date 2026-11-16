@@ -32,14 +32,11 @@ async function repo(t, { checks = { test: 'npm test' } } = {}) {
   return root;
 }
 
-/** Phase 01 work items: `[id, done]` pairs. */
+/** Phase 01 plan with `[id, done]` checklist items. */
 function work(root, items) {
-  const dir = join(root, '.telos', 'phases', '01-demo');
-  mkdirSync(dir, { recursive: true });
-  for (const [id, done] of items) {
-    writeFileSync(join(dir, `${id}-item.md`), `---\nid: ${id}\ntitle: Item ${id}\ntype: code\n`
-      + `status: ${done ? 'done' : 'approved'}\ncritical: false\neffort: normal\ndepends: []\ndecisions: []\nscope: [src/]\n---\n## Goal\nx\n`);
-  }
+  mkdirSync(join(root, '.telos', 'phases'), { recursive: true });
+  writeFileSync(join(root, '.telos', 'phases', '01-demo.md'), '# 01-demo\n\n## Goal\ndemo phase\n\n## Tasks\n'
+    + items.map(([id, done]) => `- [${done ? 'x' : ' '}] **${id} Item ${id}**\n  - detail\n`).join('') + '\n## Notes\n- none\n');
 }
 
 function snapshot(root) {
@@ -62,6 +59,7 @@ test('a ready phase lists the checks, the commit policy and the exact closing co
   const out = await ok(root, 'ctx', 'close');
   assert.equal(out, [
     'Target: 01-demo [active] demo phase · done when: demo works',
+    'Plan: .telos/phases/01-demo.md (2/2 done)',
     'Unfinished:\n- none',
     'Checks (run each from the repo root; all must exit 0): test=npm test',
     'History: phase entry missing',
@@ -80,8 +78,9 @@ test('an unchecked item blocks the close and is listed', async (t) => {
   const root = await repo(t);
   work(root, [['01-01', true], ['01-02', false]]);
   const out = await ok(root, 'ctx', 'close');
-  assert.match(out, /^Unfinished:\n- 01-02 \[approved\] Item 01-02$/m);
-  assert.match(out, /^Close: blocked\n- 01-02 \[approved\] Item 01-02$/m);
+  assert.match(out, /^Plan: \.telos\/phases\/01-demo\.md \(1\/2 done\)$/m);
+  assert.match(out, /^Unfinished:\n- \[ \] 01-02 Item 01-02$/m);
+  assert.match(out, /^Close: blocked\n- \[ \] 01-02 Item 01-02$/m);
 });
 
 test('a non-active, done or unknown phase refuses; a malformed argument is a usage error', async (t) => {
@@ -100,6 +99,8 @@ test('a recorded phase entry drops its command; the last phase points to a new p
   await ok(root, 'roadmap', 'set', '02', 'dropped');
   await ok(root, 'history', 'add', 'phase', '01', 'closed 01-demo: demo works');
   const out = await ok(root, 'ctx', 'close');
+  assert.match(out, /^Plan: \.telos\/phases\/01-demo\.md \(missing\)$/m);
+  assert.match(out, /^Close: ready$/m);
   assert.match(out, /^Checks \(run each from the repo root; all must exit 0\): none configured — verify the done-when by hand$/m);
   assert.match(out, /^History: phase entry recorded$/m);
   assert.doesNotMatch(out, /telos history add/);

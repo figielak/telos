@@ -59,7 +59,7 @@ Note: the ROADMAP line says "every removed path". Read it as above: individual `
     commands. Area updates arrive in phase 13.
   - Accept: `test/ctx-close.test.mjs` covers ready, unchecked item and non-active phase.
 
-- [ ] **10-04 Single-file phase plan**
+- [x] **10-04 Single-file phase plan**
   - New `templates/phase.md`: Goal, Done when, Tasks (checkboxes with `NN-MM`), Notes; ≤ 80 lines.
   - `lib/phases.mjs` replaces `lib/tasks.mjs`: path for a phase, read checklist state
     (done/total), create from template, and the `sections` helper `lib/session.mjs` needs.
