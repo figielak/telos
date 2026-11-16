@@ -39,7 +39,7 @@ any model call; SessionStart shows the stale count; `npm test` passes.
   - Output ≤ 6000 chars with explicit omission counts. README row.
   - Accept: CLI tests including both exit modes.
 
-- [ ] **12-04 `telos area anchor`**
+- [x] **12-04 `telos area anchor`**
   - `telos area anchor <name>…|--all`: set the header commit and date to HEAD, keeping
     every other byte. Refuse when a covered path is dirty (the note would claim more than
     is committed).
