@@ -121,3 +121,13 @@ test('after a built MAP, SessionStart derives the first-plan hint without writin
   assert.ok(out.trimEnd().length <= 1200);
   assert.equal(readFileSync(join(root, '.telos', 'STATUS.md'), 'utf8'), before);
 });
+
+test('SessionStart adds only an Areas count, and only when area files exist', () => {
+  const root = repo();
+  assert.doesNotMatch(hook(root).out, /^Areas:/m);
+  mkdirSync(join(root, '.telos', 'areas'));
+  for (const name of ['web', 'api']) writeFileSync(join(root, '.telos', 'areas', `${name}.md`), `# ${name}\nsecret-${name}\n`);
+  const { out } = hook(root);
+  assert.match(out, /^Areas: 2\nFiles: /m);
+  assert.doesNotMatch(out, /secret-|web|api/);
+});

@@ -83,14 +83,16 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error. The C
 | `telos history add <kind> <ref> "<text>" [--path <p> \| --approach "<text>"]` | Prepend a dated Log entry (`decision`, `phase`, `revert`, `remove`, `quick`, `init`; refs `NN`, `NN-MM`, `quick`, `telos`). `remove` with a selector adds a Delete-zone entry; `revert` clears exactly that selector. Over `limits.history_entries` the oldest rows move to `HISTORY-archive.md` |
 | `telos area new <name> --paths a,b` | Create `.telos/areas/<name>.md` from the template, anchored at HEAD (name: `a-z0-9-`, ≤ 30 chars; paths repo-relative, directories end in `/`) |
 | `telos area list` / `show <name>` | One line per area: `name · paths · tokens/limit` / print one area file |
-| `telos area for <path>…` | Names of the areas whose paths cover the given files (`src/a` never matches `src/ab/`); `none` when no area does |
+| `telos area for <path>…` | Names of the areas whose paths cover the given paths, or lie under a given directory (`src/a` never matches `src/ab/`); `none` when no area does |
 | `telos area lint` | Check every area: header, the six sections in order, name and `limits.area_tokens`; one line per problem, exit 1 when any |
 | `telos map-scan` | Deterministic repository inventory for `/telos:map` (≤ 2000 estimated tokens); works before init, never executes repository code |
-| `telos ctx <bundle> [args]` | Print a skill's context (≤ 6000 chars, comments stripped): `status`, `map [--refresh]`, `plan [NN\|description]`, `close [NN]`, `shared <name>` |
+| `telos ctx <bundle> [args]` | Print a skill's context (≤ 6000 chars, comments stripped): `status`, `map [--refresh]`, `plan [NN\|description] [--area <path>]…`, `close [NN]`, `shared <name>` |
 | `telos budget [--ctx <bundle> [args]]` | Read-only size report: `.telos/` files, the CLAUDE.md block, the SessionStart output and optionally one bundle, in bytes, chars and ~tokens (chars / 4) |
 
 `ctx plan` gives the target phase and its file (or the template skeleton), carry-over, PROJECT
-Purpose and Rules, stack, checks, Delete-zone approaches, MAP `## Find` and the roadmap.
+Purpose and Rules, stack, checks, Delete-zone approaches, the MAP index and the roadmap. Each
+`--area <path>` adds the area files covering that path, whole while the bundle stays under
+6000 chars, else as `Read .telos/areas/<name>.md` pointers.
 `ctx close` gives the plan's checklist state, unchecked items, the check commands,
 `Auto-commit`, `Close: ready|blocked` and the exact closing commands.
 
@@ -100,7 +102,7 @@ Node scripts in `hooks/`, no model calls; each is silent when `.telos/` is missi
 
 | Event | Behavior |
 |---|---|
-| `SessionStart` (startup, resume, clear, compact) | Injects the compact status (≤ 1200 chars): Awaiting user first, PROJECT Purpose line 1, stack, phase/task with live states, Next, Blockers, carry-over count, latest Recent line, file pointers |
+| `SessionStart` (startup, resume, clear, compact) | Injects the compact status (≤ 1200 chars): Awaiting user first, PROJECT Purpose line 1, stack, phase/task with live states, Next, Blockers, carry-over count, latest Recent line, `Areas: N` when area files exist, file pointers |
 | `PreToolUse` Bash | Git guard: blocks `git push`, `--no-verify` (also `commit -n`), `git add -A` / `--all` / `.` / `:/`, `git commit --amend` on a pushed HEAD and `git reset --hard`, with exit 2 and the reason; it splits `&&`, `;`, `\|`, env prefixes, `git -C`/`-c` and `sh -c '…'` |
 | `PreToolUse` Edit/Write | Delete-zone warning, never a block: editing a path listed in HISTORY §Delete-zone (or below it) adds its reason and the exact `telos history add revert …` command to restore it on request; once per path per session, symlinks resolved |
 

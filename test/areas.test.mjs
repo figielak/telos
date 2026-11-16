@@ -102,6 +102,8 @@ test('path matching uses the / boundary: src/a never matches src/ab/', () => {
   assert.deepEqual(areasFor(areas, ['src/ab/x.ts']), ['ab']);
   assert.deepEqual(areasFor(areas, ['src/a/x.ts', 'src/ab/y.ts']), ['a', 'ab']);
   assert.deepEqual(areasFor(areas, ['src/abc.ts']), []);
+  assert.deepEqual(areasFor(areas, ['src']), ['a', 'ab']);
+  assert.deepEqual(areasFor(areas, ['src/a']), ['a']);
 });
 
 test('normalizeAreaPath keeps directories and rejects unsafe paths', () => {

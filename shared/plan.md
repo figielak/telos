@@ -1,5 +1,6 @@
 <!-- Injected into /telos:plan via `telos ctx shared plan`. -->
-Work from the context above. Look at code only where a task needs it (Grep/Glob, then read just
+Work from the context above. For the paths the phase touches, `telos ctx plan <NN> --area <path>`
+adds their area files. Look at code only where a task needs it (Grep/Glob, then read just
 the ranges you cite); never read the whole repo. Write only the phase file under
 `.telos/phases/`; change ROADMAP and STATUS only through the `telos` commands below.
 

@@ -47,3 +47,7 @@ test('CLAUDE.md block is marked and within ~250 tokens', () => {
 test('a missing variable is an error naming it', () => {
   assert.throws(() => render('phase.md', {}), /missing variable/);
 });
+
+test('the CLAUDE.md block points at area files before editing', () => {
+  assert.match(render('claude-block.md', vars), /`telos area for <path>`[\s\S]*\.telos\/areas\/<name>\.md/);
+});

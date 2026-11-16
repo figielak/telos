@@ -1,9 +1,10 @@
-<!-- telos:start v2 -->
+<!-- telos:start v3 -->
 ## Telos
 Project memory in `.telos/` — read only what the step needs:
 PROJECT.md (rules) · MAP.md (where things are) · STATUS.md (now/next) · ROADMAP.md (phases)
 · phases/NN-name.md (the current plan) · HISTORY.md (why).
-- Locate code via MAP.md; never read the whole repo.
+- Locate code via MAP.md; never read the whole repo. Before editing under a path, read its
+  area: `telos area for <path>` names it, then read `.telos/areas/<name>.md`.
 - Never recreate paths or approaches listed in HISTORY.md §Delete-zone.
 - Tick a task's box in the phase file when its work lands; change ROADMAP, STATUS and
   HISTORY only through `telos`; edit other `.telos/` files only when asked.

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -72,7 +72,7 @@ test('without an argument the bundle names the next NN; a description targets a 
   assert.match((await ctx(root, 'plan')).stdout, /^Target: none \(pass a phase NN or a description\)$/m);
 });
 
-test('Delete-zone approaches and MAP Find lines are listed; Delete-zone paths and the archive are not', async () => {
+test('Delete-zone approaches and the MAP index are listed; Delete-zone paths and the archive are not', async () => {
   const root = repo();
   writeFileSync(join(root, '.telos', 'HISTORY.md'), render('HISTORY.md', { date: '2026-01-01' })
     .replace(/(## Delete-zone\n(?:<!--[\s\S]*?-->\n)?)- none/, '$1- approach: Global mutable cache — leaked state (01-01, 2026-01-02)\n- `src/old/` — module removed (01-01, 2026-01-02)'));
@@ -81,8 +81,58 @@ test('Delete-zone approaches and MAP Find lines are listed; Delete-zone paths an
   const out = (await ctx(root, 'plan', '01')).stdout;
   assert.match(out, /^Removed approaches \(never plan these\):\n- Global mutable cache — leaked state \(01-01\)$/m);
   assert.doesNotMatch(out, /src\/old|ARCHIVED/);
-  assert.match(out, /^Find \(MAP\):\n- greet → `src\/greet\.mjs:1-9`$/m);
-  assert.doesNotMatch(out, /Structure/);
+  assert.match(out, /^Map index \(\.telos\/MAP\.md\):\n## Structure\n- `src\/` — code\n## Find\n- greet → `src\/greet\.mjs:1-9`$/m);
+  rmSync(join(root, '.telos', 'MAP.md'));
+  assert.match((await ctx(root, 'plan', '01')).stdout, /^Map index: none \(run \/telos:map\)$/m);
+});
+
+// 11-04: selective loading of area files.
+const HASH = 'a'.repeat(40);
+function withAreas(root, size = 0) {
+  mkdirSync(join(root, '.telos', 'areas'), { recursive: true });
+  const spec = { web: 'src/web/', api: 'src/api/', db: 'src/db/' };
+  for (const [name, path] of Object.entries(spec)) {
+    const text = render('area.md', { commit: HASH, date: '2026-11-16', paths: path, name })
+      .replace('## Purpose\n', `## Purpose\nThe ${name} area secret-${name}.\n${'- filler line for the budget\n'.repeat(size)}`);
+    writeFileSync(join(root, '.telos', 'areas', `${name}.md`), text);
+  }
+  writeFileSync(join(root, '.telos', 'MAP.md'), `# Map\n\n## Areas\n${Object.entries(spec).map(([n, p]) => `- ${n} — ${n} · \`${p}\``).join('\n')}\n`);
+}
+
+test('ctx plan --area includes only the area files matching the path, whole', async () => {
+  const root = repo();
+  withAreas(root);
+  const out = (await ctx(root, 'plan', '01', '--area', 'src/api/routes.ts')).stdout;
+  assert.match(out, /^Target: 01-demo /m);
+  assert.match(out, /^Areas for src\/api\/routes\.ts: api$/m);
+  assert.match(out, /^--- area api · paths: src\/api\/\n# api\n/m);
+  assert.match(out, /secret-api/);
+  assert.doesNotMatch(out, /secret-web|secret-db/);
+  assert.ok(out.indexOf('--- end api') < out.indexOf('Roadmap:'));
+  const both = (await ctx(root, 'plan', '--area', 'src/web/a.ts', '--area', 'src/db/b.ts')).stdout;
+  assert.match(both, /^Areas for src\/web\/a\.ts, src\/db\/b\.ts: db, web$/m);
+  assert.match(both, /secret-db[\s\S]*secret-web/);
+  assert.match(both, /^Target: 01-demo /m);
+  assert.match((await ctx(root, 'plan', '--area', 'src/other.ts')).stdout, /^Areas for src\/other\.ts: none$/m);
+});
+
+test('ctx plan without selectors shows the index only; over the cap areas become Read pointers', async () => {
+  const root = repo();
+  withAreas(root, 60);
+  const plain = (await ctx(root, 'plan', '01')).stdout;
+  assert.match(plain, /^## Areas\n- web — web · `src\/web\/`$/m);
+  assert.doesNotMatch(plain, /secret-|Areas for/);
+  const r = await ctx(root, 'plan', '01', '--area', 'src/');
+  assert.equal(r.code, 0);
+  assert.ok(r.stdout.length <= CAP + 1, String(r.stdout.length));
+  assert.doesNotMatch(r.stdout, /truncated by telos ctx/);
+  assert.match(r.stdout, /^Areas for src: api, db, web$/m);
+  assert.match(r.stdout, /^--- area api /m);
+  assert.match(r.stdout, /^Read \.telos\/areas\/web\.md$/m);
+  assert.match(r.stdout, /^Roadmap:/m);
+  for (const args of [['--area'], ['--area', '--area', 'x'], ['--area', '/elsewhere/x.ts']]) {
+    assert.equal((await ctx(root, 'plan', ...args)).code, 2, args.join(' '));
+  }
 });
 
 test('a broken HISTORY is reported in the bundle instead of failing it', async () => {

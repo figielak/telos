@@ -45,7 +45,7 @@ a task bundle loads only the areas matching its paths; `npm test` passes.
   - Accept: `test/map.test.mjs` and `test/e2e-map.test.mjs` pass with the new layout on
     the `astro-ts` and `python-uv` fixtures.
 
-- [ ] **11-04 Selective loading**
+- [x] **11-04 Selective loading**
   - `telos ctx plan [NN] [--area <path>]…`: include whole area files matching the given
     paths, within the 6000-char cap; over the cap, list the remaining areas as
     `Read .telos/areas/<name>.md` pointers. Without selectors: the index only.
