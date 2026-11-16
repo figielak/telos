@@ -84,7 +84,7 @@ Note: the ROADMAP line says "every removed path". Read it as above: individual `
     `templates/LESSONS.md`, `templates/CONTEXT.md`, `templates/task.md`.
   - Accept: `ls skills` shows `close map plan status`; `npm test` passes.
 
-- [ ] **10-06 Remove profiles, config v2**
+- [x] **10-06 Remove profiles, config v2**
   - Remove `lib/profile.mjs` and every profile branch (`grep -rn profile lib hooks skills`).
   - `lib/config.mjs`: version 2 keys (D8); drop `profile`, `protected_configs`,
     `strict_scope`, `docs`; `limits.status_lines`, `limits.map_tokens`, `limits.history_entries` stay.

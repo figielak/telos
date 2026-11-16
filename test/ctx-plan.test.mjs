@@ -74,7 +74,7 @@ test('without an argument the bundle names the next NN; a description targets a 
 
 test('Delete-zone approaches and MAP Find lines are listed; Delete-zone paths and the archive are not', async () => {
   const root = repo();
-  writeFileSync(join(root, '.telos', 'HISTORY.md'), render('HISTORY.md', { date: '2026-01-01', profile: 'standard' })
+  writeFileSync(join(root, '.telos', 'HISTORY.md'), render('HISTORY.md', { date: '2026-01-01' })
     .replace(/(## Delete-zone\n(?:<!--[\s\S]*?-->\n)?)- none/, '$1- approach: Global mutable cache — leaked state (01-01, 2026-01-02)\n- `src/old/` — module removed (01-01, 2026-01-02)'));
   writeFileSync(join(root, '.telos', 'HISTORY-archive.md'), '# History archive\n\n## Log\n- 2025-01-01 remove 01-01: ARCHIVED secret\n');
   writeFileSync(join(root, '.telos', 'MAP.md'), '# Map\n\n## Structure\n- `src/` — code\n\n## Find\n- greet → `src/greet.mjs:1-9`\n');

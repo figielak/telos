@@ -109,7 +109,7 @@ for (const fixtureName of ['astro-ts', 'python-uv']) {
     let map, project, authoredClassification;
 
     await t.test('init Next reaches the shipped skill/bundle; scan and full context expose real sources', () => {
-      const initialized = cli(root, 'init', '--profile', 'minimal');
+      const initialized = cli(root, 'init');
       assert.match(initialized, /Next: run \/telos:map to map the existing code/);
       assert.match(cli(root, 'status'), /^Next: run \/telos:map to map the existing code$/m);
       assert.match(SKILL, /^name: map$/m);
@@ -262,7 +262,7 @@ for (const fixtureName of ['astro-ts', 'python-uv']) {
       const before = snapshot(root);
       const first = cli(root, 'ctx', 'map');
       assert.equal(projectLine(first), authoredClassification);
-      cli(root, 'init', '--profile', 'minimal');
+      cli(root, 'init');
       const rerun = cli(root, 'ctx', 'map');
       assert.equal(projectLine(rerun), authoredClassification);
       assert.equal(read(root, '.telos/PROJECT.md'), project);

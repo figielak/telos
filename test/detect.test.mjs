@@ -19,7 +19,6 @@ test('astro-ts: stack, pnpm commands from scripts, vitest related', () => {
     types: 'pnpm exec astro check && pnpm exec tsc --noEmit',
     lint: 'pnpm run lint',
     test: 'pnpm run test',
-    test_related: 'pnpm exec vitest related --run {files}',
   });
   assert.equal(r.evidence.lint, 'package.json scripts.lint');
   assert.equal(r.evidence.packageManager, 'pnpm-lock.yaml');
@@ -65,7 +64,6 @@ test('tool fallbacks need dependency evidence, never a guess', () => {
   assert.deepEqual(r.checks, {
     types: 'yarn tsc --noEmit',
     test: 'yarn vitest run',
-    test_related: 'yarn vitest related --run {files}',
     e2e: 'yarn playwright test',
   });
   assert.equal(r.evidence.test, 'package.json devDependencies.vitest');

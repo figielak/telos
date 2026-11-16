@@ -34,44 +34,6 @@ async function ctx(root, ...args) {
   return { code, stdout: out.text, stderr: err.text };
 }
 
-test('ctx init on astro-ts lists stack, checks and evidence', async () => {
-  const r = await ctx(repo('astro-ts'), 'init', 'standard');
-  assert.equal(r.code, 0, r.stderr);
-  assert.match(r.stdout, /^Requested profile: standard$/m);
-  assert.match(r.stdout, /^Telos: not initialized$/m);
-  assert.match(r.stdout, /^Stack: astro 5 · typescript 5\.6 · node >=22$/m);
-  assert.match(r.stdout, /^- lint: `pnpm run lint` \(package\.json scripts\.lint\)$/m);
-  assert.match(r.stdout, /^Package manager: pnpm \(pnpm-lock\.yaml\)$/m);
-});
-
-test('ctx init flags an invalid profile instead of failing', async () => {
-  const r = await ctx(repo(), 'init', 'huge');
-  assert.equal(r.code, 0);
-  assert.match(r.stdout, /^Requested profile: huge \(invalid; use minimal, standard or deep\)$/m);
-});
-
-test('ctx init in an initialized repo reports existing files', async () => {
-  const root = repo();
-  initialize(root);
-  const r = await ctx(root, 'init');
-  assert.match(r.stdout, /^Requested profile: not given$/m);
-  assert.match(r.stdout, /^Telos: initialized, profile standard \(PROJECT\.md, STATUS\.md, config\.json\)$/m);
-});
-
-test('ctx init reports the CLAUDE.md block as present, outdated or absent', async () => {
-  const cases = [
-    [render('claude-block.md', {}), 'present v1'],
-    ['# Mine\n<!-- telos:start -->\nold\n<!-- telos:end -->\n', 'outdated'],
-    ['# Mine\n', 'absent'],
-  ];
-  for (const [text, state] of cases) {
-    const root = repo();
-    writeFileSync(join(root, 'CLAUDE.md'), text);
-    const r = await ctx(root, 'init');
-    assert.match(r.stdout, new RegExp(`^CLAUDE\\.md block: ${state}$`, 'm'));
-  }
-});
-
 test('oversized bundles are truncated with the marker', () => {
   const out = cap('x'.repeat(CAP * 2));
   assert.ok(out.length <= CAP, `${out.length} > ${CAP}`);

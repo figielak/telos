@@ -16,9 +16,9 @@ const BIN = fileURLToPath(new URL('../bin/', import.meta.url));
 const { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } = fs;
 const cache = (root) => join(root, '.telos/.cache');
 
-function repo(t, { profile = 'standard' } = {}) {
-  const root = memoryRepo(t, { profile });
-  writeFileSync(join(root, '.telos/HISTORY.md'), render('HISTORY.md', { profile, date: '2026-01-01' }));
+function repo(t) {
+  const root = memoryRepo(t);
+  writeFileSync(join(root, '.telos/HISTORY.md'), render('HISTORY.md', { date: '2026-01-01' }));
   return root;
 }
 
@@ -224,13 +224,13 @@ test('deleteGuard returns an optional warning and unavailable storage never thro
   assert.equal(deleteGuard(root, { path: 'src/a/other.ts', sessionId: 'api' }), undefined);
 });
 
-test('minimal, non-edit tools and missing history or .telos/ remain silent', (t) => {
+test('non-edit tools, an unreadable config and missing history or .telos/ remain silent', (t) => {
   const root = repo(t);
   remove(root, 'src/a');
   silent(hook(root, 'src/a/new.ts', { tool: 'Read' }));
   const config = join(root, '.telos/config.json');
   const saved = readFileSync(config, 'utf8');
-  writeFileSync(config, JSON.stringify({ ...JSON.parse(saved), profile: 'minimal' }));
+  writeFileSync(config, '{ broken');
   silent(hook(root, 'src/a/new.ts'));
   writeFileSync(config, saved);
   rmSync(join(root, '.telos/HISTORY.md'));

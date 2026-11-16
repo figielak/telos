@@ -21,7 +21,7 @@ function write(root, file, text) {
 }
 
 /** A committed repo with a little source, then `telos init` (its output stays uncommitted). */
-function repo({ profile = 'minimal', commit = true, initialize = true, files = {} } = {}) {
+function repo({ commit = true, initialize = true, files = {} } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'telos-ctx-map-'));
   git(root, 'init', '-q');
   git(root, 'config', 'user.email', 't@example.com');
@@ -35,7 +35,7 @@ function repo({ profile = 'minimal', commit = true, initialize = true, files = {
     git(root, 'add', '.');
     git(root, 'commit', '-q', '-m', 'chore: init');
   }
-  if (initialize) init(root, { profile });
+  if (initialize) init(root);
   return root;
 }
 
@@ -55,9 +55,9 @@ const setLimit = (root, n) => {
 
 const HEADINGS = '## Structure\n\n## Entry points\n\n## Flows\n\n## Areas\n\n## Find\n';
 
-test('a fresh init in every profile yields a full-mode bundle with the exact header to write', async () => {
-  for (const profile of ['minimal', 'standard', 'deep']) {
-    const root = repo({ profile });
+test('a fresh init yields a full-mode bundle with the exact header to write', async () => {
+  {
+    const root = repo();
     const head = git(root, 'rev-parse', 'HEAD').trim();
     const files = scanRepo(root).files.length;
     const { code, text } = await ctxMap(root);
@@ -290,7 +290,7 @@ test('refresh validates the whole saved MAP and keeps authored PROJECT sections 
 
 // 05-14: the bundle states the commit policy for the confirmed docs(telos): map commit.
 test('the bundle names the map commit policy from git.auto_commit', async () => {
-  const root = repo({ profile: 'deep' });
+  const root = repo();
   const yes = (await ctxMap(root)).text;
   assert.match(yes, /^Auto-commit: yes$/m);
   assert.match(yes, /^Commit after PASS: ask once; on yes `git add \.telos\/MAP\.md` \(\+ `\.telos\/PROJECT\.md` when changed\), then `git commit -m "docs\(telos\): map" -- <those paths>`; other staged paths → no commit$/m);

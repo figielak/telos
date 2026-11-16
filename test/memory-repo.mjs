@@ -12,14 +12,14 @@ export const PHASES = '- 01-demo [active] demo phase · done when: demo works\n'
 
 /**
  * @param {{ after?: (fn: () => void) => void } | null} t test context for cleanup (null: caller cleans up)
- * @param {{ checks?: Record<string, string>, stack?: string[], profile?: string }} [opts]
+ * @param {{ checks?: Record<string, string>, stack?: string[] }} [opts]
  * @returns {string} repo root
  */
-export function memoryRepo(t, { checks = {}, stack = ['javascript'], profile = 'standard' } = {}) {
+export function memoryRepo(t, { checks = {}, stack = ['javascript'] } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'telos-test-'));
   t?.after(() => rmSync(root, { recursive: true, force: true }));
   mkdirSync(join(root, '.git'));
-  init(root, { profile, stack, checks });
+  init(root, { stack, checks });
   const telos = (file) => join(root, '.telos', file);
   writeFileSync(telos('ROADMAP.md'), `${readFileSync(telos('ROADMAP.md'), 'utf8').trimEnd()}\n${PHASES}`);
   writeFileSync(telos('STATUS.md'), setLines(readFileSync(telos('STATUS.md'), 'utf8'), { phase: '01-demo', task: 'none' }));

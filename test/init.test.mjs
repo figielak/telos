@@ -40,35 +40,33 @@ function tree(root) {
 
 const read = (root, path) => readFileSync(join(root, path), 'utf8');
 
-const MINIMAL = ['MAP.md', 'PROJECT.md', 'ROADMAP.md', 'STATUS.md', 'config.json'];
-const STANDARD = ['HISTORY.md', ...MINIMAL].sort();
+const FILES = ['HISTORY.md', 'MAP.md', 'PROJECT.md', 'ROADMAP.md', 'STATUS.md', 'config.json'];
 
-test('each profile creates exactly its file set, no empty directories', async () => {
-  for (const [profile, files] of [['minimal', MINIMAL], ['standard', STANDARD], ['deep', STANDARD]]) {
-    const root = repo();
-    const r = await telos(root, 'init', '--profile', profile);
-    assert.equal(r.code, 0, r.stderr);
-    assert.deepEqual(tree(root), files, profile);
-    assert.equal(loadConfig(root).profile, profile);
-  }
+test('init creates exactly the memory files and a version 2 config, no empty directories', async () => {
+  const root = repo();
+  const r = await telos(root, 'init');
+  assert.equal(r.code, 0, r.stderr);
+  assert.deepEqual(tree(root), FILES);
+  assert.equal(loadConfig(root).version, 2);
+  assert.doesNotMatch(read(root, '.telos/config.json'), /profile/);
 });
 
 test('rerun creates nothing and reports everything as kept', async () => {
   const root = repo();
-  await telos(root, 'init', '--profile', 'standard');
-  const before = Object.fromEntries(STANDARD.map((f) => [f, read(root, `.telos/${f}`)]));
-  const r = await telos(root, 'init', '--profile', 'standard');
+  await telos(root, 'init');
+  const before = Object.fromEntries(FILES.map((f) => [f, read(root, `.telos/${f}`)]));
+  const r = await telos(root, 'init');
   assert.equal(r.code, 0, r.stderr);
   assert.doesNotMatch(r.stdout, /^Created:/m);
   assert.match(r.stdout, /^Kept: .*config\.json/m);
-  for (const f of STANDARD) assert.equal(read(root, `.telos/${f}`), before[f], f);
+  for (const f of FILES) assert.equal(read(root, `.telos/${f}`), before[f], f);
 });
 
 test('CLAUDE.md keeps user text and gets exactly one current block', async () => {
   const root = repo();
   writeFileSync(join(root, 'CLAUDE.md'), '# My rules\n\nBe nice.\n\n<!-- telos:start -->\nold block\n<!-- telos:end -->\n\nAfter.\n');
-  await telos(root, 'init', '--profile', 'minimal');
-  await telos(root, 'init', '--profile', 'minimal');
+  await telos(root, 'init');
+  await telos(root, 'init');
   const text = read(root, 'CLAUDE.md');
   assert.ok(text.startsWith('# My rules\n\nBe nice.\n\n<!-- telos:start v1 -->\n'), text);
   assert.ok(text.endsWith('<!-- telos:end -->\n\nAfter.\n'), text);
@@ -78,19 +76,19 @@ test('CLAUDE.md keeps user text and gets exactly one current block', async () =>
 
 test('CLAUDE.md is created, or the block appended after user text', async () => {
   const fresh = repo();
-  await telos(fresh, 'init', '--profile', 'minimal');
+  await telos(fresh, 'init');
   assert.match(read(fresh, 'CLAUDE.md'), /^<!-- telos:start v1 -->\n/);
 
   const own = repo();
   writeFileSync(join(own, 'CLAUDE.md'), '# Mine');
-  await telos(own, 'init', '--profile', 'minimal');
+  await telos(own, 'init');
   assert.match(read(own, 'CLAUDE.md'), /^# Mine\n\n<!-- telos:start v1 -->\n/);
 });
 
 test('a start marker without an end marker is refused', async () => {
   const root = repo();
   writeFileSync(join(root, 'CLAUDE.md'), '<!-- telos:start v1 -->\nbroken\n');
-  const r = await telos(root, 'init', '--profile', 'minimal');
+  const r = await telos(root, 'init');
   assert.equal(r.code, 1);
   assert.match(r.stderr, /telos:end/);
   assert.equal(existsSync(join(root, '.telos')), false, 'nothing written');
@@ -98,21 +96,20 @@ test('a start marker without an end marker is refused', async () => {
 
 test('--checks and --stack override detection; invalid input exits 2', async () => {
   const root = repo('astro-ts');
-  const r = await telos(root, 'init', '--profile', 'minimal', '--stack', 'python', '--checks', '{"test":"pytest"}');
+  const r = await telos(root, 'init', '--stack', 'python', '--checks', '{"test":"pytest"}');
   assert.equal(r.code, 0, r.stderr);
   const cfg = loadConfig(root);
   assert.deepEqual(cfg.stack, ['python']);
   assert.deepEqual(cfg.checks, { test: 'pytest' });
 
-  assert.equal((await telos(repo(), 'init', '--profile', 'minimal', '--checks', '{nope')).code, 2);
-  assert.equal((await telos(repo(), 'init', '--profile', 'minimal', '--checks', '{"bogus":"x"}')).code, 2);
-  assert.equal((await telos(repo(), 'init', '--profile', 'huge')).code, 2);
-  assert.equal((await telos(repo(), 'init')).code, 2);
+  assert.equal((await telos(repo(), 'init', '--checks', '{nope')).code, 2);
+  assert.equal((await telos(repo(), 'init', '--checks', '{"bogus":"x"}')).code, 2);
+  assert.equal((await telos(repo(), 'init', '--profile', 'standard')).code, 2, 'profiles are gone');
 });
 
 test('without overrides the detected stack and checks land in config', async () => {
   const root = repo('astro-ts');
-  await telos(root, 'init', '--profile', 'standard');
+  await telos(root, 'init');
   const cfg = loadConfig(root);
   assert.deepEqual(validate(cfg), []);
   assert.deepEqual(cfg.stack, ['astro', 'typescript']);
@@ -120,23 +117,30 @@ test('without overrides the detected stack and checks land in config', async () 
   assert.match(read(root, '.telos/PROJECT.md'), /^# astro-demo$/m);
 });
 
-test('a different profile on an initialized repo needs --force', async () => {
+test('--force rewrites a version 1 config as version 2, keeping its values; --checks overrides them', async () => {
   const root = repo();
-  await telos(root, 'init', '--profile', 'minimal');
-  const r = await telos(root, 'init', '--profile', 'deep');
-  assert.equal(r.code, 1);
-  assert.match(r.stderr, /minimal/);
-  const forced = await telos(root, 'init', '--profile', 'standard', '--force');
+  mkdirSync(join(root, '.telos'));
+  writeFileSync(join(root, '.telos', 'config.json'), JSON.stringify({ version: 1, profile: 'deep', stack: ['go'],
+    checks: { test: 'go test ./...', format: 'gofmt -w {files}' }, strict_scope: true, git: { auto_commit: false, phase_tags: true } }));
+  const kept = await telos(root, 'init');
+  assert.match(kept.stdout, /^Kept: config\.json/m);
+  assert.match(read(root, '.telos/config.json'), /"profile":\s*"deep"/, 'without --force the file stays as it is');
+  const forced = await telos(root, 'init', '--force');
   assert.equal(forced.code, 0, forced.stderr);
-  assert.equal(loadConfig(root).profile, 'standard');
-  assert.deepEqual(tree(root), STANDARD);
+  assert.match(forced.stdout, /^Updated: config\.json/m);
+  const cfg = JSON.parse(read(root, '.telos/config.json'));
+  assert.deepEqual(Object.keys(cfg), ['version', 'stack', 'checks', 'limits', 'git', 'files_language']);
+  assert.deepEqual([cfg.version, cfg.stack, cfg.checks, cfg.git.auto_commit], [2, ['go'], { test: 'go test ./...' }, false]);
+  await telos(root, 'init', '--force', '--checks', '{"test":"make test"}');
+  assert.deepEqual(loadConfig(root).checks, { test: 'make test' });
+  assert.deepEqual(tree(root), FILES);
 });
 
 test('.gitignore gets the cache entry once', async () => {
   const root = repo();
   writeFileSync(join(root, '.gitignore'), 'node_modules/');
-  await telos(root, 'init', '--profile', 'minimal');
-  await telos(root, 'init', '--profile', 'minimal');
+  await telos(root, 'init');
+  await telos(root, 'init');
   assert.equal(read(root, '.gitignore'), 'node_modules/\n.telos/.cache/\n');
 });
 
@@ -144,12 +148,12 @@ test('Next is /telos:map with code and /telos:plan without', async () => {
   const code = repo();
   mkdirSync(join(code, 'src'));
   writeFileSync(join(code, 'src', 'index.ts'), 'export {};\n');
-  await telos(code, 'init', '--profile', 'minimal');
+  await telos(code, 'init');
   assert.match(read(code, '.telos/STATUS.md'), /^Next: run \/telos:map to map the existing code$/m);
 
   const bare = repo('node-plain');
   writeFileSync(join(bare, 'README.md'), '# x\n');
-  const r = await telos(bare, 'init', '--profile', 'minimal');
+  const r = await telos(bare, 'init');
   assert.match(read(bare, '.telos/STATUS.md'), /^Next: plan the first phase with \/telos:plan$/m);
   assert.match(r.stdout, /^Next: plan the first phase with \/telos:plan$/m);
   assert.match(r.stdout, /docs\(telos\): initialize telos/);
@@ -157,7 +161,7 @@ test('Next is /telos:map with code and /telos:plan without', async () => {
 
 test('rendered files contain no placeholders', async () => {
   const root = repo();
-  await telos(root, 'init', '--profile', 'deep');
+  await telos(root, 'init');
   for (const f of tree(root)) assert.doesNotMatch(read(root, `.telos/${f}`), /\{\{/, f);
   assert.doesNotMatch(read(root, 'CLAUDE.md'), /\{\{/);
 });

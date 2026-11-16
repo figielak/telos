@@ -13,12 +13,12 @@ import { sessionText } from '../lib/session.mjs';
 
 const FIXTURE = fileURLToPath(new URL('fixtures/node-plain/', import.meta.url));
 
-function repo(t, profile = 'standard') {
+function repo(t) {
   const root = mkdtempSync(join(tmpdir(), 'telos-budget-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   cpSync(FIXTURE, root, { recursive: true });
   mkdirSync(join(root, '.git'));
-  init(root, { profile });
+  init(root);
   return root;
 }
 
@@ -57,9 +57,9 @@ function snapshot(root) {
 const units = (text) => ({ bytes: Buffer.byteLength(text), chars: text.length, tokens: estimateTokens(text) });
 const row = (rows, label) => rows.find((r) => r.label === label);
 
-test('the default report is deterministic per profile, with distinct stored and rendered totals', async (t) => {
-  for (const profile of ['minimal', 'standard', 'deep']) {
-    const root = repo(t, profile);
+test('the default report is deterministic, with distinct stored and rendered totals', async (t) => {
+  {
+    const root = repo(t);
     const a = await budget(root);
     const b = await budget(root);
     assert.equal(a.code, 0, a.err);
@@ -103,7 +103,7 @@ test('comment stripping changes only the stored counts', (t) => {
 });
 
 test('--ctx measures exactly what telos ctx prints, including truncation', async (t) => {
-  const root = repo(t, 'deep');
+  const root = repo(t);
   for (const args of [['status'], ['plan'], ['shared', 'plan']]) {
     const real = await ctx(root, ...args);
     const r = measure(root, { ctx: args });
@@ -122,8 +122,8 @@ test('--ctx measures exactly what telos ctx prints, including truncation', async
   assert.match(out, /ctx plan · \d+ B · \d+ chars · ~\d+ est\. tokens · truncated/);
 });
 
-test('a refused or profile-gated ctx is no measurement: exit 1, no zero-cost row', async (t) => {
-  const root = repo(t, 'minimal');
+test('a refused ctx is no measurement: exit 1, no zero-cost row', async (t) => {
+  const root = repo(t);
   for (const args of [['close', '07'], ['shared', 'nope'], ['map', '--refresh']]) {
     const { code, out, err } = await budget(root, '--ctx', ...args);
     assert.equal(code, 1, args.join(' '));
@@ -142,7 +142,7 @@ test('malformed selectors and arguments exit 2', async (t) => {
 });
 
 test('missing optional memory and block are explicit rows; no .telos exits 1', async (t) => {
-  const root = repo(t, 'standard');
+  const root = repo(t);
   rmSync(join(root, '.telos', 'HISTORY.md'));
   rmSync(join(root, 'CLAUDE.md'));
   const { code, out } = await budget(root);
@@ -159,7 +159,7 @@ test('missing optional memory and block are explicit rows; no .telos exits 1', a
 });
 
 test('caches, archives, symlinks, oversize files and traversal limits are visible omissions; nothing is written', async (t) => {
-  const root = repo(t, 'deep');
+  const root = repo(t);
   const dir = join(root, '.telos');
   const outside = mkdtempSync(join(tmpdir(), 'telos-budget-out-'));
   t.after(() => rmSync(outside, { recursive: true, force: true }));

@@ -1,7 +1,5 @@
 {
-  "version": 1,
-  "profile": "deep",
-  "files_language": "en",
+  "version": 2,
   "stack": [
     "javascript"
   ],
@@ -9,20 +7,6 @@
     "test": "node --test --test-reporter=dot test/*.test.mjs",
     "e2e": "node --test test/e2e-*.test.mjs"
   },
-  "docs": {
-    "readme": "README.md",
-    "changelog": "CHANGELOG.md",
-    "paths": [
-      "docs/"
-    ]
-  },
-  "protected_configs": [
-    "eslint.config.*",
-    "biome.json",
-    "tsconfig.json",
-    "ruff.toml",
-    "pyproject.toml#tool.ruff"
-  ],
   "limits": {
     "status_lines": 40,
     "map_tokens": 1500,
@@ -32,5 +16,5 @@
     "auto_commit": true,
     "phase_tags": true
   },
-  "strict_scope": false
+  "files_language": "en"
 }

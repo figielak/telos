@@ -16,7 +16,7 @@ const HOOKS_JSON = new URL('../hooks/hooks.json', import.meta.url);
 const PLAN = '# 01-demo\n\n## Tasks\n- [x] **01-01 First task**\n- [ ] **01-02 Second task**\n';
 
 function repo() {
-  const root = memoryRepo(null, { profile: 'minimal' });
+  const root = memoryRepo(null);
   mkdirSync(join(root, 'src'));
   mkdirSync(join(root, '.telos', 'phases'));
   writeFileSync(join(root, '.telos', 'phases', '01-demo.md'), PLAN);
@@ -37,13 +37,12 @@ function hook(cwd, input = JSON.stringify({ cwd, hook_event_name: 'SessionStart'
   return { code: r.status, out: r.stdout, err: r.stderr };
 }
 
-test('the status starts with the Purpose line, then stack, profile, phase/task, next, pointers', () => {
+test('the status starts with the Purpose line, then stack, phase/task, next, pointers', () => {
   const { code, out } = hook(repo());
   assert.equal(code, 0);
   const lines = out.trimEnd().split('\n');
   assert.equal(lines[0], 'Project: A tiny demo app for tests.');
   assert.match(lines[1], /^Stack: /);
-  assert.equal(lines[2], 'Profile: minimal');
   assert.doesNotMatch(out, /Second line/);
   assert.match(out, /^Next: 01-02 Second task\nBlockers: none\nCarry-over: 0$/m);
   assert.match(lines.at(-1), /^Files: \.telos\/STATUS\.md · /);

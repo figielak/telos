@@ -7,7 +7,7 @@ import { render } from '../lib/template.mjs';
 const names = readdirSync(new URL('../templates/', import.meta.url)).filter((f) => f.endsWith('.md'));
 
 const vars = {
-  name: 'demo-app', profile: 'standard', date: '2026-10-24',
+  name: 'demo-app', date: '2026-10-24',
   id: '01-02', title: 'Check board game', nn: '01', number: '001',
   source: '02:D-03', goal: 'Ship it', done: 'it ships', next: 'run `/telos:map` to map the existing code', supersedes: 'none',
 };

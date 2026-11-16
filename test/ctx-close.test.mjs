@@ -24,7 +24,7 @@ async function repo(t, { checks = { test: 'npm test' } } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'telos-ctx-close-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   mkdirSync(join(root, '.git'));
-  await ok(root, 'init', '--profile', 'standard', '--checks', JSON.stringify(checks), '--stack', 'javascript');
+  await ok(root, 'init', '--checks', JSON.stringify(checks), '--stack', 'javascript');
   await ok(root, 'roadmap', 'add', 'demo', 'demo phase', 'demo works');
   await ok(root, 'roadmap', 'add', 'next', 'next phase', 'next works');
   await ok(root, 'roadmap', 'set', '01', 'active');

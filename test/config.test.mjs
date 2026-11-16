@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { DEFAULTS, PROFILES, atLeast, load, requireMessage, validate, write } from '../lib/config.mjs';
+import { DEFAULTS, load, upgrade, validate, write } from '../lib/config.mjs';
 
 const tempRoot = () => mkdtempSync(join(tmpdir(), 'telos-config-'));
 const withConfig = (root, obj) => {
@@ -12,21 +12,25 @@ const withConfig = (root, obj) => {
   writeFileSync(join(root, '.telos', 'config.json'), JSON.stringify(obj));
 };
 
-test('defaults validate with no errors', () => {
+test('defaults are version 2 with exactly the memory-core keys and validate', () => {
   assert.deepEqual(validate(DEFAULTS), []);
+  assert.deepEqual(Object.keys(DEFAULTS), ['version', 'stack', 'checks', 'limits', 'git', 'files_language']);
+  assert.equal(DEFAULTS.version, 2);
 });
 
 test('defaults are deeply immutable', () => {
-  assert.throws(() => { DEFAULTS.checks.test = 'x'; }, TypeError);
-  assert.throws(() => { DEFAULTS.docs.paths.push('x'); }, TypeError);
+  assert.throws(() => { DEFAULTS.limits.status_lines = 1; }, TypeError);
+  assert.throws(() => { DEFAULTS.stack.push('x'); }, TypeError);
 });
 
 test('each invalid field yields one error naming the key', () => {
   const cases = [
-    [{ profile: 'huge' }, 'profile'],
-    [{ version: 2 }, 'version'],
+    [{ version: 1 }, 'version'],
+    [{ profile: 'deep' }, 'profile'],
     [{ checks: { test: 42 } }, 'checks.test'],
+    [{ checks: { format: 'prettier' } }, 'checks.format'],
     [{ limits: { ...DEFAULTS.limits, status_lines: 0 } }, 'limits.status_lines'],
+    [{ git: { ...DEFAULTS.git, auto_commit: 'yes' } }, 'git.auto_commit'],
   ];
   for (const [patch, key] of cases) {
     const errors = validate({ ...DEFAULTS, ...patch });
@@ -35,48 +39,40 @@ test('each invalid field yields one error naming the key', () => {
   }
 });
 
-test('a partial file merges over defaults', () => {
+test('a version 1 file loads: removed keys and Stop-only checks are dropped', () => {
   const root = tempRoot();
-  withConfig(root, { version: 1, profile: 'deep', limits: { status_lines: 30 } });
+  withConfig(root, {
+    version: 1, profile: 'deep', files_language: 'pl', stack: ['javascript'],
+    checks: { test: 'npm test', format: 'prettier --write {files}', test_related: 'vitest related {files}' },
+    docs: { readme: 'README.md' }, protected_configs: ['tsconfig.json'], strict_scope: true,
+    limits: { status_lines: 30 },
+  });
   const cfg = load(root);
-  assert.equal(cfg.profile, 'deep');
-  assert.equal(cfg.limits.status_lines, 30);
-  assert.equal(cfg.limits.map_tokens, DEFAULTS.limits.map_tokens);
-  assert.deepEqual(cfg.git, DEFAULTS.git);
+  assert.deepEqual(cfg, { ...DEFAULTS, files_language: 'pl', stack: ['javascript'], checks: { test: 'npm test' },
+    limits: { ...DEFAULTS.limits, status_lines: 30 } });
+  assert.deepEqual(upgrade({ version: 2, profile: 'x' }), { version: 2, profile: 'x' }, 'only version 1 is upgraded');
 });
 
 test('load reports all validation errors at once', () => {
   const root = tempRoot();
-  withConfig(root, { version: 3, profile: 'huge' });
-  assert.throws(() => load(root), /version.*profile/s);
-});
-
-test('atLeast orders minimal < standard < deep', () => {
-  assert.deepEqual(PROFILES, ['minimal', 'standard', 'deep']);
-  const std = { ...DEFAULTS, profile: 'standard' };
-  assert.equal(atLeast(std, 'minimal'), true);
-  assert.equal(atLeast(std, 'standard'), true);
-  assert.equal(atLeast(std, 'deep'), false);
-});
-
-test('requireMessage matches the spec wording', () => {
-  assert.equal(requireMessage('deep'), 'Requires deep profile. Switch with /telos:profile deep.');
+  withConfig(root, { version: 3, extra: true });
+  assert.throws(() => load(root), /extra.*version/s);
 });
 
 test('write then load round-trips with stable formatting', () => {
   const root = tempRoot();
-  const cfg = { ...DEFAULTS, profile: 'minimal', stack: ['python'], checks: { test: 'pytest', build: 'make' } };
+  const cfg = { ...DEFAULTS, stack: ['python'], checks: { test: 'pytest', build: 'make' } };
   write(root, cfg);
   const text = readFileSync(join(root, '.telos', 'config.json'), 'utf8');
   assert.ok(text.endsWith('}\n'));
   assert.ok(text.indexOf('"build"') < text.indexOf('"test"'), 'checks keep spec order');
+  assert.ok(text.indexOf('"version"') < text.indexOf('"stack"'));
   assert.deepEqual(load(root), cfg);
 });
 
-test('checks.format is an optional known check; unknown check keys are still rejected', () => {
-  assert.deepEqual(validate({ ...DEFAULTS, checks: { format: 'prettier --write {files}', types: 'tsc' } }), []);
+test('unknown check keys are rejected with the known list', () => {
   const errors = validate({ ...DEFAULTS, checks: { formatter: 'x' } });
   assert.equal(errors.length, 1);
-  assert.match(errors[0], /^checks\.formatter: unknown check \(known: .*format/);
-  assert.match(validate({ ...DEFAULTS, checks: { format: '' } })[0], /^checks\.format: must be a non-empty string/);
+  assert.match(errors[0], /^checks\.formatter: unknown check \(known: build, types, lint, test, e2e\)/);
+  assert.match(validate({ ...DEFAULTS, checks: { test: '' } })[0], /^checks\.test: must be a non-empty string/);
 });

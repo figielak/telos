@@ -12,16 +12,16 @@ const ARCHIVE = '# History archive\n<!-- keep archive guidance -->\n\n## Log\n'
   + '- 2025-01-01 decision ADR 001: original archive entry\n\n## Notes\nKeep archive notes.\n';
 const { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } = fs;
 
-function repo(t, { profile = 'standard', limit = 30, archive } = {}) {
+function repo(t, { limit = 30, archive } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'telos-history-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   mkdirSync(join(root, '.git'));
   mkdirSync(join(root, '.telos'));
   writeFileSync(join(root, '.telos', 'config.json'), JSON.stringify({
-    profile, limits: { history_entries: limit },
+    limits: { history_entries: limit },
   }));
   writeFileSync(join(root, '.telos', 'HISTORY.md'), render('HISTORY.md', {
-    date: '2026-01-01', profile,
+    date: '2026-01-01',
   }) + '\n## Notes\nKeep these notes.\n');
   if (archive !== undefined) writeFileSync(join(root, '.telos', 'HISTORY-archive.md'), archive);
   return root;
@@ -108,7 +108,7 @@ test('rotation retains the newest Log rows, all Delete-zone bytes, archive and u
   assert.ok(text(root).endsWith('\n## Notes\nKeep these notes.\n'));
   const archived = text(root, 'HISTORY-archive.md');
   assert.match(archived, /remove 01-02: Obsolete \(still useful — context\)/);
-  assert.match(archived, /init telos: initialized \(standard profile\)/);
+  assert.match(archived, /init telos: initialized$/m);
   assert.equal(archived.replace(/^- 2026[^\n]*\n/gm, ''), ARCHIVE);
   assert.ok(archived.indexOf('remove 01-02') < archived.indexOf('init telos'));
 });
@@ -186,18 +186,6 @@ test('unsafe and outside-repository path selectors are refused without writes', 
   }
 });
 
-test('minimal refuses without mutation; deep supports the same writer', async (t) => {
-  const minimal = repo(t, { profile: 'minimal' });
-  const before = snapshot(minimal);
-  const r = await telos(minimal, 'history', 'add', 'decision', '01', 'reason');
-  assert.equal(r.code, 1);
-  assert.match(r.stderr, /Requires standard profile/);
-  assert.deepEqual(snapshot(minimal), before);
-  assert.throws(() => readHistory(minimal), /Requires standard profile/);
-  const deep = repo(t, { profile: 'deep' });
-  assert.equal((await telos(deep, 'history', 'add', 'decision', '01', 'reason')).code, 0);
-});
-
 test('missing, malformed and unreadable HISTORY or archive fail before mutation', async (t) => {
   const variants = [
     ['HISTORY.md', null], ['HISTORY.md', '# History\n## Log\n- none\n'],
@@ -272,7 +260,7 @@ test('staged write failures and either rename failure keep every original entry 
       assert.equal(archived.replace(/^- 2026[^\n]*\n/gm, ''), ARCHIVE);
       assert.deepEqual(readdirSync(join(root, '.telos')).sort(), Object.keys(before));
       if (method === 'renameSync' && failAt === 2) {
-        assert.match(archived, /initialized \(standard profile\)/);
+        assert.match(archived, /init telos: initialized$/m);
         addHistory(root, entry({ text: 'retry' }));
         assert.equal(readHistory(root).log[0].text, 'retry');
         assert.match(text(root, 'HISTORY-archive.md'), /original archive entry/);
