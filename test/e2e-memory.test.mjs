@@ -10,6 +10,8 @@ import { areasRepo, commitAll, git, write } from './areas-repo.mjs';
 
 // 13-06: one write point, end to end. The harness plays the model: scripted area edits stand in
 // for its judgment; this proves the CLI and file contracts, not the quality of the notes.
+// 14-05: no hook runs here (nothing under hooks/ is spawned); `telos status` gives what
+// SessionStart would, so an agent without hooks sees the same stale count.
 const BIN = fileURLToPath(new URL('../bin/telos', import.meta.url));
 
 function telos(root, ...args) {
@@ -49,6 +51,10 @@ test('commits made without Telos: catch-up bundle, area edits, closing commands,
   write(root, 'tools/gen.mjs', 'export const gen = () => {};\n');
   commitAll(root, 'chore: generator');
 
+  // Without the SessionStart hook, the session-start rule `telos status` shows the stale areas.
+  assert.match(ok(root, 'status'), /^Areas: 3\nStale areas: 2 \(run telos stale\)$/m);
+  assert.match(ok(root, 'ctx', 'status'), /^Areas: 3\nStale areas: 2 \(run telos stale\)$/m);
+
   const bundle = ok(root, 'ctx', 'catchup');
   assert.ok(bundle.length - 1 <= 6000, `${bundle.length - 1} chars`);
   assert.match(bundle, /^Delta: 2 areas to review · fresh: util · unmapped: 1 file$/m);
@@ -84,4 +90,12 @@ test('commits made without Telos: catch-up bundle, area edits, closing commands,
   assert.equal(stale.code, 0, stale.stdout);
   assert.equal(stale.stdout, 'fresh: 4 areas\n');
   assert.equal(ok(root, 'ctx', 'catchup'), 'Nothing to catch up\n');
+  const status = ok(root, 'status');
+  assert.match(status, /^Areas: 4$/m);
+  assert.doesNotMatch(status, /Stale areas/);
+});
+
+test('the memory e2e never invokes a hook', () => {
+  const source = readFileSync(fileURLToPath(import.meta.url), 'utf8');
+  assert.doesNotMatch(source.replace(/^\/\/.*$/gm, ''), /hooks\//);
 });

@@ -96,7 +96,7 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error. The C
 |---|---|
 | `telos --help` / `--version` | List commands / print the version |
 | `telos init [--stack a,b] [--checks '<json>'] [--force]` | Create the memory files, sync the rules block into `AGENTS.md` and the `@AGENTS.md` import into `CLAUDE.md` (an old CLAUDE.md block is removed; a CLAUDE.md symlink to AGENTS.md is left alone; a start marker without an end marker exits 1, writing nothing), add `.telos/.cache/` to `.gitignore`. Stack and checks default to detection (check keys: `build`, `types`, `lint`, `test`, `e2e`). Existing files are kept; `--force` rewrites `config.json` as version 2, keeping its values (a version 1 file loses `profile`, `docs`, `protected_configs`, `strict_scope` and the `format`/`test_related` checks) |
-| `telos status` | Compact status: phase with its ROADMAP state, task with its checklist state (`open`/`done`), Next, Blockers, carry-over count, latest Recent line; Awaiting user first |
+| `telos status` | Compact status: phase with its ROADMAP state, task with its checklist state (`open`/`done`), Next, Blockers, carry-over count, latest Recent line, `Areas: N` and `Stale areas: N` (the SessionStart lines, for agents without hooks); Awaiting user first |
 | `telos status set <key>=<value>…` | Set STATUS lines: `phase`, `task`, `next`, `blockers`, `awaiting`; empty value → `none` |
 | `telos status add recent\|carry "<line>"` / `rm carry <n>` | Prepend to Recent (3 newest kept); append to Carry-over (max 5); remove item `n` |
 | `telos roadmap add <name> "<goal>" "<done when>"` | Append a `[planned]` phase with the next free NN |
@@ -113,7 +113,8 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error. The C
 | `telos budget [--ctx <bundle> [args]]` | Read-only size report: `.telos/` files, the AGENTS.md block, the SessionStart output and optionally one bundle, in bytes, chars and ~tokens (chars / 4) |
 
 `ctx plan` gives the target phase and its file (or the template skeleton), carry-over, PROJECT
-Purpose and Rules, stack, checks, Delete-zone approaches, the MAP index and the roadmap. Each
+Purpose and Rules, stack, checks, Delete-zone approaches and removed paths, the MAP index and
+the roadmap rows that fit, nearest the target phase first. Each
 `--area <path>` adds the area files covering that path, whole while the bundle stays under
 6000 chars, else as `Read .telos/areas/<name>.md` pointers; the roadmap then keeps the rows that
 still fit, nearest the target phase first.

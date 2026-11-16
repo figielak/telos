@@ -72,7 +72,8 @@ test('without an argument the bundle names the next NN; a description targets a 
   assert.match((await ctx(root, 'plan')).stdout, /^Target: none \(pass a phase NN or a description\)$/m);
 });
 
-test('Delete-zone approaches and the MAP index are listed; Delete-zone paths and the archive are not', async () => {
+// 14-05: removed paths are listed too; the Delete-zone edit warning is a Claude Code hook only.
+test('Delete-zone approaches, removed paths and the MAP index are listed; the archive is not', async () => {
   const root = repo();
   writeFileSync(join(root, '.telos', 'HISTORY.md'), render('HISTORY.md', { date: '2026-01-01' })
     .replace(/(## Delete-zone\n(?:<!--[\s\S]*?-->\n)?)- none/, '$1- approach: Global mutable cache — leaked state (01-01, 2026-01-02)\n- `src/old/` — module removed (01-01, 2026-01-02)'));
@@ -80,7 +81,8 @@ test('Delete-zone approaches and the MAP index are listed; Delete-zone paths and
   writeFileSync(join(root, '.telos', 'MAP.md'), '# Map\n\n## Structure\n- `src/` — code\n\n## Find\n- greet → `src/greet.mjs:1-9`\n');
   const out = (await ctx(root, 'plan', '01')).stdout;
   assert.match(out, /^Removed approaches \(never plan these\):\n- Global mutable cache — leaked state \(01-01\)$/m);
-  assert.doesNotMatch(out, /src\/old|ARCHIVED/);
+  assert.match(out, /^Removed paths \(never recreate; reasons in HISTORY\.md\): `src\/old`$/m);
+  assert.doesNotMatch(out, /ARCHIVED/);
   assert.match(out, /^Map index \(\.telos\/MAP\.md\):\n## Structure\n- `src\/` — code\n## Find\n- greet → `src\/greet\.mjs:1-9`$/m);
   rmSync(join(root, '.telos', 'MAP.md'));
   assert.match((await ctx(root, 'plan', '01')).stdout, /^Map index: none \(run \/telos:map\)$/m);
@@ -142,7 +144,10 @@ test('selected areas outrank the roadmap: a long roadmap keeps the rows nearest 
   const rows = Array.from({ length: 40 }, (_, i) => `- ${String(i + 3).padStart(2, '0')}-later [planned] ${'goal text '.repeat(14)}· done when: it works`);
   writeFileSync(file, `${readFileSync(file, 'utf8').trimEnd()}\n${rows.join('\n')}\n`);
   const plain = (await ctx(root, 'plan', '01')).stdout;
-  assert.match(plain, /truncated by telos ctx/, 'without --area the roadmap is cut by the cap');
+  assert.doesNotMatch(plain, /truncated by telos ctx/, 'without --area the roadmap keeps the rows that fit');
+  assert.ok(plain.length <= CAP + 1, String(plain.length));
+  assert.match(plain, /^Roadmap:\n- 01-demo \[active\] demo phase\n- 02-next /m);
+  assert.match(plain, /^\(\d+ more in \.telos\/ROADMAP\.md\)$/m);
   const r = await ctx(root, 'plan', '01', '--area', 'src/api/x.ts');
   assert.ok(r.stdout.length <= CAP + 1, String(r.stdout.length));
   assert.doesNotMatch(r.stdout, /truncated by telos ctx/);

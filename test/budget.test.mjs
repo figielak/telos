@@ -110,8 +110,9 @@ test('--ctx measures exactly what telos ctx prints, including truncation', async
     const sel = row(r.rendered, `ctx ${args.join(' ')}`);
     assert.deepEqual({ bytes: sel.bytes, chars: sel.chars, tokens: sel.tokens }, units(real.out), args.join(' '));
   }
-  const big = join(root, '.telos', 'ROADMAP.md');
-  writeFileSync(big, `${readFileSync(big, 'utf8')}${'- 99-filler [planned] a filler phase line for the cap\n'.repeat(400)}`);
+  // The roadmap is fitted to the budget (14-05); PROJECT Rules come before it and are cut.
+  const big = join(root, '.telos', 'PROJECT.md');
+  writeFileSync(big, readFileSync(big, 'utf8').replace(/## Rules\n/, `## Rules\n${'- a filler rule line for the cap\n'.repeat(400)}`));
   const real = await ctx(root, 'plan');
   assert.match(real.out, /truncated by telos ctx/);
   const sel = row(measure(root, { ctx: ['plan'] }).rendered, 'ctx plan');

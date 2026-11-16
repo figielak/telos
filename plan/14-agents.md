@@ -52,7 +52,7 @@ in its sandbox.
   - README: separate install sections for Claude Code and Codex.
   - Accept: a test runs the CLI through a symlinked bin path.
 
-- [ ] **14-05 No hook dependency**
+- [x] **14-05 No hook dependency**
   - Audit: anything only a hook provides (status at start, stale count, Delete-zone
     warning) must also be reachable by a command (`telos status` shows the stale count;
     `ctx plan` lists Delete-zone entries).
@@ -108,3 +108,15 @@ Context first, then `## Instructions`: every `shared/*.md` says "the context abo
 `Nothing to catch up` print alone. The context keeps its 6000-char cap; the instructions get a
 separate 5600-char cap (`INSTRUCTIONS_CAP`), measured: `shared/map.md` renders at 5239 chars, the
 others at 2379–3560. On this repo `ctx plan` is 8354 chars in total.
+
+### 14-05 Hook audit
+
+| Hook gives | Without hooks |
+|---|---|
+| SessionStart status, `Areas: N`, `Stale areas: N` | rule "run `telos status` first"; `telos status` and `ctx status` print both lines |
+| Delete-zone edit warning | `ctx plan` lists removed approaches and, on one line, removed paths |
+| Git guard (push, `--no-verify`, `add -A`, `reset --hard`, amend) | stated in the AGENTS.md block; not enforced (D4) |
+
+`ctx plan` without `--area` now fits the roadmap to the budget (rows nearest the target, then a
+count line) instead of letting `cap()` cut it: the removed-paths line pushed this repo's plan
+bundle past 6000 chars.
