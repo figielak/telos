@@ -38,7 +38,8 @@ Requires Claude Code with plugin support, Git and Node.js ≥ 20.10. No dependen
    keeps the pointer current.
 5. `/telos:close` — lists unchecked tasks (they block the close) and the configured check
    commands; the agent runs them, then records `phase` in HISTORY, sets the phase `done` and
-   points STATUS at the next phase.
+   points STATUS at the next phase. On the way it updates the area notes the changes touched
+   and re-anchors them.
 6. A new session starts with the status (≤ 1200 chars): project purpose, stack, phase and task,
    next step, blockers. `/telos:status` shows the same on demand.
 
@@ -66,6 +67,7 @@ Skills are user-invoked only, so they cost nothing until called. Each injects on
 | `/telos:map [--refresh]` | Write the `.telos/MAP.md` index and the `.telos/areas/` files from `telos ctx map` and 3–8 suggested files; requires `Map validation: PASS` for MAP, every area and the row ↔ file match (at most two repairs, else the old files are restored) and drafts empty PROJECT sections, unconfirmed. `--refresh` edits only the index blocks and area files whose paths a diff since the MAP commit touches; authored area sections are kept. With `git.auto_commit` it asks once, then commits `docs(telos): map` with explicit paths |
 | `/telos:plan [NN\|description]` | Plan the STATUS phase, phase `NN` or a new phase in one file (≤ 80 lines). At most one round of questions; `telos roadmap add` for a new phase, then `telos roadmap set NN active` and `telos status set`; places carry-over items. Commits `docs(NN): plan phase NN-name` only when `git.auto_commit` is true |
 | `/telos:close [NN]` | Close an active phase: stops on `REFUSED:` or `Close: blocked` (unchecked tasks, unreadable HISTORY), runs every configured check (a failure leaves the phase active, nothing recorded), confirms the done-when, updates only the area notes the delta lists (decisions, rejected approaches, invariants, pitfalls, entry points; no diff retelling), fixes broken refs, places every unmapped path in an area, passes `telos area lint`, then runs the bundle's closing commands in order; a retry skips a recorded phase entry. Commits `docs(telos): close NN-name` only when `git.auto_commit` is true |
+| `/telos:catchup` | After work done without Telos: the same area update as `/telos:close` from `telos ctx catchup` (the delta since each area's anchor), with no checks and no phase bookkeeping; stops on `Nothing to catch up`. Re-anchors the updated areas, adds one `quick` HISTORY line only for a recorded decision, commits `docs(telos): catch up` only when `git.auto_commit` is true |
 
 ## CLI
 
@@ -139,10 +141,10 @@ generalise beyond them. Version 0.2 has not been benchmarked.
 
 ## Limits
 
-- Memory is written at two points (`/telos:plan`, `/telos:close`) and by hand; nothing checks
-  yet that MAP or PROJECT still match the code.
-- Work done without the skills is not caught up automatically; update STATUS and the phase
-  checklist yourself.
+- Memory is written at `/telos:plan`, `/telos:close` and `/telos:catchup`; `telos stale` shows
+  which area notes no longer match the code, but nothing checks MAP or PROJECT.
+- `/telos:catchup` updates area notes only; after work done without the skills, update STATUS
+  and the phase checklist yourself.
 - Claude Code only for now: the hooks and skills are plugin features. The files are plain
   markdown and the CLI runs anywhere Node does.
 - Size targets: bundles ≤ 6000 chars, SessionStart ≤ 1200 chars, MAP ≤ `limits.map_tokens` and

@@ -39,11 +39,11 @@ test('every injected telos command is pre-approved in allowed-tools', () => {
   }
 });
 
-const MODELS = { plan: 'opus', map: 'sonnet', status: 'sonnet', close: 'sonnet' };
+const MODELS = { plan: 'opus', map: 'sonnet', status: 'sonnet', close: 'sonnet', catchup: 'sonnet' };
 const SHARED = fileURLToPath(new URL('../shared/', import.meta.url));
 
-test('exactly four skills remain, one per memory step, each on its model', () => {
-  assert.deepEqual([...skills].sort(), ['close', 'map', 'plan', 'status']);
+test('every skill runs on its model', () => {
+  assert.deepEqual([...skills].sort(), Object.keys(MODELS).sort());
   for (const [name, model] of Object.entries(MODELS)) assert.equal(read(name).field('model'), model, name);
 });
 
@@ -191,7 +191,7 @@ test('the map instructions run the fixed refresh command and prove byte preserva
 });
 
 // 13-04: one write point; every skill that updates memory after work injects shared/close.md.
-const CLOSE_USERS = ['close'];
+const CLOSE_USERS = ['close', 'catchup'];
 
 test('close injects its bundle and the shared close body; arguments only appear under Request', () => {
   const { field, body } = read('close');
@@ -202,6 +202,16 @@ test('close injects its bundle and the shared close body; arguments only appear 
   const tools = field('allowed-tools').split(/,\s*/);
   assert.deepEqual(tools.filter((t) => /^(Edit|Write)\(/.test(t)).sort(), ['Edit(.telos/MAP.md)', 'Edit(.telos/areas/*)', 'Write(.telos/areas/*)']);
   assert.doesNotMatch(field('allowed-tools'), /push|reset|tag|stash|Agent|ROADMAP|STATUS|HISTORY/);
+});
+
+test('catchup injects only its fixed bundle and the shared close body, with the close tools', () => {
+  const { field, body } = read('catchup');
+  assert.match(body, /^## Context\n!`telos ctx catchup`$/m);
+  assert.match(body, /^## Instructions\n!`telos ctx shared close`$/m);
+  assert.equal((body.match(/!`/g) ?? []).length, 2);
+  assert.doesNotMatch(body, /\$ARGUMENTS/);
+  assert.equal(field('allowed-tools'), read('close').field('allowed-tools'));
+  assert.equal(field('argument-hint'), undefined);
 });
 
 test('the shared close instructions are referenced by every skill that closes work', () => {

@@ -2,7 +2,7 @@
 
 Guide for coding agents working on this repository. Telos is project memory for coding
 agents: a few markdown files in `.telos/`, a deterministic Node CLI (`telos`) and a small
-Claude Code plugin (four skills, three hooks). User-facing commands are in
+Claude Code plugin (five skills, three hooks). User-facing commands are in
 [README.md](README.md); the plan for the current rebuild is in [plan/](plan/README.md).
 
 ## Layout

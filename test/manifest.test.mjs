@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 
 const root = new URL('../', import.meta.url);
 const readJson = (path) => JSON.parse(readFileSync(new URL(path, root), 'utf8'));
@@ -48,4 +48,10 @@ test('hooks.json has exactly three entries: SessionStart, the Bash git guard and
       assert.ok(existsSync(new URL(script, root)), script);
     }
   }
+});
+
+test('the plugin ships five skills: status plan close catchup map', () => {
+  const dirs = readdirSync(new URL('skills/', root), { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
+  assert.deepEqual(dirs.sort(), ['catchup', 'close', 'map', 'plan', 'status']);
+  for (const name of dirs) assert.ok(existsSync(new URL(`skills/${name}/SKILL.md`, root)), name);
 });
