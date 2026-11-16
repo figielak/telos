@@ -87,16 +87,20 @@ test('prompt: the question, then the five-line limit', () => {
 });
 
 // Review fixes after phase 15.
-test('working copy: node_modules is skipped at any depth', (t) => {
+test('working copy: node_modules at any depth and local Claude Code settings are skipped', (t) => {
   const root = repo(t);
   for (const dir of ['node_modules/a', 'pkg/node_modules/b']) {
     mkdirSync(join(root, dir), { recursive: true });
     write(root, `${dir}/f.js`, '');
   }
   write(root, 'pkg/index.mjs', '');
+  mkdirSync(join(root, '.claude'));
+  write(root, '.claude/settings.json', '{}');
+  write(root, '.claude/settings.local.json', '{"enabledPlugins":{"telos@telos":true}}');
   const copy = workingCopy(root, 'bare');
   t.after(copy.cleanup);
   assert.ok(existsSync(join(copy.dir, 'pkg/index.mjs')));
+  assert.ok(existsSync(join(copy.dir, '.claude/settings.json')) && !existsSync(join(copy.dir, '.claude/settings.local.json')));
   assert.ok(!existsSync(join(copy.dir, 'node_modules')) && !existsSync(join(copy.dir, 'pkg/node_modules')));
 });
 

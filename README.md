@@ -170,7 +170,7 @@ sessions found the same facts. The test is meant for projects whose decisions li
 
 **Cost:** 2 × N paid sessions (16 for eight questions), one at a time. `--variant` runs one
 side; `--agent-cmd` gets the prompt on stdin in the copy. Each variant uses one copy of the repo
-(without `node_modules`) for the whole run; Ctrl-C stops the running session and removes the
+(without `node_modules` and `.claude/settings.local.json`) for the whole run; Ctrl-C stops the running session and removes the
 copies. The copies keep `.git`, where the removed memory and the questions file are still in
 history, so the default sessions get no git commands; do not grant them in your own `--agent-cmd`.
 
