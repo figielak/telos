@@ -27,7 +27,7 @@ Note: the ROADMAP line says "every removed path". Read it as above: individual `
 
 ## Tasks
 
-- [ ] **10-01 Remove website and deep features**
+- [x] **10-01 Remove website and deep features**
   - Remove: `website/`, `agents/`, skills `review`, `review-hard`, `research`,
     `research-hard`, `docs`; `shared/review.md`, `shared/research.md`; `lib/review.mjs`,
     `lib/docs-scan.mjs`, `lib/changelog.mjs`, `lib/adr.mjs`, `lib/ctx/{review,research,docs}.mjs`;

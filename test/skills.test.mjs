@@ -52,8 +52,8 @@ test('init injects telos ctx init and stays short', () => {
 
 // Variants (SPEC §5.0): same body as the base skill, which injects the shared instructions via
 // `telos ctx shared <name>` (cat of plugin files is blocked outside the session's working dirs).
-const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do', 'quick-hard': 'quick', 'map-hard': 'map', 'review-hard': 'review', 'research-hard': 'research' };
-const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet', discuss: 'opus', lesson: 'sonnet', check: 'sonnet', done: 'sonnet', undo: 'sonnet', review: 'sonnet', 'review-hard': 'opus', docs: 'sonnet', research: 'sonnet', 'research-hard': 'opus' };
+const VARIANTS = { 'plan-lite': 'plan', 'revise-lite': 'revise', 'do-hard': 'do', 'quick-hard': 'quick', 'map-hard': 'map' };
+const MODELS = { plan: 'opus', 'plan-lite': 'sonnet', revise: 'opus', 'revise-lite': 'sonnet', do: 'sonnet', 'do-hard': 'opus', quick: 'sonnet', 'quick-hard': 'opus', map: 'sonnet', 'map-hard': 'opus', status: 'sonnet', profile: 'sonnet', discuss: 'opus', lesson: 'sonnet', check: 'sonnet', done: 'sonnet', undo: 'sonnet' };
 const SHARED = fileURLToPath(new URL('../shared/', import.meta.url));
 const FIELDS = ['disable-model-invocation', 'allowed-tools', 'argument-hint', 'context'];
 
@@ -391,26 +391,6 @@ test('the do instructions gate deep critical code on real RED, targeted checks a
   assert.match(body, /`Auto-commit: no`/);
 });
 
-test('docs injects one fixed bundle, keeps scopes under Request and may edit only docs without touching state', () => {
-  const { field, body } = read('docs');
-  assert.equal(field('model'), 'sonnet');
-  assert.equal(field('argument-hint'), '"[scope path…]"');
-  assert.match(body, /^## Context\n!`telos ctx docs`$/m);
-  assert.match(body, /^## Request\n\$ARGUMENTS$/m);
-  assert.equal(body.split('$ARGUMENTS').length - 1, 1);
-  assert.equal((body.match(/!`/g) ?? []).length, 1);
-  const at = (s) => { const i = body.indexOf(s); assert.ok(i >= 0, s); return i; };
-  assert.ok(at('literal repo-relative') < at('telos ctx docs --scope <path>'));
-  for (const s of ['Requires deep profile', 'REFUSED:', 'Sync: NO-OP', 'Sync: NOT VERIFIED', 'targeted', 'public', 'docstring',
-    'telos check', 'never invent', 'Changed:', 'unrelated text']) assert.ok(body.includes(s), s);
-  assert.match(body, /never (read|open) (all|every) doc/i);
-  assert.match(body, /no (task|STATUS|ROADMAP)[^.]*git/i);
-  const tools = field('allowed-tools').split(/,\s*/);
-  assert.deepEqual(tools.filter((t) => t.startsWith('Bash')).sort(), ['Bash(telos check *)', 'Bash(telos ctx docs *)']);
-  assert.doesNotMatch(field('allowed-tools'), /git|push|reset|Agent|Task/);
-  assert.ok(body.trim().split('\n').length <= 60);
-});
-
 test('check and done inject one fixed bundle and keep the phase argument under Request', () => {
   for (const name of ['check', 'done']) {
     const { field, body } = read(name);
@@ -505,51 +485,6 @@ test('undo injects a fixed bundle, validates the id from Request and confirms be
   assert.doesNotMatch(tools, /reset|stash|push|Edit|Write|git revert \*|git checkout/);
   assert.ok(tools.includes('Bash(git revert --no-commit *)'));
   assert.ok(body.trim().split('\n').length <= 60);
-});
-
-test('review skills fork the matching reviewer agent and inject only fixed commands', () => {
-  const agentModel = (name) => /^model:\s*(.*)$/m.exec(readFileSync(join(SKILLS, '..', 'agents', `${name}.md`), 'utf8'))[1].trim();
-  for (const [name, agent] of [['review', 'reviewer'], ['review-hard', 'reviewer-hard']]) {
-    const { field, body } = read(name);
-    assert.equal(field('context'), 'fork', name);
-    assert.equal(field('agent'), `telos:${agent}`, name);
-    assert.equal(field('model'), agentModel(agent), name);
-    assert.equal(field('argument-hint'), '"[NN-MM|NN]"', name);
-    assert.match(body, /^## Context\n!`telos ctx review`$/m, name);
-    assert.match(body, /^## Request\n\$ARGUMENTS$/m, name);
-    assert.match(body, /^## Instructions\n!`telos ctx shared review`$/m, name);
-    assert.equal(body.split('$ARGUMENTS').length - 1, 1, name);
-    assert.deepEqual(field('allowed-tools').split(/,\s*/).sort(),
-      ['Bash(git diff *)', 'Bash(git log *)', 'Bash(telos ctx review *)', 'Bash(telos ctx shared *)', 'Glob', 'Grep', 'Read'], name);
-  }
-  assert.notEqual(read('review').field('agent'), read('review-hard').field('agent'));
-});
-
-test('the review instructions stop on the profile gate and validate the selector before any rerun', () => {
-  const body = readFileSync(join(SHARED, 'review.md'), 'utf8');
-  const gate = body.indexOf('Requires deep profile');
-  const valid = body.indexOf('exactly `NN-MM` or `NN`');
-  const rerun = body.indexOf('telos ctx review <selector>');
-  assert.ok(gate >= 0 && valid > gate && rerun > valid, `${gate} ${valid} ${rerun}`);
-  assert.match(body, /REFUSED:/);
-  assert.match(body, /\/telos:review \[NN-MM\|NN\]/);
-});
-
-test('research skills fork the matching researcher agent with the fixed research bundle', () => {
-  const agentModel = (name) => /^model:\s*(.*)$/m.exec(readFileSync(join(SKILLS, '..', 'agents', `${name}.md`), 'utf8'))[1].trim();
-  for (const [name, agent] of [['research', 'researcher'], ['research-hard', 'researcher-hard']]) {
-    const { field, body } = read(name);
-    assert.equal(field('context'), 'fork', name);
-    assert.equal(field('agent'), `telos:${agent}`, name);
-    assert.equal(field('model'), agentModel(agent), name);
-    assert.equal(field('argument-hint'), '"[NN] [--replace] [focus]"', name);
-    assert.match(body, /^## Context\n!`telos ctx research`$/m, name);
-    assert.match(body, /^## Request\n\$ARGUMENTS$/m, name);
-    assert.match(body, /^## Instructions\n!`telos ctx shared research`$/m, name);
-    assert.equal(body.split('$ARGUMENTS').length - 1, 1, name);
-    assert.deepEqual(field('allowed-tools').split(/,\s*/).sort(),
-      ['Bash(telos ctx research *)', 'Bash(telos ctx shared *)', 'Glob', 'Grep', 'Read', 'WebFetch', 'WebSearch'], name);
-  }
 });
 
 test('plan and revise share one deep self-critique pass that adds no research, agent or question round', () => {

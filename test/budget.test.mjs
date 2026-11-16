@@ -14,7 +14,7 @@ import { sessionText } from '../lib/session.mjs';
 const FIXTURES = {
   minimal: fileURLToPath(new URL('fixtures/minimal-loop/', import.meta.url)),
   standard: fileURLToPath(new URL('fixtures/standard-loop/', import.meta.url)),
-  deep: fileURLToPath(new URL('fixtures/deep-loop/', import.meta.url)),
+  deep: fileURLToPath(new URL('fixtures/standard-loop/', import.meta.url)),
 };
 
 function repo(t, profile = 'standard') {
@@ -108,7 +108,7 @@ test('comment stripping changes only the stored counts', (t) => {
 
 test('--ctx measures exactly what telos ctx prints, including truncation', async (t) => {
   const root = repo(t, 'deep');
-  for (const args of [['status'], ['plan'], ['shared', 'review']]) {
+  for (const args of [['status'], ['plan'], ['shared', 'plan']]) {
     const real = await ctx(root, ...args);
     const r = measure(root, { ctx: args });
     const sel = row(r.rendered, `ctx ${args.join(' ')}`);

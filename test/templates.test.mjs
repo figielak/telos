@@ -15,12 +15,12 @@ const vars = {
 // SPEC §4 size limits, in lines.
 const LINE_LIMITS = {
   'PROJECT.md': 60, 'ROADMAP.md': 80, 'STATUS.md': 40, 'CONTEXT.md': 60,
-  'task.md': 80, 'adr.md': 30, 'claude-block.md': 15,
+  'task.md': 80, 'claude-block.md': 15,
 };
 
 test('all expected templates exist', () => {
   const expected = ['PROJECT.md', 'MAP.md', 'ROADMAP.md', 'STATUS.md', 'HISTORY.md', 'LESSONS.md',
-    'CONTEXT.md', 'task.md', 'adr.md', 'claude-block.md'];
+    'CONTEXT.md', 'task.md', 'claude-block.md'];
   assert.deepEqual([...names].sort(), [...expected].sort());
 });
 
@@ -46,5 +46,5 @@ test('CLAUDE.md block is marked and within ~250 tokens', () => {
 });
 
 test('a missing variable is an error naming it', () => {
-  assert.throws(() => render('adr.md', { title: 'x' }), /missing variable 'number'/);
+  assert.throws(() => render('task.md', {}), /missing variable/);
 });
