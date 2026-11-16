@@ -65,7 +65,7 @@ test('a ready phase lists the checks, the commit policy and the exact closing co
     'Unfinished:\n- none',
     'Checks (run each from the repo root; all must exit 0): test=npm test',
     'History: phase entry missing',
-    'Auto-commit: yes',
+    'Auto-commit: yes · subject "docs(telos): close 01-demo"',
     'Close: ready',
     'Closing commands (in order, after the checks pass):',
     '- `telos history add phase 01 "closed 01-demo: <evidence for done when>"`',
@@ -117,7 +117,7 @@ test('stale areas add one line to the close bundle and never block it (12:D-05)'
   assert.doesNotMatch(await ok(root, 'ctx', 'close'), /Stale areas/);
   writeFileSync(join(root, 'src/web/app.mjs'), 'export const title = String;\n');
   const out = await ok(root, 'ctx', 'close');
-  assert.match(out, /^Auto-commit: (yes|no)\nStale areas: 1 \(run telos stale\); review them, they do not block the close\nClose: ready$/m);
+  assert.match(out, /^Auto-commit: [^\n]*\nStale areas: 1 \(run telos stale\); review them, they do not block the close\nClose: ready$/m);
 });
 
 /** areasRepo with phase 01-demo active and its plan; @returns {string} root */
