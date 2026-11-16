@@ -65,5 +65,5 @@ any model call; SessionStart shows the stale count; `npm test` passes.
   unmapped files.
 - 12-05: SessionStart with 30 areas measured ~135 ms (test bound 1500 ms). D5: `ctx close`
   adds the same line, never as a blocker.
-- This repository after 12: all five areas are stale and two notes have broken refs
-  (`src/a`, `src/ab/` in map; `.telos/phases/NN-name.md` in state) — left for 13 (catchup).
+- This repository after 12: all five areas were stale and two notes had broken refs
+  (example paths written in backticks); notes fixed and re-anchored at 8398de5, `telos stale` clean.

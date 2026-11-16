@@ -13,7 +13,7 @@
 ## Areas
 - cli — dispatch, exit codes, init, budget, templates · `lib/cli.mjs`, `templates/`
 - bundles — `telos ctx` bundles and the skills · `lib/ctx/`, `skills/`, `shared/`
-- map — MAP index, scan, refresh, area files · `lib/map.mjs`, `lib/areas.mjs`
+- map — MAP index, scan, refresh, area files, staleness · `lib/map.mjs`, `lib/areas.mjs`
 - hooks-guards — SessionStart, git guard, Delete-zone warning · `hooks/`, `lib/session.mjs`
 - state — STATUS, ROADMAP, HISTORY, phases, config · `lib/status.mjs`, `lib/history.mjs`
 
