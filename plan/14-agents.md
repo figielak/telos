@@ -17,12 +17,13 @@ and in Codex, recorded as a live smoke run; correctness depends on no hook; `npm
 
 ## Open (resolved by 14-01)
 
-How Codex currently defines custom commands, whether it has hooks, and how it discovers
-`AGENTS.md` in nested directories. Not verified when this plan was written.
+Resolved 2026-11-16, see Notes: D1–D4 hold; Codex has trusted-only hooks and skills
+without shell injection, reads AGENTS.md without `@` imports, and keeps `.git/` read-only
+in its sandbox.
 
 ## Tasks
 
-- [ ] **14-01 Research Codex mechanisms**
+- [x] **14-01 Research Codex mechanisms**
   - From current primary docs: custom commands or skills, hooks, `AGENTS.md` discovery and
     size limits, how a CLI gets onto PATH in its sandbox, headless mode and usage output.
   - Record findings with dated sources in Notes; revise D1–D4 and the tasks below if needed.
@@ -64,3 +65,38 @@ How Codex currently defines custom commands, whether it has hooks, and how it di
   - Accept: both runs end with `telos stale --check` exit 0 and a correct STATUS.
 
 ## Notes
+
+### 14-01 Codex mechanisms (checked 2026-11-16, codex-cli 0.164.0)
+
+Sources (fetched 2026-11-16; developers.openai.com/codex/* now redirects to learn.chatgpt.com):
+learn.chatgpt.com/docs/agent-configuration/agents-md · /docs/build-skills ·
+/docs/custom-prompts · /docs/hooks · /docs/plugins · /docs/non-interactive-mode ·
+/docs/sandboxing · developers.openai.com/plugins/build/plugins; local probes with
+`codex sandbox`, `codex features list`.
+
+- **Custom commands.** Custom prompts (`~/.codex/prompts/`, `/prompts:<name>`) are deprecated
+  in favour of skills. Skills are `SKILL.md` dirs in `.agents/skills` (cwd up to repo root) or
+  `~/.agents/skills`, invoked with `$name` or `/skills`. No documented way for a skill to
+  inject shell output (Claude Code's `` !`…` ``): unavailable. → D2 holds: "run
+  `telos ctx <name>` and follow its output" is the portable form; no Codex skills shipped.
+- **Hooks.** Stable and on by default (`[features] hooks`): `SessionStart`, `PreToolUse`
+  (shell matched as `Bash`, blocks with exit 2), etc., in `~/.codex/` or `<repo>/.codex/`
+  `hooks.json`. Project and plugin hooks run only after the user trusts them. → D3 and D4
+  hold: correctness cannot rest on hooks the user may not have trusted. Wiring the git guard
+  into `.codex/hooks.json` is possible later; not part of this phase.
+- **AGENTS.md discovery.** `~/.codex/AGENTS.md` (or `AGENTS.override.md`), then one file per
+  directory from the project root (git root) down to cwd, concatenated root first; limit
+  `project_doc_max_bytes` = 32 KiB combined. Codex does not resolve `@file` imports, so
+  AGENTS.md must be self-contained. → D1 holds: the block lives in AGENTS.md; Claude Code
+  reads it through the `@AGENTS.md` import in CLAUDE.md.
+- **CLI on PATH.** The sandboxed shell inherits the user's PATH (probe: `node` and `telos`
+  resolved). In `workspace-write`, the workspace is writable but `.git/` and `$HOME` are
+  read-only: `telos` (writes only `.telos/`) works; `git commit` needs an approval or
+  escalation in Codex. → 14-04 installs with `npm install -g`/`npm link` outside Codex.
+- **Plugins.** Codex reads `.claude-plugin/marketplace.json` as a legacy repo marketplace and
+  root `skills/`, but our skills depend on `` !`…` `` injection, so the Telos plugin is
+  Claude Code only; Codex uses the CLI plus AGENTS.md.
+- **Headless and usage.** `codex exec --sandbox workspace-write --json` (default read-only;
+  `--full-auto` removed); JSONL events, `turn.completed.usage` has `input_tokens`,
+  `cached_input_tokens`, `output_tokens`, `reasoning_output_tokens`; `-o` writes the last
+  message. Useful for phase 15.
