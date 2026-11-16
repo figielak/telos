@@ -37,7 +37,7 @@ session know the project better, and more cheaply, with the memory than without 
   - Timeouts per question; a failed run is counted as incorrect and listed.
   - Accept: tests with a stub agent command cover both variants and a timeout.
 
-- [ ] **15-03 Scoring and report**
+- [x] **15-03 Scoring and report**
   - Apply D2; print a table: question · memory ✓/✗ · bare ✓/✗, then the D4 totals and the
     missing facts for every incorrect answer.
   - `--variant memory|bare` runs one side; `--json` prints machine output.
