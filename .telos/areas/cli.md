@@ -1,25 +1,31 @@
-<!-- telos-area: commit 8398de51a6a618345a0e99d7e102ab061a01332b · 2026-11-16 · paths: bin/, lib/cli.mjs, lib/errors.mjs, lib/init.mjs, lib/budget.mjs, lib/detect.mjs, lib/template.mjs, templates/ -->
+<!-- telos-area: commit 27b0d07d0fd8970db052d63d2d0bdb87f3400d07 · 2026-11-16 · paths: bin/, lib/cli.mjs, lib/errors.mjs, lib/init.mjs, lib/budget.mjs, lib/detect.mjs, lib/template.mjs, templates/, package.json, README.md -->
 # cli
 
 ## Purpose
-The `telos` command: dispatch, exit codes, `init`, `budget`, stack detection and templates.
+The `telos` command: dispatch, exit codes, `init`, `budget`, stack detection, templates, the
+package (global install) and the user-facing README.
 
 ## Entry points
 - `bin/telos:1-4` — calls `main()`
 - `lib/cli.mjs:25-35` — command registry; `lib/cli.mjs:56-102` — `main()` dispatch and exit codes
-- `lib/init.mjs:66` — `init`; `lib/init.mjs:46` — `syncBlock` for the CLAUDE.md block
-- `lib/budget.mjs:97` — `measure`; `lib/detect.mjs` — stack and check detection
+- `lib/init.mjs:108` — `init`; `:63` `syncBlock` (AGENTS.md); `:77` `syncImport` (CLAUDE.md)
+- `lib/budget.mjs:96` — `measure`; `lib/detect.mjs` — stack and check detection
 - `lib/template.mjs` — `render` of `templates/*.md` (`{{key}}`, no logic)
 
 ## Invariants
 - Exit codes: 0 ok · 1 failure or `.telos/` missing · 2 usage error (`UsageError` → 2).
 - A command is one line in `commands`; `needsTelos` commands fail with 1 before `.telos/` exists.
-- The CLI never writes to git; `init` is rerun-safe and keeps existing files.
+- The CLI never writes to git; `init` is rerun-safe, keeps existing files and plans every write
+  first: a start marker without an end marker in AGENTS.md or CLAUDE.md exits 1, writing nothing.
+- `bin/telos` imports `../lib/` relative to its real path, so npm's symlinked bin works.
 - Every new or changed command gets its README.md row in the same task.
 
 ## Decisions
 - Seven core commands plus `area` and `stale` (10, 11-02, 12-03) — the memory core needs no workflow commands.
-- CLAUDE.md block carries a `vN` marker and is replaced whole by `syncBlock` — one block, upgradable.
+- The rules block lives in AGENTS.md (v5, 14-03), read by Codex and others; CLAUDE.md holds only
+  `@AGENTS.md` (Codex resolves no imports, so the block cannot live in CLAUDE.md). An old
+  CLAUDE.md block is replaced by the import; a CLAUDE.md symlink to AGENTS.md is left alone.
+- The CLI is the product; install outside the plugin is `npm install -g` / `npm link` (14-04).
 - Config version 2; `init --force` rewrites a v1 file, dropping removed keys (10-06).
 
 ## Rejected

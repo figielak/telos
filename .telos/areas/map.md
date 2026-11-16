@@ -1,4 +1,4 @@
-<!-- telos-area: commit 61dffd78cf2b6bfda2b3b0457ec9a150a1027c24 · 2026-11-16 · paths: lib/map.mjs, lib/map-scan.mjs, lib/map-refresh.mjs, lib/map-budget.mjs, lib/areas.mjs, lib/stale.mjs, lib/refs.mjs -->
+<!-- telos-area: commit 27b0d07d0fd8970db052d63d2d0bdb87f3400d07 · 2026-11-16 · paths: lib/map.mjs, lib/map-scan.mjs, lib/map-refresh.mjs, lib/map-budget.mjs, lib/areas.mjs, lib/stale.mjs, lib/refs.mjs -->
 # map
 
 ## Purpose
@@ -9,7 +9,7 @@ MAP index validation, repo scan, refresh planning, the area files and their stal
 - `lib/map-scan.mjs:147` — `scanRepo`; `lib/map-scan.mjs:209` — `renderScan`
 - `lib/map-refresh.mjs:66` — `planRefresh` (noop / incremental / full / refused)
 - `lib/areas.mjs:110` — `lintArea`; `:138` `loadAreas`; `:184` `areasFor`; `:303` `telos area`
-- `lib/stale.mjs:28` — `staleAreas` (`telos stale`); `lib/refs.mjs:15` — `parseReference`, `:41` `pathReferences`, `:77` `brokenReferences`
+- `lib/stale.mjs:29` — `staleAreas` (`telos stale`); `:68` `unmappedFiles`; `:95` `areaStatusLines`; `lib/refs.mjs:15` — `parseReference`, `:41` `pathReferences`, `:77` `brokenReferences`
 
 ## Invariants
 - MAP ≤ `limits.map_tokens` (600), each area ≤ `limits.area_tokens` (800); over the limit is an
@@ -19,6 +19,7 @@ MAP index validation, repo scan, refresh planning, the area files and their stal
 - Staleness comes from git only: one diff per distinct anchor plus one status; no model call.
 - `telos area anchor` refuses while a covered path is uncommitted.
 - Area ownership comes from area headers only; MAP row paths are informational.
+- Unmapped never lists `.telos/` or the root `AGENTS.md`, `CLAUDE.md`, `.gitignore` (`isMemoryPath`).
 
 ## Decisions
 - Two-level memory: MAP is a short index, details live in `.telos/areas/<name>.md` (11).

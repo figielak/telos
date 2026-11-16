@@ -1,11 +1,12 @@
-<!-- telos-area: commit 61dffd78cf2b6bfda2b3b0457ec9a150a1027c24 · 2026-11-16 · paths: lib/phases.mjs, lib/frontmatter.mjs, lib/config.mjs, lib/repo.mjs, lib/history.mjs, lib/git.mjs, lib/status.mjs, lib/roadmap.mjs -->
+<!-- telos-area: commit 27b0d07d0fd8970db052d63d2d0bdb87f3400d07 · 2026-11-16 · paths: lib/phases.mjs, lib/frontmatter.mjs, lib/config.mjs, lib/repo.mjs, lib/history.mjs, lib/git.mjs, lib/status.mjs, lib/roadmap.mjs -->
 # state
 
 ## Purpose
 Memory files and their writers: STATUS, ROADMAP, HISTORY, phase files, config, git reads.
 
 ## Entry points
-- `lib/status.mjs:146` — `telos status`; `:114` `view`; `:39` `setLines`
+- `lib/status.mjs:147` — `telos status` (view plus area lines); `:115` `view`; `:40` `setLines`
+- `lib/git.mjs:94` `commitLog`, `:111` `diffNumstat`, `:129` `diffNameStatus` — delta reads
 - `lib/roadmap.mjs:87` — `telos roadmap`; `:41` `phaseLine`
 - `lib/history.mjs:281` — `telos history`; `:199` `deleteZoneEntries`; `:252` `addHistory`
 - `lib/phases.mjs:68` — `checklist`; `:81` `phaseSkeleton`; `lib/config.mjs:96` — `load`

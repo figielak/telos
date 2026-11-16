@@ -11,8 +11,8 @@
 - `README.md`, `AGENTS.md`, `CHANGELOG.md` — docs
 
 ## Areas
-- cli — dispatch, exit codes, init, budget, templates · `lib/cli.mjs`, `templates/`
-- bundles — `telos ctx` bundles and the skills · `lib/ctx/`, `skills/`, `shared/`
+- cli — dispatch, exit codes, init, budget, templates, install · `lib/cli.mjs`, `templates/`, `package.json`
+- bundles — `telos ctx` steps, the git delta and the skills · `lib/ctx/`, `lib/delta.mjs`, `skills/`, `shared/`
 - map — MAP index, scan, refresh, area files, staleness · `lib/map.mjs`, `lib/areas.mjs`
 - hooks-guards — SessionStart, git guard, Delete-zone warning · `hooks/`, `lib/session.mjs`
 - state — STATUS, ROADMAP, HISTORY, phases, config · `lib/status.mjs`, `lib/history.mjs`

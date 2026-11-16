@@ -1,4 +1,4 @@
-<!-- telos-area: commit 8398de51a6a618345a0e99d7e102ab061a01332b · 2026-11-16 · paths: hooks/, lib/git-guard.mjs, lib/edit-guard.mjs, lib/delete-guard.mjs, lib/session.mjs -->
+<!-- telos-area: commit 27b0d07d0fd8970db052d63d2d0bdb87f3400d07 · 2026-11-16 · paths: hooks/, lib/git-guard.mjs, lib/edit-guard.mjs, lib/delete-guard.mjs, lib/session.mjs -->
 # hooks-guards
 
 ## Purpose
@@ -6,12 +6,14 @@ The three plugin hooks: SessionStart status, the Bash git guard and the Delete-z
 
 ## Entry points
 - `hooks/hooks.json` — wires the hooks to `hooks/*.mjs`
-- `hooks/session-start.mjs` → `lib/session.mjs:32` `sessionText` → `lib/status.mjs:114` `view`
+- `hooks/session-start.mjs` → `lib/session.mjs:31` `sessionText` → `lib/status.mjs:115` `view`
 - `hooks/git-guard.mjs` → `lib/git-guard.mjs:139` `check`; `:28` `splitCommands`
 - `hooks/edit-guard.mjs` → `lib/edit-guard.mjs:50` `editTarget` → `lib/delete-guard.mjs:37` `deleteGuard`
 
 ## Invariants
 - Hooks are silent when `.telos/` is missing and make no model calls.
+- No correctness depends on a hook (14-05): every line SessionStart adds also comes from
+  `telos status` (`areaStatusLines`), the Delete-zone paths from `ctx plan`.
 - SessionStart ≤ 1200 chars, identical after startup and compact; it adds only `Areas: N` and,
   when N > 0, `Stale areas: N (run telos stale)` (12-05), within a 300 ms budget for 30 areas.
 - The git guard blocks only the irreversible (push, `--no-verify`, `add -A`, amend of a pushed
@@ -21,6 +23,8 @@ The three plugin hooks: SessionStart status, the Bash git guard and the Delete-z
 ## Decisions
 - Block only the irreversible; the agent runs checks itself (10).
 - The git guard splits `&&`, `;`, `|`, env prefixes, `git -C`/`-c` and `sh -c '…'`.
+- Hooks stay Claude Code only (14:D4); Codex has trusted-only hooks, so other agents get the
+  git rules as text in the AGENTS.md block — weaker, documented in README Limits.
 
 ## Rejected
 - Edit-scope and protected-config guards, Stop-time checks, PreCompact saves, context-usage
