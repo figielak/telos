@@ -1,7 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -9,14 +8,10 @@ import { main } from '../lib/cli.mjs';
 import { CAP } from '../lib/ctx/index.mjs';
 import { render } from '../lib/template.mjs';
 import { checklist, createPhase } from '../lib/phases.mjs';
-
-const FIXTURE = fileURLToPath(new URL('fixtures/telos-phase/', import.meta.url));
-const DEMO = join('.telos', 'phases', '01-demo');
+import { memoryRepo } from './memory-repo.mjs';
 
 function repo() {
-  const root = mkdtempSync(join(tmpdir(), 'telos-ctx-plan-'));
-  cpSync(FIXTURE, root, { recursive: true });
-  mkdirSync(join(root, '.git'));
+  const root = memoryRepo(null);
   const project = render('PROJECT.md', { name: 'demo' })
     .replace('## Purpose\n', '## Purpose\nA demo app that greets people.\n')
     .replace(/## Rules\n[\s\S]*?- none/, '## Rules\n- no runtime dependencies')
@@ -24,13 +19,8 @@ function repo() {
   writeFileSync(join(root, '.telos', 'PROJECT.md'), project);
   const status = join(root, '.telos', 'STATUS.md');
   writeFileSync(status, readFileSync(status, 'utf8')
-    .replace('## Carry-over\n- none', '## Carry-over\n- 04: later thing → 01-01 Result\n- 01: rate limit → 01-01 Result\n- 03: new phase item → SPEC'));
+    .replace(/## Carry-over\n((?:<!--[\s\S]*?-->\n)?)- none/, '## Carry-over\n$1- 04: later thing → 01-01 Result\n- 01: rate limit → 01-01 Result\n- 03: new phase item → SPEC'));
   return root;
-}
-
-function edit(root, file, fn) {
-  const path = join(root, DEMO, file);
-  writeFileSync(path, fn(readFileSync(path, 'utf8')));
 }
 
 async function ctx(root, ...args) {
@@ -64,6 +54,7 @@ test('ctx plan NN shows the target, the phase skeleton, project, stack, checks a
 
 test('an existing phase file is reported with its checklist state instead of the skeleton', async () => {
   const root = repo();
+  mkdirSync(join(root, '.telos', 'phases'));
   writeFileSync(join(root, '.telos', 'phases', '01-demo.md'), '# 01-demo\n\n## Tasks\n- [x] **01-01 First**\n- [ ] **01-02 Second**\n');
   const out = (await ctx(root, 'plan')).stdout;
   assert.match(out, /^Phase file: \.telos\/phases\/01-demo\.md \(exists, 1\/2 done; edit it in place\)$/m);
@@ -83,8 +74,6 @@ test('without an argument the bundle names the next NN; a description targets a 
 
 test('Delete-zone approaches and MAP Find lines are listed; Delete-zone paths and the archive are not', async () => {
   const root = repo();
-  const config = join(root, '.telos', 'config.json');
-  writeFileSync(config, JSON.stringify({ ...JSON.parse(readFileSync(config, 'utf8')), profile: 'standard' }));
   writeFileSync(join(root, '.telos', 'HISTORY.md'), render('HISTORY.md', { date: '2026-01-01', profile: 'standard' })
     .replace(/(## Delete-zone\n(?:<!--[\s\S]*?-->\n)?)- none/, '$1- approach: Global mutable cache — leaked state (01-01, 2026-01-02)\n- `src/old/` — module removed (01-01, 2026-01-02)'));
   writeFileSync(join(root, '.telos', 'HISTORY-archive.md'), '# History archive\n\n## Log\n- 2025-01-01 remove 01-01: ARCHIVED secret\n');
@@ -128,33 +117,3 @@ test('createPhase writes the template for a ROADMAP phase once; checklist reads 
   assert.deepEqual(checklist(root, '07'), { path: null, exists: false, items: [], done: 0, total: 0 });
 });
 
-test('ctx approve lists lint problems and a missing tag', async () => {
-  const r = await ctx(repo(), 'approve', '09');
-  assert.equal(r.code, 0, r.stderr);
-  assert.match(r.stdout, /^Lint:\n09-01: scope empty$/m);
-  assert.match(r.stdout, /^Tag: telos\/09-start missing$/m);
-  assert.match(r.stdout, /^Draft: 09-01, 09-02$/m);
-});
-
-test('ctx approve on a clean phase shows ok, draft ids and blocked tasks', async () => {
-  const root = repo();
-  writeFileSync(join(root, DEMO, '01-CONTEXT.md'), '# 01 · Demo\n## Decisions\n- D-01: keep it small\n- D-02 [proposed]: maybe\n');
-  edit(root, '01-03-third-task.md', (t) => t.replace('decisions: []', 'decisions: [D-01, D-02]'));
-  const r = await ctx(root, 'approve');
-  assert.match(r.stdout, /^Phase: 01-demo \[active\]$/m);
-  assert.match(r.stdout, /^Lint: ok: 3 tasks$/m);
-  assert.match(r.stdout, /^Draft: 01-03$/m);
-  assert.match(r.stdout, /^Blocked:\n- 01-03: D-02 is proposed$/m);
-});
-
-test('a decision listed in Awaiting user blocks its task unless CONTEXT confirms it', async () => {
-  const root = repo();
-  writeFileSync(join(root, DEMO, '01-CONTEXT.md'), '# 01 · Demo\n## Decisions\n- D-01: keep it small\n');
-  edit(root, '01-02-second-task.md', (t) => t.replace('decisions: []', 'decisions: [D-04]'));
-  edit(root, '01-03-third-task.md', (t) => t.replace('decisions: []', 'decisions: [D-01]'));
-  const status = join(root, '.telos', 'STATUS.md');
-  writeFileSync(status, readFileSync(status, 'utf8').replace('Awaiting user: none', 'Awaiting user: 01:D-01, 01:D-04, 02:D-03'));
-  const r = await ctx(root, 'approve', '01');
-  assert.match(r.stdout, /^- 01-02: D-04 awaits the user$/m);
-  assert.doesNotMatch(r.stdout, /01-03: D-01/);
-});

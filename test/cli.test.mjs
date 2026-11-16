@@ -65,7 +65,7 @@ test('a command needing .telos/ exits 1 when not initialized', async () => {
   const code = await main(['demo'], { commands, cwd: root, stdout: capture(), stderr });
   assert.equal(code, 1);
   assert.equal(ran, false);
-  assert.equal(stderr.text.trim(), 'Telos not initialized. Run /telos:init.');
+  assert.equal(stderr.text.trim(), 'Telos not initialized. Run telos init.');
 });
 
 test('budget is registered, read-only and needs .telos/', () => {

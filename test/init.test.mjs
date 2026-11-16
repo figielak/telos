@@ -41,7 +41,7 @@ function tree(root) {
 const read = (root, path) => readFileSync(join(root, path), 'utf8');
 
 const MINIMAL = ['MAP.md', 'PROJECT.md', 'ROADMAP.md', 'STATUS.md', 'config.json'];
-const STANDARD = ['HISTORY.md', 'LESSONS.md', ...MINIMAL].sort();
+const STANDARD = ['HISTORY.md', ...MINIMAL].sort();
 
 test('each profile creates exactly its file set, no empty directories', async () => {
   for (const [profile, files] of [['minimal', MINIMAL], ['standard', STANDARD], ['deep', STANDARD]]) {

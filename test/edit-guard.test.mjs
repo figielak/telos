@@ -1,23 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, rmSync, symlinkSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { editTarget } from '../lib/edit-guard.mjs';
+import { memoryRepo } from './memory-repo.mjs';
 
-const FIXTURE = fileURLToPath(new URL('fixtures/telos-phase/', import.meta.url));
 const HOOK = fileURLToPath(new URL('../hooks/edit-guard.mjs', import.meta.url));
 
-function repo(t) {
-  const root = mkdtempSync(join(tmpdir(), 'telos-edit-guard-'));
-  t.after(() => rmSync(root, { recursive: true, force: true }));
-  cpSync(FIXTURE, root, { recursive: true });
-  mkdirSync(join(root, '.git'));
-  return root;
-}
+const repo = (t) => memoryRepo(t);
 
 const input = (root, file, tool = 'Edit', cwd = root) => ({ tool_name: tool, cwd, tool_input: { file_path: file } });
 

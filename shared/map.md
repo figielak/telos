@@ -1,4 +1,4 @@
-<!-- Shared by /telos:map and /telos:map-hard (SPEC §5.0, §6). Injected via `telos ctx shared map`. -->
+<!-- Injected into /telos:map via `telos ctx shared map`. -->
 Work from the context above. Write only `.telos/MAP.md` and `.telos/PROJECT.md`. Git only in step 10;
 never edit ROADMAP, STATUS or config. Never read or enumerate `.telos/` beyond the
 `Existing MAP` and `Project` pointers; never read the whole repo.

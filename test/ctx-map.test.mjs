@@ -88,7 +88,7 @@ test('missing init, missing HEAD and dirty source are refused with a fix; init o
   const bare = repo({ initialize: false });
   let r = await ctxMap(bare);
   assert.equal(r.code, 0);
-  assert.match(r.text, /^REFUSED: .*\/telos:init/);
+  assert.match(r.text, /^REFUSED: .*telos init/);
 
   r = await ctxMap(repo({ commit: false }));
   assert.equal(r.code, 0);

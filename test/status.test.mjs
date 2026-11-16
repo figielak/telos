@@ -76,16 +76,15 @@ test('add carry refuses a sixth item; rm carry empties to none', async () => {
 test('status view reads live states and shows Awaiting user first', async () => {
   const root = repo();
   writeFileSync(join(root, '.telos', 'ROADMAP.md'), '# Roadmap\n- 01-audit [active] audit · done when: closed\n');
-  mkdirSync(join(root, '.telos', 'phases', '01-audit'), { recursive: true });
-  const task = render('task.md', { id: '01-02', title: 'Check' }).replace('status: draft', 'status: in-progress');
-  writeFileSync(join(root, '.telos', 'phases', '01-audit', '01-02-check.md'), task);
+  mkdirSync(join(root, '.telos', 'phases'), { recursive: true });
+  writeFileSync(join(root, '.telos', 'phases', '01-audit.md'), '# 01-audit\n\n## Tasks\n- [x] **01-01 Scan**\n- [ ] **01-02 Check**\n');
   await telos(root, 'status', 'set', 'phase=01-audit', 'task=01-02', 'awaiting=01:D-03');
 
   const r = await telos(root, 'status');
   assert.equal(r.code, 0, r.stderr);
   const lines = r.stdout.trimEnd().split('\n');
   assert.equal(lines[0], 'Awaiting user: 01:D-03');
-  assert.ok(lines.includes('Phase: 01-audit [active] · Task: 01-02 [in-progress]'), r.stdout);
+  assert.ok(lines.includes('Phase: 01-audit [active] · Task: 01-02 [open]'), r.stdout);
   assert.ok(lines.length <= 15);
 });
 
@@ -93,7 +92,7 @@ test('status view marks missing sources with ?', async () => {
   const root = repo();
   await telos(root, 'status', 'set', 'phase=02-auth', 'task=02-01');
   const r = await telos(root, 'status');
-  assert.match(r.stdout, /^Phase: 02-auth \[\?\] · Task: 02-01 \[\?\]$/m);
+  assert.match(r.stdout, /^Phase: 02-auth \[\?\] · Task: 02-01$/m);
   assert.doesNotMatch(r.stdout, /Awaiting user/);
 });
 
@@ -159,17 +158,3 @@ test('status preserves custom Next, active phase/task and blockers', async () =>
   assert.match(blocked, /^Awaiting user: decide$/m);
 });
 
-test('status shows /telos:do-hard <id> for a stored /telos:do on an effort: hard task', async () => {
-  const taskRepo = (effort, next = '/telos:do') => {
-    const root = mapRepo({ next, set: { Phase: '01-core', Task: '01-02' } });
-    mkdirSync(join(root, '.telos', 'phases', '01-core'), { recursive: true });
-    writeFileSync(join(root, '.telos', 'phases', '01-core', '01-02-x.md'), `---\nid: 01-02\nstatus: approved\neffort: ${effort}\n---\n`);
-    return root;
-  };
-  const hard = taskRepo('hard');
-  const before = statusText(hard);
-  assert.match((await telos(hard, 'status')).stdout, /^Next: \/telos:do-hard 01-02$/m);
-  assert.equal(statusText(hard), before);
-  assert.match((await telos(taskRepo('normal'), 'status')).stdout, /^Next: \/telos:do$/m);
-  assert.match((await telos(taskRepo('hard', 'finish 01-02: step'), 'status')).stdout, /^Next: finish 01-02: step$/m);
-});

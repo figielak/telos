@@ -92,7 +92,7 @@ test('ctx without a bundle name is a usage error', async () => {
 test('excerpts carry no HTML or frontmatter comments', () => {
   const root = repo();
   const task = join(root, 'task.md');
-  writeFileSync(task, render('task.md', { id: '01-02', title: 'Check' }));
+  writeFileSync(task, `---\nid: 01-02 # the id\ntype: code   # code | doc\n---\n<!-- guidance -->\n## Goal\nCheck.\n`);
   const status = join(root, 'STATUS.md');
   writeFileSync(status, render('STATUS.md', { next: 'x' }));
   for (const file of [task, status]) assert.doesNotMatch(excerpt(file), /<!--|-->/);
@@ -138,5 +138,5 @@ test('ctx status: view, stack line and file pointers; uninitialized is one line'
 
   const bare = await ctx(repo(), 'status');
   assert.equal(bare.code, 0);
-  assert.equal(bare.stdout, 'Telos not initialized. Run /telos:init.\n');
+  assert.equal(bare.stdout, 'Telos not initialized. Run telos init.\n');
 });

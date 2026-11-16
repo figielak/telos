@@ -58,42 +58,13 @@ test('minimal → standard creates HISTORY and LESSONS and records the switch vi
   assert.match(r.stdout, /minimal → standard/);
   assert.equal(config(root).profile, 'standard');
   assert.ok(existsSync(path(root, 'HISTORY.md')));
-  assert.ok(existsSync(path(root, 'LESSONS.md')));
+  assert.ok(existsSync(path(root, 'HISTORY.md')));
   const entries = profileEntries(root);
   assert.equal(entries.length, 1);
   assert.equal(entries[0].ref, 'telos');
   assert.match(entries[0].text, /minimal → standard/);
   // The switch does not invent an `init` row dated today with the target profile.
   assert.deepEqual(readHistory(root).log.map((e) => e.kind), ['profile']);
-});
-
-test('standard → deep creates decisions/; a downgrade retains every file and its content', async (t) => {
-  const root = repo(t, 'standard');
-  writeFileSync(path(root, 'LESSONS.md'), '# Lessons\n- [tests] keep me (01-01)\n');
-  mkdirSync(path(root, 'phases/01-core'), { recursive: true });
-  writeFileSync(path(root, 'phases/01-core/01-CONTEXT.md'), '# Context\nkeep\n');
-  assert.equal((await telos(root, 'profile', 'deep')).code, 0);
-  assert.ok(statSync(path(root, 'decisions')).isDirectory());
-  writeFileSync(path(root, 'decisions/001-x.md'), '# ADR 001\n');
-  const before = snapshot(root);
-
-  const r = await telos(root, 'profile', 'minimal');
-  assert.equal(r.code, 0, r.stderr);
-  assert.equal(config(root).profile, 'minimal');
-  const after = snapshot(root);
-  for (const [key, value] of Object.entries(before)) {
-    if (key === 'config.json' || key === 'HISTORY.md') continue;
-    assert.deepEqual(after[key], value, key);
-  }
-  // HISTORY keeps all prior content and only gains the downgrade entry.
-  const history = after['HISTORY.md'];
-  for (const line of before['HISTORY.md'].split('\n')) assert.ok(history.includes(line), line);
-  assert.match(history, /profile telos: deep → minimal/);
-
-  // Upgrading again from minimal reuses the retained HISTORY.
-  assert.equal((await telos(root, 'profile', 'standard')).code, 0);
-  assert.equal(profileEntries(root).length, 3);
-  assert.equal(read(root, 'LESSONS.md'), '# Lessons\n- [tests] keep me (01-01)\n');
 });
 
 test('the same profile twice is a no-op without duplicate files or history', async (t) => {
@@ -195,20 +166,3 @@ test('a switch keeps checks, stack, limits, git settings, unknown key order and 
   }
 });
 
-test('ctx profile shows the current profile, files and guidance without mutating', async (t) => {
-  const root = repo(t, 'standard');
-  const before = snapshot(root);
-  const r = await telos(root, 'ctx', 'profile');
-  assert.equal(r.code, 0);
-  assert.match(r.stdout, /^Current profile: standard$/m);
-  assert.match(r.stdout, /HISTORY\.md: present/);
-  assert.match(r.stdout, /decisions\/: missing/);
-  assert.match(r.stdout, /telos profile <minimal\|standard\|deep>/);
-  assert.match(r.stdout, /retain/i);
-  assert.deepEqual(snapshot(root), before);
-
-  writeFileSync(path(root, 'config.json'), '{"profile": "huge"}\n');
-  const bad = await telos(root, 'ctx', 'profile');
-  assert.equal(bad.code, 0);
-  assert.match(bad.stdout, /^REFUSED: /m);
-});

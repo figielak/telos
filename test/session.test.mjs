@@ -1,23 +1,29 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { setLines } from '../lib/status.mjs';
 import { render } from '../lib/template.mjs';
+import { memoryRepo } from './memory-repo.mjs';
 
-const FIXTURE = fileURLToPath(new URL('fixtures/telos-phase/', import.meta.url));
 const HOOK = fileURLToPath(new URL('../hooks/session-start.mjs', import.meta.url));
 const HOOKS_JSON = new URL('../hooks/hooks.json', import.meta.url);
 
+const PLAN = '# 01-demo\n\n## Tasks\n- [x] **01-01 First task**\n- [ ] **01-02 Second task**\n';
+
 function repo() {
-  const root = mkdtempSync(join(tmpdir(), 'telos-session-'));
-  cpSync(FIXTURE, root, { recursive: true });
+  const root = memoryRepo(null, { profile: 'minimal' });
+  mkdirSync(join(root, 'src'));
+  mkdirSync(join(root, '.telos', 'phases'));
+  writeFileSync(join(root, '.telos', 'phases', '01-demo.md'), PLAN);
   writeFileSync(join(root, '.telos', 'PROJECT.md'), render('PROJECT.md', { name: 'demo' })
     .replace(/## Purpose\n/, '## Purpose\nA tiny demo app for tests.\nSecond line stays out.\n'));
-  spawnSync('git', ['-C', root, 'init', '-q']);
+  const status = join(root, '.telos', 'STATUS.md');
+  writeFileSync(status, setLines(readFileSync(status, 'utf8'), { task: '01-02', next: '01-02 Second task' }));
   return root;
 }
 
@@ -39,7 +45,7 @@ test('the status starts with the Purpose line, then stack, profile, phase/task, 
   assert.match(lines[1], /^Stack: /);
   assert.equal(lines[2], 'Profile: minimal');
   assert.doesNotMatch(out, /Second line/);
-  assert.match(out, /^Next: run \/telos:do\nBlockers: none\nCarry-over: 0$/m);
+  assert.match(out, /^Next: 01-02 Second task\nBlockers: none\nCarry-over: 0$/m);
   assert.match(lines.at(-1), /^Files: \.telos\/STATUS\.md · /);
 });
 
@@ -49,11 +55,14 @@ test('Awaiting user comes first when set', () => {
   assert.match(hook(root).out, /^Awaiting user: 01:D-02\nProject: /);
 });
 
-test('phase and task show live states from ROADMAP and the task file', () => {
+test('phase and task show live states from ROADMAP and the phase checklist', () => {
   const root = repo();
-  const task = join(root, '.telos', 'phases', '01-demo', '01-02-second-task.md');
-  writeFileSync(task, readFileSync(task, 'utf8').replace('status: approved', 'status: in-progress'));
-  assert.match(hook(root).out, /^Phase: 01-demo \[active\] · Task: 01-02 \[in-progress\]$/m);
+  assert.match(hook(root).out, /^Phase: 01-demo \[active\] · Task: 01-02 \[open\]$/m);
+  const plan = join(root, '.telos', 'phases', '01-demo.md');
+  writeFileSync(plan, PLAN.replace('- [ ] **01-02', '- [x] **01-02'));
+  assert.match(hook(root).out, /^Phase: 01-demo \[active\] · Task: 01-02 \[done\]$/m);
+  editStatus(root, (s) => s.replace('Task: 01-02', 'Task: 01-09'));
+  assert.match(hook(root).out, /^Phase: 01-demo \[active\] · Task: 01-09$/m);
 });
 
 test('a long STATUS is cut to 1200 chars with a marker', () => {

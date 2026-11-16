@@ -6,8 +6,6 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { setField } from '../lib/frontmatter.mjs';
-import { loadTask } from '../lib/tasks.mjs';
 
 // Offline CLI proof: known MAP/PROJECT text stands in for model output. Real-repository
 // navigation quality and actual headless model runs remain a separate gate (03-09).
@@ -137,7 +135,7 @@ for (const fixtureName of ['astro-ts', 'python-uv']) {
       map = knownMap(fixture, headerFrom(bundle, root));
     });
 
-    await t.test('known MAP and PROJECT draft validate; ctx do finds the matching MAP row', () => {
+    await t.test('known MAP and PROJECT draft validate; ctx plan shows the MAP Find rows', () => {
       write(root, '.telos/MAP.md', map);
       project = '# Offline fixture project\n\n## Purpose\nDraft for confirmation: navigate the demo sources.\n\n## Rules\n- none\n\n## Conventions\n- Modules live beside their domain source.\n\n## Out of scope\n- none\n';
       write(root, '.telos/PROJECT.md', project);
@@ -155,14 +153,11 @@ for (const fixtureName of ['astro-ts', 'python-uv']) {
       authoredClassification = projectLine(bundle);
       assert.match(authoredClassification, /draft: Rules, Out of scope · preserve: Purpose .*Conventions/);
       cli(root, 'roadmap', 'add', 'navigation', 'Use the authored MAP', 'A source location is found');
-      cli(root, 'task', 'new', '01', 'locate-auth', 'Locate auth through MAP');
-      const task = loadTask(root, '01-01');
-      writeFileSync(task.path, setField(task.text, 'scope', [paths[0]]));
-      cli(root, 'task', 'set', '01-01', 'status=approved');
-      const context = cli(root, 'ctx', 'do', '01-01');
-      assert.match(context, /^Task: 01-01 \[approved\]/m);
-      const mapRows = context.split('Map:\n')[1];
-      assert.ok(mapRows?.includes(`- \`${paths[0]}:1-2\` — known fixture location`));
+      const context = cli(root, 'ctx', 'plan', '01');
+      assert.match(context, /^Target: 01-navigation \[planned\]/m);
+      const find = map.split('## Find\n')[1].split('\n').filter((l) => l.startsWith('- '));
+      assert.ok(find.length > 0);
+      for (const row of find) assert.ok(context.includes(row), row);
       assert.equal(read(root, '.telos/PROJECT.md'), project);
     });
 

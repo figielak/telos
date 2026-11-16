@@ -72,7 +72,7 @@ Note: the ROADMAP line says "every removed path". Read it as above: individual `
     lint, no approve step, no commit unless `git.auto_commit`.
   - Accept: test creates a phase file from the template and `ctx plan 10` stays ≤ 6000 chars.
 
-- [ ] **10-05 Remove execution gates**
+- [x] **10-05 Remove execution gates**
   - Remove skills `discuss`, `approve`, `revise`, `revise-lite`, `do`, `do-hard`, `quick`,
     `quick-hard`, `check`, `undo`, `lesson`, `init`, `profile`, `plan-lite`, `map-hard`;
     `shared/{do,quick,revise}.md`; `lib/{accept,check,lint-plan,lessons,scope,tasks}.mjs`;

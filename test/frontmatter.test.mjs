@@ -3,11 +3,23 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { parse, setField } from '../lib/frontmatter.mjs';
-import { render } from '../lib/template.mjs';
 
-const task = render('task.md', { id: '01-02', title: 'Check board game' });
+// The frontmatter of the former task template, kept as a fixture for the parser.
+const task = `---
+id: 01-02
+title: Check board game
+type: code          # code | doc | audit
+status: draft       # draft | approved | in-progress | done | blocked | reverted
+critical: false
+effort: normal      # normal | hard
+depends: []         # task IDs, e.g. [01-01]
+decisions: []       # phase-local, e.g. [D-03]
+scope: []           # required: path prefixes/globs
+---
+## Goal
+`;
 
-test('parses the task template frontmatter', () => {
+test('parses task frontmatter with trailing comments', () => {
   assert.deepEqual(parse(task), {
     id: '01-02', title: 'Check board game', type: 'code', status: 'draft',
     critical: false, effort: 'normal', depends: [], decisions: [], scope: [],

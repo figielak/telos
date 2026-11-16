@@ -26,6 +26,7 @@ Skills inject one `telos ctx` bundle each; the CLI owns all state changes in `.t
 - Skills are user-invoked only (`disable-model-invocation: true`) and get context from one `telos ctx <bundle>` injection.
 - `-lite`/`-hard` variants share their body via `shared/<name>.md` and differ only in `model`.
 - State changes go through the CLI (`telos task set`, `telos roadmap set`, `telos status set`), never by hand.
+- Run on real repos before trimming prompts: they expose permission and syntax defects that fixtures hide.
 
 ## Out of scope
 <!-- things this project deliberately does not do (never built ≠ Delete-zone) -->

@@ -11,16 +11,12 @@ import { init } from '../lib/init.mjs';
 import { estimateTokens } from '../lib/map-budget.mjs';
 import { sessionText } from '../lib/session.mjs';
 
-const FIXTURES = {
-  minimal: fileURLToPath(new URL('fixtures/minimal-loop/', import.meta.url)),
-  standard: fileURLToPath(new URL('fixtures/standard-loop/', import.meta.url)),
-  deep: fileURLToPath(new URL('fixtures/standard-loop/', import.meta.url)),
-};
+const FIXTURE = fileURLToPath(new URL('fixtures/node-plain/', import.meta.url));
 
 function repo(t, profile = 'standard') {
   const root = mkdtempSync(join(tmpdir(), 'telos-budget-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
-  cpSync(FIXTURES[profile], root, { recursive: true });
+  cpSync(FIXTURE, root, { recursive: true });
   mkdirSync(join(root, '.git'));
   init(root, { profile });
   return root;
@@ -128,7 +124,7 @@ test('--ctx measures exactly what telos ctx prints, including truncation', async
 
 test('a refused or profile-gated ctx is no measurement: exit 1, no zero-cost row', async (t) => {
   const root = repo(t, 'minimal');
-  for (const args of [['lesson'], ['shared', 'nope'], ['map', '--refresh']]) {
+  for (const args of [['close', '07'], ['shared', 'nope'], ['map', '--refresh']]) {
     const { code, out, err } = await budget(root, '--ctx', ...args);
     assert.equal(code, 1, args.join(' '));
     assert.equal(out, '');
@@ -147,11 +143,11 @@ test('malformed selectors and arguments exit 2', async (t) => {
 
 test('missing optional memory and block are explicit rows; no .telos exits 1', async (t) => {
   const root = repo(t, 'standard');
-  rmSync(join(root, '.telos', 'LESSONS.md'));
+  rmSync(join(root, '.telos', 'HISTORY.md'));
   rmSync(join(root, 'CLAUDE.md'));
   const { code, out } = await budget(root);
   assert.equal(code, 0);
-  assert.match(out, /\.telos\/LESSONS\.md · missing/);
+  assert.match(out, /\.telos\/HISTORY\.md · missing/);
   assert.match(out, /CLAUDE\.md Telos block · missing/);
   rmSync(join(root, '.telos', 'STATUS.md'));
   assert.match((await budget(root)).out, /SessionStart \(hook output\) · missing/);

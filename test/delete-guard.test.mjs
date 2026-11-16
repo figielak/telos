@@ -9,25 +9,15 @@ import { fileURLToPath } from 'node:url';
 import { main } from '../lib/cli.mjs';
 import { addHistory, deleteZoneEntries } from '../lib/history.mjs';
 import { render } from '../lib/template.mjs';
+import { memoryRepo } from './memory-repo.mjs';
 
-const FIXTURE = fileURLToPath(new URL('fixtures/telos-phase/', import.meta.url));
 const HOOK = fileURLToPath(new URL('../hooks/edit-guard.mjs', import.meta.url));
 const BIN = fileURLToPath(new URL('../bin/', import.meta.url));
-const TASK = '.telos/phases/01-demo/01-02-second-task.md';
-const { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } = fs;
+const { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } = fs;
 const cache = (root) => join(root, '.telos/.cache');
 
-function repo(t, { profile = 'standard', strict = false, active = true } = {}) {
-  const root = mkdtempSync(join(tmpdir(), 'telos-delete-guard-'));
-  t.after(() => rmSync(root, { recursive: true, force: true }));
-  cpSync(FIXTURE, root, { recursive: true });
-  mkdirSync(join(root, '.git'));
-  const config = join(root, '.telos/config.json');
-  writeFileSync(config, JSON.stringify({ ...JSON.parse(readFileSync(config, 'utf8')), profile, strict_scope: strict }));
-  if (active) {
-    const path = join(root, TASK);
-    writeFileSync(path, readFileSync(path, 'utf8').replace('status: approved', 'status: in-progress'));
-  }
+function repo(t, { profile = 'standard' } = {}) {
+  const root = memoryRepo(t, { profile });
   writeFileSync(join(root, '.telos/HISTORY.md'), render('HISTORY.md', { profile, date: '2026-01-01' }));
   return root;
 }
@@ -114,7 +104,7 @@ test('an entry recorded through a symlink also matches the physical target', (t)
   assert.match(warned(hook(root, 'src/a/new.ts')), /--path 'src\/alias'/);
 });
 
-test('the suggested shell command safely reverts only its exact selector, preserving approaches in plan/quick', async (t) => {
+test('the suggested shell command safely reverts only its exact selector, preserving approaches in plan', async (t) => {
   const root = repo(t);
   const path = "src/a '$(touch should-not-exist)'";
   remove(root, path, 'ADR 007');
@@ -132,13 +122,9 @@ test('the suggested shell command safely reverts only its exact selector, preser
   assert.deepEqual(deleteZoneEntries(root).filter((e) => e.path).map((e) => e.path), ['src/ab']);
   silent(hook(root, `${path}/new.ts`, { sessionId: 'after-revert' }));
   warned(hook(root, 'src/ab/new.ts'));
-  for (const bundle of ['plan', 'quick']) {
-    assert.match(await telos(root, 'ctx', bundle), /Global mutable cache/);
-  }
+  assert.match(await telos(root, 'ctx', 'plan'), /Global mutable cache/);
   await telos(root, 'history', 'add', 'revert', '04-01', 'Restore the approach', '--approach', 'Global mutable cache');
-  for (const bundle of ['plan', 'quick']) {
-    assert.doesNotMatch(await telos(root, 'ctx', bundle), /Global mutable cache/);
-  }
+  assert.doesNotMatch(await telos(root, 'ctx', 'plan'), /Global mutable cache/);
   assert.equal(deleteZoneEntries(root)[0].path, 'src/ab');
 });
 
@@ -153,32 +139,12 @@ test('a normalized root revert clears descendant warnings and leaves sibling ent
   warned(hook(root, 'src/ab/new.ts'));
 });
 
-test('strict_scope does not block deletion warnings inside scope or in .telos/', (t) => {
-  const root = repo(t, { strict: true });
-  remove(root, 'src/a');
-  remove(root, '.telos/removed');
+test('deletion warnings cover .telos/ paths and protected configs, without any active task', (t) => {
+  const root = repo(t);
+  for (const path of ['src/a', '.telos/removed', 'tsconfig.json']) remove(root, path);
   warned(hook(root, 'src/a/new.ts'));
   warned(hook(root, '.telos/removed/new.md'));
-});
-
-test('deletion warnings apply without an in-progress task in both standard and deep', (t) => {
-  for (const profile of ['standard', 'deep']) {
-    const root = repo(t, { profile, active: false, strict: true });
-    remove(root, 'docs/old');
-    warned(hook(root, 'docs/old/new.md'));
-    const status = join(root, '.telos/STATUS.md');
-    writeFileSync(status, readFileSync(status, 'utf8').replace('Task: 01-02', 'Task: none'));
-    warned(hook(root, 'docs/old/other.md'));
-  }
-});
-
-test('protected configs and a broken task never block; the warning still shows', (t) => {
-  for (const [path, invalid] of [['src/tsconfig.json', null], ['src/a', TASK]]) {
-    const root = repo(t, { strict: true });
-    remove(root, path);
-    if (invalid) writeFileSync(join(root, invalid), invalid === TASK ? '---\nid: 01-02\nstatus: [broken\n---\n' : 'broken');
-    warned(hook(root, path));
-  }
+  warned(hook(root, 'tsconfig.json'));
 });
 
 test('missing or invalid session identities warn every time without persistent markers', (t) => {
