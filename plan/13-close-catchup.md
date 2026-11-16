@@ -21,13 +21,13 @@ chars listing the changed areas, and `telos stale` is empty after the run; `npm 
 
 ## Tasks
 
-- [ ] **13-01 Delta engine**
+- [x] **13-01 Delta engine**
   - `lib/delta.mjs`: per stale area: commit subjects since the anchor (≤ 10, newest
     first), changed files with `--stat` numbers, added/deleted/renamed kinds; plus the
     unmapped list. Budgeted rows with omission counts; commit messages are quoted data.
   - Accept: unit tests on the `areas` fixture: two areas changed, one fresh, one unmapped file.
 
-- [ ] **13-02 `telos ctx close [NN]`**
+- [x] **13-02 `telos ctx close [NN]`**
   - Extend the phase 10 bundle: phase file state, delta per area, broken refs, configured
     checks, the exact closing commands in order (`telos area anchor …`,
     `telos history add phase …`, `telos roadmap set NN done`, `telos status set …`).

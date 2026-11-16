@@ -5,7 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { main } from '../lib/cli.mjs';
-import { areasRepo } from './areas-repo.mjs';
+import { CAP } from '../lib/ctx/index.mjs';
+import { areasRepo, commitAll, setAnchor, write } from './areas-repo.mjs';
 
 async function telos(root, ...args) {
   const out = { text: '', write(s) { out.text += s; } };
@@ -117,4 +118,86 @@ test('stale areas add one line to the close bundle and never block it (12:D-05)'
   writeFileSync(join(root, 'src/web/app.mjs'), 'export const title = String;\n');
   const out = await ok(root, 'ctx', 'close');
   assert.match(out, /^Auto-commit: (yes|no)\nStale areas: 1 \(run telos stale\); review them, they do not block the close\nClose: ready$/m);
+});
+
+/** areasRepo with phase 01-demo active and its plan; @returns {string} root */
+async function areasPhase(t, items = [['01-01', true]]) {
+  const { root } = areasRepo(t);
+  await ok(root, 'roadmap', 'add', 'demo', 'demo phase', 'demo works');
+  await ok(root, 'roadmap', 'set', '01', 'active');
+  await ok(root, 'status', 'set', 'phase=01-demo', 'task=none');
+  work(root, items);
+  commitAll(root, 'phase 01');
+  return root;
+}
+
+test('ready with a delta: anchor command first, delta per area after the closing commands', async (t) => {
+  const root = await areasPhase(t);
+  write(root, 'src/api/routes.mjs', 'export const routes = {};\n');
+  write(root, 'docs/guide.md', '# Guide v2\n');
+  commitAll(root, 'feat(api): new routes "now"');
+  const before = snapshot(root);
+  const out = await ok(root, 'ctx', 'close');
+  assert.ok(out.length <= CAP);
+  assert.match(out, /^Close: ready\nClosing commands \(in order, after the checks pass\):\n- `telos area anchor api`\n- `telos history add phase 01 /m);
+  assert.match(out, /^- `telos status add recent "01 closed: <one line>"`\nDelta: 1 area to review · fresh: util, web · unmapped: 1 file$/m);
+  assert.match(out, /^Area api: stale since \w{7} · 1 file \(\+1 -3\) · 1 commit$/m);
+  assert.match(out, /^ {2}- \w{7} "feat\(api\): new routes \\"now\\""$/m);
+  assert.match(out, /^ {2}- src\/api\/routes\.mjs · modified \+1 -3$/m);
+  assert.match(out, /^Unmapped .*: 1 file\n {2}- docs\/guide\.md$/m);
+  assert.deepEqual(snapshot(root), before, 'the bundle never writes');
+});
+
+test('blocked by unchecked items: still lists the delta; a fresh repo adds no anchor command', async (t) => {
+  const root = await areasPhase(t, [['01-01', true], ['01-02', false]]);
+  let out = await ok(root, 'ctx', 'close');
+  assert.match(out, /^Close: blocked\n- \[ \] 01-02 Item 01-02$/m);
+  assert.doesNotMatch(out, /telos area anchor/);
+  assert.match(out, /^Delta: 0 areas to review · fresh: api, util, web · unmapped: 0 files$/m);
+  write(root, 'lib/util.mjs', 'export const slug = String;\n');
+  out = await ok(root, 'ctx', 'close');
+  assert.match(out, /^Close: blocked$/m);
+  assert.match(out, /^- `telos area anchor util`$/m);
+  assert.match(out, /^ {2}- lib\/util\.mjs · uncommitted$/m);
+});
+
+/** `count` extra areas x0..xN over dirs x0/..xN/, anchored at HEAD. */
+function addAreas(root, count) {
+  for (let i = 0; i < count; i++) {
+    mkdirSync(join(root, `x${i}`));
+    write(root, `x${i}/seed.mjs`, 'export {};\n');
+    write(root, `.telos/areas/x${i}.md`, `<!-- telos-area: commit ${'0'.repeat(40)} · 2026-01-01 · paths: x${i}/ -->\n# x${i}\n`);
+  }
+  setAnchor(root, commitAll(root, 'extra areas'));
+  commitAll(root, 'anchor extra areas');
+}
+
+test('overflow: file rows shrink to counts first, commit subjects stay', async (t) => {
+  const root = await areasPhase(t);
+  addAreas(root, 4);
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 12; j++) write(root, `x${i}/${'long-module-name-'.repeat(6)}${j}.mjs`, 'export {};\n');
+  }
+  commitAll(root, 'feat: many files');
+  const out = await ok(root, 'ctx', 'close');
+  assert.ok(out.length <= CAP, `${out.length} chars`);
+  assert.doesNotMatch(out, /truncated by telos ctx/);
+  assert.doesNotMatch(out, /Files:/);
+  assert.match(out, /^- `telos area anchor x0 x1 x2 x3`$/m);
+  for (let i = 0; i < 4; i++) assert.match(out, new RegExp(`^Area x${i}: stale since \\w{7} · 12 files \\(\\+12 -0\\) · 1 commit · 12 added$`, 'm'));
+  assert.match(out, /^ {2}- \w{7} "feat: many files"$/m);
+});
+
+test('overflow: subjects go next; every area and closing command survives', async (t) => {
+  const root = await areasPhase(t);
+  addAreas(root, 8);
+  for (let c = 0; c < 10; c++) {
+    for (let i = 0; i < 8; i++) write(root, `x${i}/f${c}.mjs`, 'export {};\n');
+    commitAll(root, `feat: commit ${c} ${'with a long subject line '.repeat(4)}`);
+  }
+  const out = await ok(root, 'ctx', 'close');
+  assert.ok(out.length <= CAP, `${out.length} chars`);
+  assert.doesNotMatch(out, /truncated by telos ctx|Commits \(newest first\)|quoted data|Files:/);
+  for (let i = 0; i < 8; i++) assert.match(out, new RegExp(`^Area x${i}: stale since \\w{7} · 10 files \\(\\+10 -0\\) · 10 commits · 10 added$`, 'm'));
+  assert.match(out, /^- `telos status add recent "01 closed: <one line>"`$/m);
 });

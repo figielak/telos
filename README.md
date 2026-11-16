@@ -98,7 +98,10 @@ Purpose and Rules, stack, checks, Delete-zone approaches, the MAP index and the 
 still fit, nearest the target phase first.
 `ctx close` gives the plan's checklist state, unchecked items, the check commands,
 `Auto-commit`, `Stale areas: N` when any (never blocking), `Close: ready|blocked` and the exact
-closing commands.
+closing commands (`telos area anchor …` first when an area changed). Last comes the delta: per
+area that needs review, the commits since its own anchor (≤ 10 subjects, newest first, quoted as
+data), the changed files with kind and `+added -deleted`, broken refs, then changed files under no
+area (`Unmapped`). Over 6000 chars, file rows shrink to kind counts first, then subjects go.
 
 ## Hooks
 
