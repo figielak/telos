@@ -41,6 +41,7 @@
      kinds: decision | phase | revert | remove | quick | init
      ref: NN, NN-MM, quick, telos
      Archive is installed first; after an interrupted write it may duplicate live Log rows. -->
+- 2026-11-16 phase 12: closed 12-anchors: telos stale finds changed covered files, unanchored areas and broken refs from git alone; fixture tests pass, SessionStart shows the count
 - 2026-11-16 phase 11: closed 11-areas: telos area new/list/show/for/lint work and lint enforces sections and limits; ctx plan --area loads only matching areas; this repo has a 286/600 MAP index and 5 areas; npm test 260/260, e2e 17/17
 - 2026-11-16 phase 10: closed 10-prune: 4 skills, config v2 without profile, README 135 lines, removed paths, skills and mechanisms in Delete-zone, npm test 238/238
 - 2026-11-16 remove 10: Block only the irreversible; the agent runs checks itself
@@ -70,4 +71,3 @@
 - 2026-11-16 remove 10: Landing page removed with the memory-core prune; kept in tag pre-memory-core
 - 2026-11-16 phase 09: dropped 09-command-guide: a guide for 24 commands is obsolete because phase 10 cuts Telos to a memory core; phases 10-16 added after the concept review (benchmark showed 2-5x cost with level acceptance)
 - 2026-11-05 remove 07: Benchmark harness, corpus and evidence removed by owner's decision after the 07 results; summary kept outside the repo; results stay in README Benchmark
-- 2026-11-03 phase 08: closed 08-website: website tests pass after a clean install, DESIGN.md exists, root tests pass with root package.json unchanged, no horizontal scroll at 390, 768 and 1440 px; retro: the layout changed twice mid-phase, so tests encoding layout were rewritten, and the root suite outgrew the telos check output limit
