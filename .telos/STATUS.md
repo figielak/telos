@@ -2,8 +2,8 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 12-anchors
-Task: none
-Next: /telos:plan 12
+Task: 12-01
+Next: 12-01 Staleness engine
 Blockers: none
 Awaiting user: none
 <!-- Blockers: "NN-MM: reason". Awaiting user: what the user must decide, short. -->

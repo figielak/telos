@@ -20,7 +20,7 @@ any model call; SessionStart shows the stale count; `npm test` passes.
 
 ## Tasks
 
-- [ ] **12-01 Staleness engine**
+- [x] **12-01 Staleness engine**
   - `lib/stale.mjs`: group areas by anchor, one `git diff --name-only <anchor>..HEAD` per
     distinct anchor plus one `git status --porcelain`; map changed files to areas with the
     11-01 matcher. Git calls go through `lib/git.mjs` (read-only, size and time limits).
