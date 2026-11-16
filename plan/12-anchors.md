@@ -53,3 +53,17 @@ any model call; SessionStart shows the stale count; `npm test` passes.
   - Accept: session test shows the line only when stale; *Done when* holds.
 
 ## Notes
+- 12-01: the `test/fixtures/areas/` fixture (areas api, web, util; `docs/` under no area) and the
+  `test/areas-repo.mjs` helper landed with 12-01, since every later test uses them. Fixture
+  headers hold a zero hash; the helper commits, then anchors them at that commit.
+- 12-01: renames count on both sides (`--no-renames`); dirty includes untracked and deleted
+  files; `.telos/` changes never count as unmapped. Every git call has a 10 s time limit.
+- 12-02: in area bodies only path-like spans are references (a `/` or a `:line` suffix, file-name
+  characters only), so `telos area for`, `limits.map_tokens`, `hooks/*.mjs` and
+  `.telos/areas/<name>.md` are prose. MAP keeps the strict rule (every span is a reference).
+- 12-03: a stale row gets ` · N uncommitted` when dirty files are part of it; `--check` ignores
+  unmapped files.
+- 12-05: SessionStart with 30 areas measured ~135 ms (test bound 1500 ms). D5: `ctx close`
+  adds the same line, never as a blocker.
+- This repository after 12: all five areas are stale and two notes have broken refs
+  (`src/a`, `src/ab/` in map; `.telos/phases/NN-name.md` in state) — left for 13 (catchup).
