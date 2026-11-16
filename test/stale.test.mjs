@@ -6,7 +6,7 @@ import { join } from 'node:path';
 
 import { loadAreas } from '../lib/areas.mjs';
 import { staleAreas, unmappedFiles } from '../lib/stale.mjs';
-import { areasRepo, commitAll, setAnchor, write } from './areas-repo.mjs';
+import { areasRepo, commitAll, git, setAnchor, write } from './areas-repo.mjs';
 
 const states = (root) => Object.fromEntries(staleAreas(root).areas.map((a) => [a.name, a]));
 
@@ -54,6 +54,15 @@ test('a rename shows both sides; the / boundary keeps src/apix out of src/api/',
   assert.equal(s.api.state, 'fresh');
   assert.deepEqual(s.web.files, ['src/web/app.mjs']);
   assert.deepEqual(unmappedFiles(loadAreas(root), staleAreas(root).changed), ['docs/app.mjs', 'src/apix/x.mjs']);
+});
+
+test('an uncommitted move out of an area makes it stale: the old path is dirty too', (t) => {
+  const { root } = areasRepo(t);
+  git(root, 'mv', 'src/web/app.mjs', 'docs/app.mjs');
+  const s = states(root);
+  assert.equal(s.web.state, 'stale');
+  assert.deepEqual(s.web.dirty, ['src/web/app.mjs']);
+  assert.equal(s.api.state, 'fresh');
 });
 
 test('unanchored: a missing anchor commit or an invalid header is reported, never fresh', (t) => {

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -164,7 +164,12 @@ test('the hook stays fast with 30 areas, half of them stale', (t) => {
     writeFileSync(join(root, `pkg/m${i}/index.mjs`), 'export {};\n');
     writeFileSync(join(root, `.telos/areas/m${i}.md`), `${header.replace(/paths: .*/, `paths: pkg/m${i}/ -->`)}\n# m${i}\n\n## Purpose\n- \`pkg/m${i}/index.mjs:1\`\n`);
   }
-  setAnchor(root, commitAll(root, 'more areas'));
+  commitAll(root, 'more areas');
+  // The realistic worst case: every area anchored at its own commit, so one git diff per area.
+  for (const name of readdirSync(join(root, '.telos/areas')).map((f) => f.slice(0, -3))) {
+    writeFileSync(join(root, 'docs/guide.md'), `# Guide for ${name}\n`);
+    setAnchor(root, commitAll(root, `docs for ${name}`), [name]);
+  }
   commitAll(root, 'anchor');
   for (let i = 0; i < 15; i++) writeFileSync(join(root, `pkg/m${i}/index.mjs`), 'export const x = 1;\n');
   hook(root);

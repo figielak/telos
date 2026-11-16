@@ -63,6 +63,14 @@ test('anchor refuses when a covered path is dirty and writes nothing', async (t)
   assert.match(git(root, 'status', '--porcelain'), /\.telos\/areas\/api\.md/);
 });
 
+test('anchor refuses when a covered file was moved out of the area and not committed', async (t) => {
+  const { root } = areasRepo(t);
+  git(root, 'mv', 'src/web/app.mjs', 'docs/app.mjs');
+  const r = await area(root, 'anchor', 'web');
+  assert.equal(r.code, 1);
+  assert.match(r.err, /^telos area: web: uncommitted src\/web\/app\.mjs\n/);
+});
+
 test('anchor: usage errors exit 2; unknown areas and invalid headers exit 1', async (t) => {
   const { root } = areasRepo(t);
   for (const args of [[], ['api', '--all'], ['Bad'], ['--bogus']]) {

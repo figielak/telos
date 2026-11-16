@@ -48,6 +48,15 @@ test('a changed covered file and a deleted reference: report rows, exit 0; --che
   assert.deepEqual(await stale(root, '--check'), { code: 1, out: expected, err: '' });
 });
 
+test('broken references alone still get the Next hint', async (t) => {
+  const { root } = areasRepo(t);
+  write(root, '.telos/areas/web.md', `${readFileSync(join(root, '.telos/areas/web.md'), 'utf8')}\n- see \`src/web/gone.mjs\`, served as \`application/json\`\n`);
+  const r = await stale(root, '--check');
+  assert.equal(r.code, 1);
+  assert.equal(r.out, 'web: broken ref src/web/gone.mjs · missing\nfresh: 2 areas\n'
+    + 'Next: check each listed area against its files, fix the note, then telos area anchor <name>\n');
+});
+
 test('--area narrows the report and drops the unmapped line; an unknown area fails', async (t) => {
   const { root } = areasRepo(t);
   write(root, 'src/api/routes.mjs', 'export const routes = {};\n');
@@ -84,7 +93,7 @@ test('output stays within the cap and counts the omitted lines', async (t) => {
   const shown = r.out.split('\n').filter((l) => l.startsWith('api: broken ref')).length;
   const omitted = Number(/… (\d+) more lines omitted; narrow with telos stale --area <name>/.exec(r.out)?.[1]);
   assert.equal(shown + omitted, 400);
-  assert.match(r.out, /fresh: 2 areas\n$/);
+  assert.match(r.out, /fresh: 2 areas\nNext: [^\n]+\n$/);
 });
 
 test('usage errors exit 2; no areas exits 0; no git exits 1', async (t) => {

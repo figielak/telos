@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { brokenReferences, parseReference, pathReferences } from '../lib/refs.mjs';
@@ -18,7 +18,7 @@ test('parseReference: paths, directories and ranges; invalid spans are null', ()
 
 test('pathReferences: only path-like spans outside comments and fences count', () => {
   const text = '<!-- `hidden/x.mjs` -->\nSee `lib/a.mjs:2`, `cli.mjs:4`, `telos area for`, `limits.map_tokens`, `hooks/*.mjs`,'
-    + ' `.telos/areas/<name>.md` and `README.md`.\n```\n`fenced/y.mjs`\n```\n';
+    + ' `.telos/areas/<name>.md`, `localhost:3000`, `16:9` and `README.md`.\n```\n`fenced/y.mjs`\n```\n';
   assert.deepEqual(pathReferences(text).map((r) => r.raw), ['lib/a.mjs:2', 'cli.mjs:4']);
 });
 
@@ -49,4 +49,23 @@ test('a range ending exactly on the last line is valid; a directory ref must be 
     { raw: 'lib/util.mjs/', problem: 'not a directory' },
     { raw: 'src/api:2', problem: 'not a file' },
   ]);
+});
+
+test('spans whose first segment is not in the repo are prose, not broken refs', (t) => {
+  const { root } = areasRepo(t);
+  const text = 'Returns `application/json` from `origin/master` via `@scope/pkg`; see `src/web/gone.mjs` and `gone.mjs:2`.';
+  assert.deepEqual(brokenReferences(root, text), [
+    { raw: 'src/web/gone.mjs', problem: 'missing' },
+    { raw: 'gone.mjs:2', problem: 'missing' },
+  ]);
+});
+
+test('an unreadable referenced file is a broken ref, not a crash', { skip: process.getuid?.() === 0 }, (t) => {
+  const { root } = areasRepo(t);
+  chmodSync(join(root, 'src/api/server.mjs'), 0o000);
+  try {
+    assert.deepEqual(brokenReferences(root, 'See `src/api/server.mjs:2`.'), [{ raw: 'src/api/server.mjs:2', problem: 'unreadable' }]);
+  } finally {
+    chmodSync(join(root, 'src/api/server.mjs'), 0o644);
+  }
 });

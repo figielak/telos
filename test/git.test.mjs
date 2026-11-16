@@ -43,7 +43,7 @@ test('porcelainFiles lists modified, untracked (inside new dirs), renamed and sp
   mkdirSync(join(root, 'dist'));
   writeFileSync(join(root, 'dist', 'out.js'), 'x\n');
   git(root, 'mv', 'a.ts', 'b.ts');
-  assert.deepEqual(porcelainFiles(root).sort(), ['b.ts', 'keep.ts', 'src/deep/my file.ts']);
+  assert.deepEqual(porcelainFiles(root).sort(), ['a.ts', 'b.ts', 'keep.ts', 'src/deep/my file.ts']);
 });
 
 test('porcelainFiles works before the first commit', () => {
