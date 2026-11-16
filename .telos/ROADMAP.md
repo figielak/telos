@@ -1,6 +1,10 @@
 # Roadmap
-<!-- Telos building itself; .planning/ uses the .telos/ format and moves there in phase 03.
-     Goals and criteria from SPEC §14. -->
+<!-- ≤ 80 lines. One phase per line, updated by `telos roadmap set <NN> <status>`:
+     "- NN-name [status] goal · done when: criterion"
+     status: planned | drafted | active | done | dropped
+     NN-name must match the directory in phases/.
+     Optional milestone headings "## M1 · Name"; a finished milestone collapses
+     to "## M1 · Name — done (01–05)". -->
 - 01-skeleton [done] plugin, CLI skeleton (ctx, status), config, templates, init · done when: `/telos:init` works in a test repo
 - 02-core-loop [done] plan, approve, revise, do, quick, status, accept, lint-plan, roadmap set, SessionStart hook, git guard · done when: a minimal phase runs end to end with commits
 - 03-map [done] map-scan, map, incremental refresh, PROJECT draft · done when: MAP.md for a real Astro and a real Python repo under limits

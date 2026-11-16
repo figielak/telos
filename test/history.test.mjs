@@ -43,8 +43,8 @@ async function telos(root, ...args) {
 
 test('valid kinds and refs produce newest-first UTC entries and readers never write', async (t) => {
   const root = repo(t);
-  const kinds = ['decision', 'phase', 'revert', 'remove', 'quick', 'profile', 'init'];
-  const refs = ['01', '01-02', 'ADR 007', 'quick', 'telos'];
+  const kinds = ['decision', 'phase', 'revert', 'remove', 'quick', 'init'];
+  const refs = ['01', '01-02', 'quick', 'telos'];
   const dates = [new Date().toISOString().slice(0, 10)];
   for (const [i, kind] of kinds.entries()) {
     const r = await telos(root, 'history', 'add', kind, refs[i % refs.length], `Reason ${i}: żółć`);
@@ -57,9 +57,21 @@ test('valid kinds and refs produce newest-first UTC entries and readers never wr
   assert.deepEqual(history.log.slice(0, -1).map((e) => e.ref),
     kinds.map((_, i) => refs[i % refs.length]).toReversed());
   assert.ok(history.log.slice(0, -1).every((e) => dates.includes(e.date)));
-  assert.equal(history.log[0].text, 'Reason 6: żółć');
+  assert.equal(history.log[0].text, 'Reason 5: żółć');
   assert.deepEqual(deleteZoneEntries(root), []);
   assert.deepEqual(snapshot(root), before);
+});
+
+test('rows written by version 0.1 (kind profile, ref ADR NNN) still read and survive an add', async (t) => {
+  const root = repo(t);
+  const legacy = '- 2025-02-01 profile telos: switched to deep\n- 2025-01-01 decision ADR 001: keep it\n';
+  writeFileSync(file(root), text(root)
+    .replace('- none\n', '- `old/dir` — gone (ADR 001, 2025-01-01)\n')
+    .replace(/^- 2026-01-01 init telos: initialized\n/m, legacy));
+  assert.deepEqual(readHistory(root).log.map((e) => [e.kind, e.ref]), [['profile', 'telos'], ['decision', 'ADR 001']]);
+  assert.deepEqual(deleteZoneEntries(root).map((e) => e.ref), ['ADR 001']);
+  assert.equal((await telos(root, 'history', 'add', 'decision', '01', 'new row')).code, 0);
+  assert.ok(text(root).includes(legacy));
 });
 
 test('CLI rejects invalid kinds, refs, text and selectors without any writes', async (t) => {
@@ -68,6 +80,7 @@ test('CLI rejects invalid kinds, refs, text and selectors without any writes', a
   const invalid = [
     ['add', 'bad', '01', 'reason'], ['add', 'decision', '1', 'reason'],
     ['add', 'decision', 'ADR 1', 'reason'], ['add', 'decision', '01', ''],
+    ['add', 'profile', '01', 'reason'], ['add', 'decision', 'ADR 007', 'reason'],
     ['add', 'decision', '01', 'first\nsecond'], ['add', 'decision', '01', 'first\rsecond'],
     ['add', 'decision', '01', 'hidden\u2028line'], ['add', 'decision', '01', '<!-- hidden -->'],
     ['add', 'decision', '01', 'reason', '--path', 'src/old'],

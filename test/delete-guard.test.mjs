@@ -107,11 +107,11 @@ test('an entry recorded through a symlink also matches the physical target', (t)
 test('the suggested shell command safely reverts only its exact selector, preserving approaches in plan', async (t) => {
   const root = repo(t);
   const path = "src/a '$(touch should-not-exist)'";
-  remove(root, path, 'ADR 007');
-  remove(root, 'src/ab', 'ADR 007');
+  remove(root, path, '07');
+  remove(root, 'src/ab', '07');
   approach(root);
-  await telos(root, 'history', 'add', 'revert', 'ADR 007', 'Log only');
-  await telos(root, 'history', 'add', 'revert', 'ADR 007', 'Only the child', '--path', `${path}/child`);
+  await telos(root, 'history', 'add', 'revert', '07', 'Log only');
+  await telos(root, 'history', 'add', 'revert', '07', 'Only the child', '--path', `${path}/child`);
   const context = warned(hook(root, `${path}/new.ts`));
   const command = /`(telos history add revert [^`]+)`/.exec(context)?.[1];
   assert.ok(command, context);
