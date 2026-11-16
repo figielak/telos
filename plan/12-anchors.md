@@ -32,7 +32,7 @@ any model call; SessionStart shows the stale count; `npm test` passes.
     report `<area>: broken ref <path[:line]>`.
   - Accept: tests for a deleted file, a line past EOF and a valid range.
 
-- [ ] **12-03 `telos stale` command**
+- [x] **12-03 `telos stale` command**
   - `telos stale [--area <name>] [--check]`: one row per affected area,
     `<area>: stale · N files since <sha7> (a, b, +K more)`; `fresh: N areas` summary;
     files under no area listed as `unmapped: N files (top dirs)`.
