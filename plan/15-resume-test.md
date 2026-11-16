@@ -43,7 +43,7 @@ session know the project better, and more cheaply, with the memory than without 
   - `--variant memory|bare` runs one side; `--json` prints machine output.
   - Accept: scoring tests including alternatives and a partial match.
 
-- [ ] **15-04 Command and docs**
+- [x] **15-04 Command and docs**
   - Register `telos resume-test`; README section "Does the memory work?" with a sample
     report and the cost warning (2 × N headless sessions).
   - Accept: CLI test with the stub; README row present.

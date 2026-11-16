@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
@@ -156,4 +157,23 @@ test('command: missing or invalid questions file exits 1; bad flags are usage er
   for (const args of [['--variant', 'both'], ['--timeout', '0'], ['--agent-cmd', ' '], ['extra'], ['--bogus']]) {
     await assert.rejects(command(root, ...args), UsageError, args.join(' '));
   }
+});
+
+test('CLI: bin/telos resume-test runs with the stub agent; --help names the flags', async (t) => {
+  const root = memoryRepo(t);
+  write(root, '.telos/resume-test.md', QUESTIONS);
+  const bin = fileURLToPath(new URL('../bin/telos', import.meta.url));
+  const r = spawnSync(bin, ['resume-test', '--agent-cmd', `node '${STUB}'`, '--variant', 'bare'], { cwd: root, encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /^Resume test · 5 questions · bare\n/);
+  assert.match(r.stdout, /Correct      0\/5\n/);
+  const help = spawnSync(bin, ['--help'], { encoding: 'utf8' });
+  assert.match(help.stdout, /resume-test .*--variant memory\|bare.*--agent-cmd/);
+});
+
+test('README documents telos resume-test and its cost', () => {
+  const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
+  assert.match(readme, /^\| `telos resume-test /m);
+  assert.match(readme, /^## Does the memory work\?$/m);
+  assert.match(readme, /2 × N paid sessions/);
 });

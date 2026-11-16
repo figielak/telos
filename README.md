@@ -108,6 +108,7 @@ Exit codes: `0` ok · `1` failure or `.telos/` missing · `2` usage error. The C
 | `telos area lint` | Check every area: header, the six sections in order, name and `limits.area_tokens`; no sub-directories in `.telos/areas/`; with a built MAP, `## Areas` rows and area files match one to one; one line per problem, exit 1 when any |
 | `telos area anchor <name>…` / `--all` | Set the area header commit and date to HEAD, keeping every other byte; run after checking the note against its files. Refuses, writing nothing, when a covered path is uncommitted |
 | `telos stale [--area <name>]… [--check]` / `--unmapped` | Without a model: one line per area whose header paths changed between its anchor commit and HEAD or are dirty (`<area>: stale · N files since <sha7> (a, b, +K more)`), whose anchor commit is gone (`unanchored`) or whose body has a backticked `path[:line]` to a missing file or past its end (`broken ref`); then `fresh: N areas` and changed files under no area (`unmapped: N files (top dirs)`; `.telos/` and the root `AGENTS.md`, `CLAUDE.md`, `.gitignore` never count). ≤ 6000 chars, omitted lines counted. Exit 0; `--check` exits 1 when anything is stale, broken or unanchored. `--unmapped` prints only the unmapped paths, one per line (`unmapped: none` when empty), and takes no other option |
+| `telos resume-test [--variant memory\|bare] [--json] [--agent-cmd '<cmd>'] [--timeout <s>]` | Ask the 5–10 questions in `.telos/resume-test.md`, each in a fresh headless session with and without the memory; prints per question ✓/✗, then correct/total, tokens, cost and tool calls per variant and the missing facts (see [Does the memory work?](#does-the-memory-work)). Exit 1 when the file is missing or invalid, or every run failed |
 | `telos map-scan` | Deterministic repository inventory for `/telos:map` (≤ 2000 estimated tokens); works before init, never executes repository code |
 | `telos ctx <bundle> [args]` | Print one self-contained step: the context (≤ 6000 chars, comments stripped), then `## Instructions` from `shared/<name>.md` (≤ 5600 chars), for `status`, `map [--refresh]`, `plan [NN\|description] [--area <path>]…`, `close [NN]` and `catchup`; a `REFUSED: …` or `Nothing to catch up` line comes alone. `shared <name>` prints only an instruction file |
 | `telos budget [--ctx <bundle> [args]]` | Read-only size report: `.telos/` files, the AGENTS.md block, the SessionStart output and optionally one bundle, in bytes, chars and ~tokens (chars / 4) |
@@ -140,6 +141,26 @@ Node scripts in `hooks/`, no model calls; each is silent when `.telos/` is missi
 | `SessionStart` (startup, resume, clear, compact) | Injects the compact status (≤ 1200 chars): Awaiting user first, PROJECT Purpose line 1, stack, phase/task with live states, Next, Blockers, carry-over count, latest Recent line, `Areas: N` when area files exist, `Stale areas: N (run telos stale)` when any area is stale, unanchored or has a broken ref (git only, no model), file pointers |
 | `PreToolUse` Bash | Git guard: blocks `git push`, `--no-verify` (also `commit -n`), `git add -A` / `--all` / `.` / `:/`, `git commit --amend` on a pushed HEAD and `git reset --hard`, with exit 2 and the reason; it splits `&&`, `;`, `\|`, env prefixes, `git -C`/`-c` and `sh -c '…'` |
 | `PreToolUse` Edit/Write | Delete-zone warning, never a block: editing a path listed in HISTORY §Delete-zone (or below it) adds its reason and the exact `telos history add revert …` command to restore it on request; once per path per session, symlinks resolved |
+
+## Does the memory work?
+
+`telos resume-test` asks the 5–10 questions in `.telos/resume-test.md` (format and examples in
+`templates/resume-test.md`), each in two fresh headless Claude Code sessions in temporary copies
+of the repo: **memory** (as is) and **bare** (no `.telos/`, no Telos block). An answer is correct
+when it contains every expected fact, case-insensitive; `a|b` accepts either. No model judges.
+
+```text
+#  Question                                     memory  bare
+1  What is the next task of the current phase?  ✓       ✗
+             memory  bare
+Correct      7/8     3/8
+Cost         $1.10   $2.05
+Tool calls   21      64
+```
+
+**Cost:** 2 × N paid sessions (16 for eight questions), one at a time. `--variant` runs one
+side; `--agent-cmd` gets the prompt on stdin in the copy. The copy keeps `.git`, so a bare
+session could still dig the memory out of history.
 
 ## Benchmark
 

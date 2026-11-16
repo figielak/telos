@@ -2,8 +2,8 @@
 <!-- ≤ 40 lines. Maintained by `telos status set <key>=<value>`; never edit by hand.
      Holds pointers only: phase state lives in ROADMAP, task state in the task file. -->
 Phase: 15-resume-test
-Task: 15-04
-Next: 15-04 register resume-test, README
+Task: 15-05
+Next: 15-05 first real resume-test run on Telos
 Blockers: none
 Awaiting user: none
 <!-- Blockers: "NN-MM: reason". Awaiting user: what the user must decide, short. -->
