@@ -128,7 +128,7 @@ test('the map skill injects the fixed bundle and shared body; arguments only app
     assert.match(body, /^## Instructions\n!`telos ctx shared map`$/m, name);
     assert.equal(body.split('$ARGUMENTS').length - 1, 1, name);
     const tools = field('allowed-tools');
-    for (const t of ['Bash(telos *)', 'Read', 'Grep', 'Glob', 'Edit(.telos/MAP.md)', 'Edit(.telos/PROJECT.md)', 'Write(.telos/MAP.md)', 'Write(.telos/PROJECT.md)']) {
+    for (const t of ['Bash(telos *)', 'Read', 'Grep', 'Glob', 'Edit(.telos/MAP.md)', 'Edit(.telos/PROJECT.md)', 'Edit(.telos/areas/*)', 'Write(.telos/MAP.md)', 'Write(.telos/PROJECT.md)', 'Write(.telos/areas/*)']) {
       assert.ok(tools.split(/,\s*/).includes(t), `${name}: ${t}`);
     }
     assert.doesNotMatch(tools, /push|reset|Edit\(\.telos\/\*\*\)|Write\(\*|ROADMAP/, name);
@@ -142,7 +142,7 @@ test('the map instructions require targeted reads, the full format and validated
   const map = readFileSync(join(SHARED, 'map.md'), 'utf8');
   assert.ok(map.trim().split('\n').length <= 60);
   for (const s of ['REFUSED:', 'Header to write', 'telos-map', 'Not built yet', 'telos ctx map', 'Map validation: PASS',
-    '## Structure', '## Entry points', '## Flows', '## Areas', '## Find', '### ', '3–8', '--refresh', 'at most two', 'rollback']) {
+    '## Structure', '## Areas', '## Find', '.telos/areas/', 'telos area new', 'Affected areas', '3–8', '--refresh', 'at most two', 'rollback']) {
     assert.ok(map.includes(s), s);
   }
   assert.match(map, /assum/i);

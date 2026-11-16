@@ -76,7 +76,7 @@ test('ctx status derives the first-plan hint only for init\'s map hint plus a bu
   initialize(root, { stack: ['python'] });
   const status = join(root, '.telos', 'STATUS.md');
   writeFileSync(status, render('STATUS.md', { next: 'run /telos:map to map the existing code' }));
-  const map = '<!-- telos-map: commit aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa · 2026-10-29 · files 3 -->\n# Map\n\n## Structure\n- `lib/` — code\n\n## Entry points\n- `bin/telos:1-1` — start\n\n## Flows\n- run → `lib/a.mjs:1-2`\n\n## Areas\n### Core\n- `lib/a.mjs:1-2` — core\n\n## Find\n- lookup → `lib/a.mjs:1-2`\n';
+  const map = '<!-- telos-map: commit aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa · 2026-10-29 · files 3 -->\n# Map\n\n## Structure\n- `lib/` — code\n\n## Areas\n- core — the core · `lib/a.mjs`\n\n## Find\n- lookup → `lib/a.mjs:1-2`\n';
   writeFileSync(join(root, '.telos', 'MAP.md'), map);
   const before = readFileSync(status, 'utf8');
   const r = await ctx(root, 'status');

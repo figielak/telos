@@ -114,7 +114,7 @@ test('lib/status.mjs can be imported before lib/cli.mjs', () => {
 // Read-time Next after map (06-03): init's exact map hint is replaced once MAP is valid.
 const INIT_MAP = 'run /telos:map to map the existing code';
 const FIRST_PLAN = 'plan the first phase with /telos:plan';
-const BUILT_MAP = '<!-- telos-map: commit aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa · 2026-10-29 · files 3 -->\n# Map\n\n## Structure\n- `lib/` — code\n\n## Entry points\n- `bin/telos:1-1` — start\n\n## Flows\n- run → `lib/a.mjs:1-2`\n\n## Areas\n### Core\n- `lib/a.mjs:1-2` — core\n\n## Find\n- lookup → `lib/a.mjs:1-2`\n';
+const BUILT_MAP = '<!-- telos-map: commit aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa · 2026-10-29 · files 3 -->\n# Map\n\n## Structure\n- `lib/` — code\n\n## Areas\n- core — the core · `lib/a.mjs`\n\n## Find\n- lookup → `lib/a.mjs:1-2`\n';
 
 function mapRepo({ next = INIT_MAP, map = BUILT_MAP, set = {}, limit } = {}) {
   const root = repo();

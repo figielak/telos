@@ -35,7 +35,7 @@ a task bundle loads only the areas matching its paths; `npm test` passes.
   - Register in `lib/cli.mjs`; README row.
   - Accept: CLI tests for each subcommand and exit codes 0/1/2.
 
-- [ ] **11-03 MAP as index**
+- [x] **11-03 MAP as index**
   - `templates/MAP.md`: `## Structure` (≤ 10 lines), `## Areas` (one row per area:
     `- <name> — one line · <paths>`), `## Find` (task → area or file). `Entry points` and
     `Flows` move into area files.
@@ -59,3 +59,9 @@ a task bundle loads only the areas matching its paths; `npm test` passes.
   - Accept: `telos area lint` exits 0; `telos budget` shows MAP ≤ 600 est. tokens.
 
 ## Notes
+- 11-03: `--refresh` no longer falls back to a full build above 30% affected units. Area files
+  hold authored Decisions, Rejected and Pitfalls, so a diff selects index blocks and area files
+  and is always incremental; full mode remains for a missing, invalid or unanchored MAP.
+- 11-03: Areas index rows are `- <name> — text`; their backticked paths are informational. Area
+  ownership for refresh and `telos area for` comes from the area file headers only.
+- 11-03: this repository's own MAP stays in the old layout (invalid under the new rules) until 11-05.

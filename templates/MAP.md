@@ -1,24 +1,17 @@
 <!-- telos-map: not built -->
 # Map
-<!-- Built by /telos:map, ≤ ~1500 tokens. Answers only "where is X".
-     Headings are stable: tasks and CONTEXT link to "MAP.md §Heading".
+<!-- Built by /telos:map, ≤ ~600 tokens: an index that answers only "where is X".
+     Each area's entry points, invariants and decisions live in .telos/areas/<name>.md.
      Rules → PROJECT.md, check commands → config.json. -->
 Not built yet: run `/telos:map`. Until then, locate code with targeted Glob/Grep;
 never read the whole repo.
 
 ## Structure
-<!-- bullet rows with backticked repo-relative paths: "- `src/` — role".
+<!-- ≤ 10 rows with backticked repo-relative paths: "- `src/` — role".
      Use / separators; directory refs end in /, file ranges use :start-end. -->
 
-## Entry points
-<!-- "- `src/main.ts:1-30` — what starts here" -->
-
-## Flows
-<!-- "- route → `handler.ts:1-20` → `service.ts` → `store.ts`", one bullet per flow -->
-
 ## Areas
-<!-- one ### per domain (### Game, ### Auth), each independently editable;
-     key files in bullet rows: "- `src/game state.ts:10-40` — role" -->
+<!-- one row per area file: "- auth — sign-in and sessions · `src/auth/`, `lib/session.ts`" -->
 
 ## Find
-<!-- "- X → `src/file.ts:10-30`"; backticks also preserve paths containing spaces -->
+<!-- "- task → area or `src/file.ts:10-30`"; backticks also preserve paths containing spaces -->

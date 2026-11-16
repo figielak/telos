@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 // navigation quality and actual headless model runs remain a separate gate (03-09).
 const BIN = fileURLToPath(new URL('../bin/telos', import.meta.url));
 const SKILL = readFileSync(new URL('../skills/map/SKILL.md', import.meta.url), 'utf8');
-const DOMAINS = ['Auth', 'Board', 'Catalog', 'Account', 'Search', 'Help'];
+const DOMAINS = ['auth', 'board', 'catalog', 'account', 'search', 'help'];
 const git = (root, ...args) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 const read = (root, path) => readFileSync(join(root, path), 'utf8');
 function write(root, path, text) {
@@ -63,7 +63,7 @@ function setup(t, fixture) {
   const python = fixture === 'python-uv';
   const extension = python ? 'py' : 'ts';
   const entry = python ? 'src/demo/__main__.py' : 'src/pages/index.astro';
-  const paths = DOMAINS.map((name, i) => `src/${name.toLowerCase()}/${i === 1 ? 'game state' : 'module'}.${extension}`);
+  const paths = DOMAINS.map((name, i) => `src/${name}/${i === 1 ? 'game state' : 'module'}.${extension}`);
   const flow = `src/flow.${extension}`, find = `src/find.${extension}`;
   const source = (value) => python ? `value = ${value}\n# inert fixture, never executed\n` : `export const value = ${value};\n// inert fixture, never executed\n`;
   write(root, entry, python ? 'raise RuntimeError("fixture source must never run")\n' : '---\nconst title = "Fixture";\n---\n<h1>{title}</h1>\n');
@@ -89,16 +89,27 @@ function headerFrom(bundle, root) {
   assert.match(header, new RegExp(`^<!-- telos-map: commit ${git(root, 'rev-parse', 'HEAD')} · \\d{4}-\\d{2}-\\d{2} · files ${eligibleCount(root)} -->$`));
   return header;
 }
-function area(fixture, i, description = 'known fixture location') {
-  return `### ${DOMAINS[i]}\n- \`${fixture.paths[i]}:1-2\` — ${description}\n\n`;
+/** The Entry points line an area file holds for domain `i`. */
+function entryLine(fixture, i, description = 'known fixture location') {
+  return `- \`${fixture.paths[i]}:1-2\` — ${description}\n`;
 }
 function knownMap(fixture, header) {
-  return `${header}\n# Map\n\n## Structure\n- \`docs/\` — guide\n\n## Entry points\n- \`${fixture.entry}:1-1\` — starts here\n\n## Flows\n- request → \`${fixture.flow}:1-2\`\n\n## Areas\n<!-- Each domain is independently editable. -->\n${DOMAINS.map((_, i) => area(fixture, i)).join('')}## Find\n- lookup → \`${fixture.find}:1-2\`\n`;
+  const rows = DOMAINS.map((name) => `- ${name} — the ${name} domain · \`src/${name}/\`\n`).join('');
+  return `${header}\n# Map\n\n## Structure\n- \`docs/\` — guide\n- \`${fixture.entry}:1-1\` — starts here\n\n## Areas\n<!-- One row per area file. -->\n${rows}\n## Find\n- request flow → \`${fixture.flow}:1-2\`\n- lookup → \`${fixture.find}:1-2\`\n`;
 }
+/** Create every area through the CLI and fill its Entry points. */
+function writeAreas(fixture) {
+  for (const [i, name] of DOMAINS.entries()) {
+    assert.match(cli(fixture.root, 'area', 'new', name, '--paths', `src/${name}/`), new RegExp(`^Created \\.telos/areas/${name}\\.md`));
+    const rel = `.telos/areas/${name}.md`;
+    write(fixture.root, rel, read(fixture.root, rel).replace('## Entry points\n', `## Entry points\n${entryLine(fixture, i)}`));
+  }
+}
+const areaFiles = (root) => Object.fromEntries(DOMAINS.map((name) => [name, read(root, `.telos/areas/${name}.md`)]));
 const body = (map) => map.slice(map.indexOf('\n') + 1);
 const withHeader = (map, header) => `${header}\n${body(map)}`;
 const projectLine = (bundle) => /^Project: .+$/m.exec(bundle)?.[0];
-function assertPass(bundle, map, limit = 1500) {
+function assertPass(bundle, map, limit = 600) {
   assert.match(bundle, new RegExp(`^Map validation: PASS ${Math.ceil(map.length / 4)}/${limit}$`, 'm'));
 }
 
@@ -126,7 +137,8 @@ for (const fixtureName of ['astro-ts', 'python-uv']) {
       const bundle = cli(root, 'ctx', 'map');
       assert.match(bundle, /^Map validation: NOT BUILT$/m);
       assert.match(bundle, /^Mode: full$/m);
-      assert.match(bundle, /^Map limit: 1500 /m);
+      assert.match(bundle, /^Map limit: 600 /m);
+      assert.match(bundle, /^Areas: none yet · each ≤ 800 estimated tokens$/m);
       assert.ok(bundle.includes(fixture.entry));
       assert.match(bundle, /preserve: none/);
       if (fixtureName === 'astro-ts') assert.match(scan, /astro build/);
@@ -137,11 +149,16 @@ for (const fixtureName of ['astro-ts', 'python-uv']) {
 
     await t.test('known MAP and PROJECT draft validate; ctx plan shows the MAP Find rows', () => {
       write(root, '.telos/MAP.md', map);
+      assert.match(cli(root, 'ctx', 'map'), /^Map validation: FAIL Areas row auth has no file/m);
+      writeAreas(fixture);
+      assert.equal(cli(root, 'area', 'lint'), 'Areas: 6 · all valid\n');
+      assert.equal(cli(root, 'area', 'for', paths[1]), 'board\n');
       project = '# Offline fixture project\n\n## Purpose\nDraft for confirmation: navigate the demo sources.\n\n## Rules\n- none\n\n## Conventions\n- Modules live beside their domain source.\n\n## Out of scope\n- none\n';
       write(root, '.telos/PROJECT.md', project);
       const bundle = cli(root, 'ctx', 'map');
       assertPass(bundle, map);
-      assert.deepEqual([...map.matchAll(/^## (.+)$/gm)].map((m) => m[1]), ['Structure', 'Entry points', 'Flows', 'Areas', 'Find']);
+      assert.deepEqual([...map.matchAll(/^## (.+)$/gm)].map((m) => m[1]), ['Structure', 'Areas', 'Find']);
+      assert.match(bundle, /^Areas: account, auth, board, catalog, help, search · each ≤ 800 estimated tokens$/m);
       assert.ok(map.startsWith(headerFrom(bundle, root)));
       assert.doesNotMatch(map, /Not built yet/);
       // Read-time Next: init's map hint yields the first-plan hint once MAP is valid; STATUS untouched.
@@ -161,42 +178,40 @@ for (const fixtureName of ['astro-ts', 'python-uv']) {
       assert.equal(read(root, '.telos/PROJECT.md'), project);
     });
 
-    await t.test('a small committed change selects one Area and preserves all unrelated bytes', () => {
+    await t.test('a small committed change selects one area file and preserves all unrelated bytes', () => {
       write(root, paths[0], source(101));
       commit(root, [paths[0]]);
       const bundle = cli(root, 'ctx', 'map', '--refresh');
       assertPass(bundle, map);
       assert.match(bundle, /^Mode: incremental$/m);
-      assert.match(bundle, /^Impact: 1\/10 editable units · blocks: area:Auth$/m);
+      assert.match(bundle, /^Impact: 1\/9 editable units · blocks: none · areas: auth$/m);
       assert.ok(bundle.includes(`Changed: M ${paths[0]}`));
-      const oldArea = area(fixture, 0);
-      assert.ok(bundle.includes(`--- block area:Auth (replace exactly this text)\n${oldArea}--- end area:Auth`));
-      const mandatory = bundle.split('Affected blocks:\n')[1].split('Suggestions:')[0];
-      assert.doesNotMatch(mandatory, /### Board|### Catalog/);
+      assert.match(bundle, /^Affected areas: auth \(\.telos\/areas\/auth\.md\)$/m);
+      assert.match(bundle, /^Affected blocks: none$/m);
+      const before = areaFiles(root);
+      // The agent's edit: the area's entry text and its anchor; MAP line 1 only.
+      const anchor = /^Area header: (<!-- telos-area: commit [0-9a-f]+ · \d{4}-\d{2}-\d{2} · paths: )<a\/, b\.mjs> -->/m.exec(bundle)[1];
+      const auth = before.auth.replace(/^.*\n/, `${anchor}src/auth/ -->\n`).replace(entryLine(fixture, 0), entryLine(fixture, 0, 'known fixture location after committed edit'));
+      write(root, '.telos/areas/auth.md', auth);
       const previous = map;
-      const patched = map.replace(oldArea, area(fixture, 0, 'known fixture location after committed edit'));
-      map = withHeader(patched, headerFrom(bundle, root));
+      map = withHeader(map, headerFrom(bundle, root));
       write(root, '.telos/MAP.md', map);
-      for (let i = 1; i < DOMAINS.length; i++) assert.ok(map.includes(area(fixture, i)));
-      assert.equal(body(map), body(previous).replace(oldArea, area(fixture, 0, 'known fixture location after committed edit')));
+      assert.equal(body(map), body(previous));
+      for (const name of DOMAINS.slice(1)) assert.equal(read(root, `.telos/areas/${name}.md`), before[name]);
+      assert.equal(cli(root, 'area', 'lint'), 'Areas: 6 · all valid\n');
       const validated = cli(root, 'ctx', 'map', '--refresh');
       assertPass(validated, map);
       assert.match(validated, /^Mode: noop$/m);
       assert.equal(read(root, '.telos/PROJECT.md'), project);
     });
 
-    await t.test('3/10 stays incremental, 4/10 rebuilds, and a missing baseline falls back to full', () => {
-      for (let i = 0; i < 3; i++) write(root, paths[i], source(200 + i));
-      commit(root, paths.slice(0, 3));
-      const exact = cli(root, 'ctx', 'map', '--refresh');
-      assert.match(exact, /^Mode: incremental$/m);
-      assert.match(exact, /^Impact: 3\/10 editable units · blocks: area:Auth, area:Board, area:Catalog$/m);
-      write(root, paths[3], source(204));
-      commit(root, [paths[3]]);
-      const above = cli(root, 'ctx', 'map', '--refresh');
-      assert.match(above, /^Mode: full$/m);
-      assert.match(above, /^Reason: refresh fallback: 4\/10 editable units affected: strictly more than 30%/m);
-      map = withHeader(map, headerFrom(above, root));
+    await t.test('changes in many areas stay incremental; a missing baseline falls back to full', () => {
+      for (let i = 0; i < 4; i++) write(root, paths[i], source(200 + i));
+      commit(root, paths.slice(0, 4));
+      const many = cli(root, 'ctx', 'map', '--refresh');
+      assert.match(many, /^Mode: incremental$/m);
+      assert.match(many, /^Impact: 4\/9 editable units · blocks: none · areas: account, auth, board, catalog$/m);
+      map = withHeader(map, headerFrom(many, root));
       write(root, '.telos/MAP.md', map.replace(/^<!-- telos-map: commit [a-f0-9]+ /, `<!-- telos-map: commit ${'0'.repeat(40)} `));
       const missing = cli(root, 'ctx', 'map', '--refresh');
       assert.match(missing, /^Mode: full$/m);
@@ -210,7 +225,7 @@ for (const fixtureName of ['astro-ts', 'python-uv']) {
       const previousBody = body(map);
       const noop = cli(root, 'ctx', 'map', '--refresh');
       assert.match(noop, /^Mode: noop$/m);
-      assert.match(noop, /^Impact: 0\/10 editable units · blocks: none$/m);
+      assert.match(noop, /^Impact: 0\/9 editable units · blocks: none · areas: none$/m);
       assert.match(noop, /^Write: replace only line 1/m);
       map = withHeader(map, headerFrom(noop, root));
       write(root, '.telos/MAP.md', map);

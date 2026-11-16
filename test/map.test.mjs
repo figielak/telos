@@ -8,9 +8,9 @@ import { render } from '../lib/template.mjs';
 const commit = '0123456789abcdef'.repeat(2) + '01234567';
 const metadata = { commit, date: '2026-10-26', files: 42 };
 const header = `<!-- telos-map: commit ${commit} · 2026-10-26 · files 42 -->`;
-const inspect = (text, limit = 1500) => inspectMap(text, { limit });
-const skeleton = `${header}\n# Map\n\n## Structure\n\n## Entry points\n\n## Flows\n\n## Areas\n\n## Find\n`;
-const built = `${header}\n# Map\n<!-- keep this comment exactly -->\n\n## Structure\n- \`src/\` — application\n\n## Entry points\n- \`./src/main.ts:1-12\` — boot\n\n## Flows\n- UI → \`src/auth/login.ts:20-35\`\n\n## Areas\n<!-- area preface -->\n\n### Auth\n- \`src/auth/login.ts:20-35\` — log in\n- \`src/auth/\` — auth\n\n### Board\n- \`src/board/game state.ts:3-9\` — state\n\n## Find\n- Settings → \`src/settings.ts\`\n`;
+const inspect = (text, limit = 600, areas) => inspectMap(text, { limit, areas });
+const skeleton = `${header}\n# Map\n\n## Structure\n\n## Areas\n\n## Find\n`;
+const built = `${header}\n# Map\n<!-- keep this comment exactly -->\n\n## Structure\n- \`src/\` — application\n- \`./src/main.ts:1-12\` — boot\n\n## Areas\n<!-- area preface -->\n- auth — log in · \`src/auth/login.ts:20-35\`, \`src/auth/\`\n- board — game state · \`src/board/game state.ts:3-9\`\n\n## Find\n- Settings → \`src/settings.ts\`\n`;
 
 test('missing MAP and the actual rendered init stub are not built', () => {
   for (const text of [undefined, null, '', ' \n\t', render('MAP.md', {})]) {
@@ -23,7 +23,7 @@ test('missing MAP and the actual rendered init stub are not built', () => {
   const stub = render('MAP.md', {});
   assert.ok(stub.startsWith('<!-- telos-map: not built -->\n'));
   assert.match(stub, /Not built yet: run `\/telos:map`/);
-  assert.deepEqual([...stub.matchAll(/^## (.+)$/gm)].map((m) => m[1]), ['Structure', 'Entry points', 'Flows', 'Areas', 'Find']);
+  assert.deepEqual([...stub.matchAll(/^## (.+)$/gm)].map((m) => m[1]), ['Structure', 'Areas', 'Find']);
 });
 
 test('a complete MAP has canonical provenance and fixed headings in order', () => {
@@ -32,7 +32,8 @@ test('a complete MAP has canonical provenance and fixed headings in order', () =
   assert.deepEqual(result.errors, []);
   assert.deepEqual(result.header, metadata);
   assert.equal(result.tokens, estimateTokens(built));
-  assert.deepEqual(result.blocks.filter((b) => ['Structure', 'Entry points', 'Flows', 'Areas', 'Find'].includes(b.heading)).map((b) => b.heading), ['Structure', 'Entry points', 'Flows', 'Areas', 'Find']);
+  assert.deepEqual(result.blocks.map((b) => b.heading), [null, 'Structure', 'Areas', 'Find']);
+  assert.deepEqual(result.areas, ['auth', 'board']);
   assert.equal(new Set(result.blocks.map((b) => b.id)).size, result.blocks.length);
   assert.deepEqual(inspect(built), result);
 });
@@ -95,18 +96,52 @@ test('malformed commit/date/count, missing or duplicate headers are actionable',
 
 test('missing, duplicate, reordered or unexpected sections name the structural error', () => {
   const cases = [
-    [skeleton.replace('## Flows\n', ''), /missing.*Flows/i],
-    [skeleton.replace('## Flows', '## Flows\n\n## Flows'), /duplicate.*Flows/i],
-    [skeleton.replace('## Flows\n\n## Areas', '## Areas\n\n## Flows'), /order/i],
-    [skeleton.replace('## Flows', '## Other'), /unexpected.*Other/i],
-    [skeleton.replace('## Areas', '### Misplaced\n\n## Areas'), /Area.*outside|outside.*Area/i],
-    [built.replace('### Board', '### Auth'), /duplicate.*Auth/i],
+    [skeleton.replace('## Areas\n', ''), /missing.*Areas/i],
+    [skeleton.replace('## Areas', '## Areas\n\n## Areas'), /duplicate.*Areas/i],
+    [skeleton.replace('## Areas\n\n## Find', '## Find\n\n## Areas'), /order/i],
+    [skeleton.replace('## Areas', '## Flows\n\n## Areas'), /unexpected.*Flows/i],
+    [skeleton.replace('## Areas', '## Entry points\n\n## Areas'), /unexpected.*Entry points/i],
+    [skeleton.replace('## Areas\n', '## Areas\n### Auth\n'), /sub-heading ### Auth.*\.telos\/areas/i],
   ];
   for (const [text, message] of cases) {
     const result = inspect(text);
     assert.equal(result.state, 'invalid');
     assert.match(result.errors.join('\n'), message);
   }
+});
+
+test('Structure holds at most 10 lines; comments do not count', () => {
+  const rows = (n) => Array.from({ length: n }, (_, i) => `- \`d${i}/\` — dir`).join('\n');
+  assert.equal(inspect(skeleton.replace('## Structure\n', `## Structure\n${rows(10)}\n<!-- a\nb\nc -->\n`)).state, 'built');
+  const over = inspect(skeleton.replace('## Structure\n', `## Structure\n${rows(11)}\n`));
+  assert.equal(over.state, 'invalid');
+  assert.match(over.errors.join('\n'), /Structure has 11 lines; keep it to 10/);
+});
+
+test('Areas rows are "- <name> — text" with valid unique names', () => {
+  const withRows = (rows) => inspect(skeleton.replace('## Areas\n', `## Areas\n${rows}\n`));
+  assert.deepEqual(withRows('- cli — commands · `lib/cli.mjs`\n- map-index — the index').areas, ['cli', 'map-index']);
+  for (const [rows, message] of [
+    ['- cli: commands', /Malformed Areas row/],
+    ['cli — commands', /Malformed Areas row/],
+    ['- CLI — commands', /Invalid area name "CLI"/],
+    ['- cli — one\n- cli — two', /Duplicate Areas row: cli/],
+  ]) {
+    const result = withRows(rows);
+    assert.equal(result.state, 'invalid', rows);
+    assert.match(result.errors.join('\n'), message, rows);
+  }
+});
+
+test('with area files given, every row needs a file and every file a row', () => {
+  assert.equal(inspect(built, 600, ['auth', 'board']).state, 'built');
+  assert.equal(inspect(built).state, 'built');
+  const missing = inspect(built, 600, ['auth']);
+  assert.equal(missing.state, 'invalid');
+  assert.match(missing.errors.join('\n'), /Areas row board has no file \.telos\/areas\/board\.md; create it with telos area new board/);
+  const extra = inspect(built, 600, ['auth', 'board', 'cli']);
+  assert.deepEqual(extra.errors, ['Area file .telos/areas/cli.md has no row in ## Areas.']);
+  assert.equal(inspect(render('MAP.md', {}), 600, ['cli']).state, 'not-built');
 });
 
 test('a built header with a remaining init paragraph is invalid', () => {
@@ -116,13 +151,11 @@ test('a built header with a remaining init paragraph is invalid', () => {
   assert.match(result.errors.join('\n'), /Not built yet|stub/i);
 });
 
-test('Areas are separate editable blocks; offsets and raw concatenation preserve every byte', () => {
+test('blocks partition the text; offsets and raw concatenation preserve every byte', () => {
   for (const text of [built, built.replaceAll('\n', '\r\n'), built.trimEnd()]) {
     const result = inspect(text);
     assert.equal(result.state, 'built');
-    const areas = result.blocks.filter((b) => b.id.startsWith('area:'));
-    assert.deepEqual(areas.map((b) => b.heading), ['Auth', 'Board']);
-    assert.ok(result.blocks.some((b) => b.id === 'areas'));
+    assert.deepEqual(result.blocks.map((b) => b.id), ['header', 'structure', 'areas', 'find']);
     assert.equal(result.blocks[0].start, 0);
     assert.equal(result.blocks.at(-1).end, text.length);
     for (let i = 0; i < result.blocks.length; i++) {
@@ -131,22 +164,18 @@ test('Areas are separate editable blocks; offsets and raw concatenation preserve
       if (i) assert.equal(block.start, result.blocks[i - 1].end);
     }
     assert.equal(result.blocks.map((b) => b.text).join(''), text);
-    assert.ok(areas[0].text.startsWith('### Auth'));
-    assert.ok(!areas[0].text.includes('### Board'));
-    assert.ok(!areas[1].text.includes('## Find'));
   }
 });
 
 test('file/range/directory refs normalize paths and keep spaces and line bounds intact', () => {
   const result = inspect(built);
   const block = (heading) => result.blocks.find((b) => b.heading === heading);
-  assert.deepEqual(block('Structure').refs, [{ path: 'src/', directory: true }]);
-  assert.deepEqual(block('Entry points').refs, [{ path: 'src/main.ts', directory: false, start: 1, end: 12 }]);
-  assert.deepEqual(block('Auth').refs, [
+  assert.deepEqual(block('Structure').refs, [{ path: 'src/', directory: true }, { path: 'src/main.ts', directory: false, start: 1, end: 12 }]);
+  assert.deepEqual(block('Areas').refs, [
     { path: 'src/auth/login.ts', directory: false, start: 20, end: 35 },
     { path: 'src/auth/', directory: true },
+    { path: 'src/board/game state.ts', directory: false, start: 3, end: 9 },
   ]);
-  assert.deepEqual(block('Board').refs, [{ path: 'src/board/game state.ts', directory: false, start: 3, end: 9 }]);
   assert.deepEqual(block('Find').refs, [{ path: 'src/settings.ts', directory: false }]);
   const normalized = inspect(skeleton.replace('## Find\n', '## Find\n- `./src//auth/../main.ts:7`\n- `Dockerfile`\n'));
   assert.deepEqual(normalized.blocks.at(-1).refs, [
@@ -164,11 +193,12 @@ test('unsafe paths and malformed line ranges never become usable references', ()
 });
 
 test('comments and fenced examples cannot create phantom sections, Areas or references', () => {
-  const examples = '<!--\n## Find\n### Fake\n- `fake/comment.ts`\n-->\n```md\n## Find\n### Fake\n- `fake/fenced.ts`\n```\n~~~md\n## Structure\n- `fake/tilde.ts`\n~~~\n';
+  const examples = '<!--\n## Find\n### Fake\n- fake — row `fake/comment.ts`\n-->\n```md\n## Find\n### Fake\n- fake — row `fake/fenced.ts`\n```\n~~~md\n## Structure\n- `fake/tilde.ts`\n~~~\n';
   const text = built.replace('<!-- area preface -->\n', examples);
   const result = inspect(text);
   assert.equal(result.state, 'built');
   assert.ok(!result.blocks.some((b) => b.heading === 'Fake'));
+  assert.deepEqual(result.areas, ['auth', 'board']);
   assert.ok(!result.blocks.flatMap((b) => b.refs).some((r) => r.path.startsWith('fake/')));
   assert.equal(result.blocks.map((b) => b.text).join(''), text);
 });
@@ -178,5 +208,6 @@ test('empty optional sections are valid but no usable refs means no incremental 
   assert.equal(result.state, 'built');
   assert.deepEqual(result.errors, []);
   assert.equal(result.blocks.flatMap((b) => b.refs).length, 0);
-  assert.deepEqual(result.blocks.map((b) => b.id), ['header', 'structure', 'entry-points', 'flows', 'areas', 'find']);
+  assert.deepEqual(result.blocks.map((b) => b.id), ['header', 'structure', 'areas', 'find']);
+  assert.deepEqual(result.areas, []);
 });

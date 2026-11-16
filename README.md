@@ -27,8 +27,9 @@ Requires Claude Code with plugin support, Git and Node.js ≥ 20.10. No dependen
 1. `telos init` — detects the stack and check commands, creates `.telos/` (PROJECT, MAP,
    ROADMAP, STATUS, HISTORY, `config.json`), adds a short Telos block to `CLAUDE.md` and
    `.telos/.cache/` to `.gitignore`. Rerun-safe: existing files are kept.
-2. `/telos:map` — on an existing codebase, writes `.telos/MAP.md` (structure, entry points,
-   flows, areas, where to find things) from a deterministic scan and a few targeted reads, and
+2. `/telos:map` — on an existing codebase, writes `.telos/MAP.md`, a short index (structure,
+   one row per area, where to find things), and one `.telos/areas/<name>.md` per area (entry
+   points, invariants, decisions) from a deterministic scan and a few targeted reads, and
    drafts empty PROJECT sections for you to confirm.
 3. `/telos:plan add login with magic links` — adds a ROADMAP phase and writes one file,
    `.telos/phases/NN-name.md`: goal, done-when, a checklist of `- [ ] **NN-MM Title**` tasks,
@@ -46,8 +47,8 @@ Requires Claude Code with plugin support, Git and Node.js ≥ 20.10. No dependen
 | File | Holds |
 |---|---|
 | `PROJECT.md` | Purpose, hard Rules, Conventions, Out of scope (≤ 60 lines) |
-| `MAP.md` | Where things are; validated against a token budget (`limits.map_tokens`) |
-| `areas/<name>.md` | One area's living docs: Purpose, Entry points, Invariants, Decisions, Rejected, Pitfalls (≤ `limits.area_tokens`) |
+| `MAP.md` | Index of where things are: Structure (≤ 10 lines), one Areas row per area file, Find; ≤ `limits.map_tokens` (600) |
+| `areas/<name>.md` | One area's living docs, read only when work touches its paths: Purpose, Entry points, Invariants, Decisions, Rejected, Pitfalls (≤ `limits.area_tokens`, 800) |
 | `ROADMAP.md` | One line per phase: `- NN-name [status] goal · done when: …` |
 | `phases/NN-name.md` | The plan of one phase: Goal, Done when, Tasks checklist, Notes (≤ 80 lines) |
 | `STATUS.md` | Pointers only: Phase, Task, Next, Blockers, Awaiting user, Carry-over, Recent |
@@ -62,7 +63,7 @@ Skills are user-invoked only, so they cost nothing until called. Each injects on
 | Command | Purpose |
 |---|---|
 | `/telos:status` | Phase, task, blockers, latest Recent line and the next step in ≤ 10 lines; reads and changes nothing |
-| `/telos:map [--refresh]` | Write `.telos/MAP.md` from `telos ctx map` and 3–8 suggested files; requires `Map validation: PASS` (at most two repairs, else the old MAP is restored) and drafts empty PROJECT sections, unconfirmed. `--refresh` updates only the blocks a diff since the MAP commit affects (≤ 30% of units; else a full build). With `git.auto_commit` it asks once, then commits `docs(telos): map` with explicit paths |
+| `/telos:map [--refresh]` | Write the `.telos/MAP.md` index and the `.telos/areas/` files from `telos ctx map` and 3–8 suggested files; requires `Map validation: PASS` for MAP, every area and the row ↔ file match (at most two repairs, else the old files are restored) and drafts empty PROJECT sections, unconfirmed. `--refresh` edits only the index blocks and area files whose paths a diff since the MAP commit touches; authored area sections are kept. With `git.auto_commit` it asks once, then commits `docs(telos): map` with explicit paths |
 | `/telos:plan [NN\|description]` | Plan the STATUS phase, phase `NN` or a new phase in one file (≤ 80 lines). At most one round of questions; `telos roadmap add` for a new phase, then `telos roadmap set NN active` and `telos status set`; places carry-over items. Commits `docs(NN): plan phase NN-name` only when `git.auto_commit` is true |
 | `/telos:close [NN]` | Close an active phase: stops on `REFUSED:` or `Close: blocked` (unchecked tasks, unreadable HISTORY), runs every configured check (a failure leaves the phase active, nothing recorded), confirms the done-when, then runs the bundle's closing commands in order; a retry skips a recorded phase entry. Commits `docs(NN): close phase NN-name` only when `git.auto_commit` is true |
 
@@ -132,8 +133,8 @@ generalise beyond them. Version 0.2 has not been benchmarked.
   checklist yourself.
 - Claude Code only for now: the hooks and skills are plugin features. The files are plain
   markdown and the CLI runs anywhere Node does.
-- Size targets: bundles ≤ 6000 chars, SessionStart ≤ 1200 chars, MAP ≤ `limits.map_tokens`
-  estimated tokens. `telos budget` measures sizes, not host token usage.
+- Size targets: bundles ≤ 6000 chars, SessionStart ≤ 1200 chars, MAP ≤ `limits.map_tokens` and
+  each area ≤ `limits.area_tokens` estimated tokens. `telos budget` measures sizes, not host token usage.
 
 ## Development
 

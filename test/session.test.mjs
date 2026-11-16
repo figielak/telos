@@ -112,7 +112,7 @@ test('after a built MAP, SessionStart derives the first-plan hint without writin
   const mapPath = join(root, '.telos', 'MAP.md');
   writeFileSync(mapPath, '<!-- telos-map: not built -->\n# Map\n\nNot built yet: run `/telos:map`.\n');
   assert.match(hook(root).out, /^Next: run \/telos:map to map the existing code$/m);
-  writeFileSync(mapPath, '<!-- telos-map: commit aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa · 2026-10-29 · files 3 -->\n# Map\n\n## Structure\n- `lib/` — code\n\n## Entry points\n- `bin/telos:1-1` — start\n\n## Flows\n- run → `lib/a.mjs:1-2`\n\n## Areas\n### Core\n- `lib/a.mjs:1-2` — core\n\n## Find\n- lookup → `lib/a.mjs:1-2`\n');
+  writeFileSync(mapPath, '<!-- telos-map: commit aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa · 2026-10-29 · files 3 -->\n# Map\n\n## Structure\n- `lib/` — code\n\n## Areas\n- core — the core · `lib/a.mjs`\n\n## Find\n- lookup → `lib/a.mjs:1-2`\n');
   const before = readFileSync(join(root, '.telos', 'STATUS.md'), 'utf8');
   const { out } = hook(root);
   assert.match(out, /^Next: plan the first phase with \/telos:plan$/m);
