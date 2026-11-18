@@ -15,11 +15,13 @@ the ranges you cite); never read the whole repo. Write only the phase file under
 3. **New phase**: `telos roadmap add <kebab-name> "<goal>" "<done when>"` (it prints the NN), then
    `telos ctx plan <NN>` for the skeleton. The done-when criterion must be observable.
 4. **Phase file**: write the `Phase file:` path from its skeleton (or edit it in place when it
-   exists), ≤ 80 lines:
+   exists), ≤ 200 lines (split a bigger phase):
    - Goal and Done when from the phase line, sharpened only where they are vague.
+   - Decisions: choices several tasks share, once each, with the reason.
    - Tasks: `- [ ] **NN-MM Title**`, numbered from 01, foundations first, each about an hour or
-     less, with at most 3 indented lines: what changes and where (`path` or `path:start-end`),
-     and how to accept it (a check command from the `Checks:` line or an observable result).
+     less. Indented lines, enough for a fresh session to do it from this file alone: what
+     changes and where (`path` or `path:start-end`), steps, what to leave alone, and `Accept:`
+     a check command from the `Checks:` line or an observable result. No repeated boilerplate.
    - Notes: assumptions, carry-over items, risks; never a removed approach from the context.
 5. **Record**: `telos roadmap set <NN> active`, then
    `telos status set phase=<NN-name> task=none next="<first task id and title>"`;

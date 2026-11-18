@@ -79,7 +79,7 @@ test('the per-run plan body stays short and keeps its gates', async () => {
   };
   const baseline = { plan: 2600 };
   const gates = {
-    plan: ['AskUserQuestion', 'No second round', '≤ 80 lines', 'telos roadmap set <NN> active', 'Auto-commit: yes'],
+    plan: ['AskUserQuestion', 'No second round', '≤ 200 lines', 'telos roadmap set <NN> active', 'Auto-commit: yes'],
   };
   for (const [name, max] of Object.entries(baseline)) {
     const text = await shared(name);

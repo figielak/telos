@@ -38,7 +38,7 @@ test('ctx plan NN shows the target, the phase skeleton, project, stack, checks a
   assert.equal(r.code, 0, r.stderr);
   const out = r.stdout;
   assert.match(out, /^Target: 01-demo \[active\] demo phase · done when: demo works$/m);
-  assert.match(out, /^Phase file: \.telos\/phases\/01-demo\.md \(missing; write it from this skeleton\)\n# 01-demo\n\n## Goal\ndemo phase\n\n## Done when\ndemo works\n\n## Tasks\n- \[ \] \*\*01-01 <title>\*\*$/m);
+  assert.match(out, /^Phase file: \.telos\/phases\/01-demo\.md \(missing; write it from this skeleton\)\n# 01-demo\n\n## Goal\ndemo phase\n\n## Done when\ndemo works\n\n## Decisions\n- none\n\n## Tasks\n- \[ \] \*\*01-01 <title>\*\*$/m);
   assert.match(out, /^Carry-over:\n- rate limit → 01-01 Result$/m);
   assert.doesNotMatch(out, /later thing|new phase item/);
   assert.match(out, /^Purpose: A demo app that greets people\.$/m);

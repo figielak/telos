@@ -90,7 +90,7 @@ to run `telos status` first and states the git rules the Claude Code guard enfor
 | `MAP.md` | Index of where things are: Structure (≤ 10 lines), one Areas row per area file, Find; ≤ `limits.map_tokens` (600) |
 | `areas/<name>.md` | One area's living docs, read only when work touches its paths: Purpose, Entry points, Invariants, Decisions, Rejected, Pitfalls (≤ `limits.area_tokens`, 800) |
 | `ROADMAP.md` | One line per phase: `- NN-name [status] goal · done when: …` |
-| `phases/NN-name.md` | The plan of one phase: Goal, Done when, Tasks checklist, Notes (≤ 80 lines) |
+| `phases/NN-name.md` | The plan of one phase: Goal, Done when, Decisions, Tasks checklist with per-task details, Notes (≤ 200 lines) |
 | `STATUS.md` | Pointers only: Phase, Task, Next, Blockers, Awaiting user, Carry-over, Recent |
 | `HISTORY.md` | Why: a dated Log and the Delete-zone of removed paths and approaches |
 | `config.json` | Version 2: `stack`, `checks`, `limits`, `git`, `files_language` |
@@ -110,7 +110,7 @@ then its instructions; the skill never reads the whole repository.
 |---|---|
 | `/telos:status` | Phase, task, blockers, latest Recent line and the next step in ≤ 10 lines; reads and changes nothing |
 | `/telos:map [--refresh]` | Write the `.telos/MAP.md` index and the `.telos/areas/` files; draft empty PROJECT sections |
-| `/telos:plan [NN\|description]` | Plan the STATUS phase, phase `NN` or a new phase in one file (≤ 80 lines) and set it active |
+| `/telos:plan [NN\|description]` | Plan the STATUS phase, phase `NN` or a new phase in one file (≤ 200 lines) and set it active |
 | `/telos:close [NN]` | Close an active phase: run the checks, update the touched area notes, record HISTORY, ROADMAP and STATUS |
 | `/telos:catchup` | After work done without Telos: the same area update as `close`, with no checks and no phase bookkeeping |
 
